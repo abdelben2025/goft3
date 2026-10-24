@@ -1,0 +1,134 @@
+{
+  "name": "goft3-app",
+  "private": true,
+  "type": "module",
+  "version": "1.1.1",
+  "main": "electron.js",
+  "description": "Gestion des Opérations Financière Titre 3",
+  "author": "Abdelatif Benketira",
+  "keywords": [
+    "arabe",
+    "rtl",
+    "i18n"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint . --report-unused-disable-directives",
+    "preview": "vite preview",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "electron:start": "electron .",
+    "electron:build": "npm run build && electron-builder",
+    "electron:build:win": "npm run build && electron-builder --win",
+    "electron:build:linux": "npm run build && electron-builder --linux"
+  },
+  "dependencies": {
+    "@fontsource/amiri": "^5.2.8",
+    "@fontsource/cairo": "^5.2.7",
+    "@fontsource/tajawal": "^5.2.7",
+    "@supabase/supabase-js": "^2.39.8",
+    "@tanstack/react-query": "^5.100.9",
+    "@tauri-apps/api": "^2.2.0",
+    "@tauri-apps/plugin-dialog": "^2.8.3",
+    "@tauri-apps/plugin-process": "^2.4.0",
+    "@tauri-apps/plugin-updater": "^2.14.0",
+    "@types/react-window": "^1.8.8",
+    "bcrypt-ts": "^9.0.2",
+    "bootstrap-icons": "^1.11.3",
+    "exceljs": "^4.4.0",
+    "framer-motion": "^11.15.0",
+    "globals": "^17.5.0",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.0",
+    "lucide-react": "^1.14.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-window": "^2.2.7",
+    "typescript-eslint": "^8.58.2",
+    "vite-plugin-node-polyfills": "^0.26.0"
+  },
+  "overrides": {
+    "uuid": "^11.0.0",
+    "fast-csv": "^4.3.6",
+    "tmp": "^0.2.6",
+    "elliptic": "^6.6.1",
+    "flatted": "^3.3.3",
+    "form-data": "^4.0.2",
+    "js-yaml": "^4.1.1",
+    "lodash": "^4.17.23",
+    "picomatch": "^4.0.4",
+    "postcss": "^8.5.3",
+    "tar": "^7.5.3",
+    "ws": "^8.20.2",
+    "ip-address": "^10.1.1",
+    "qs": "^6.15.2",
+    "brace-expansion": "^2.0.1",
+    "minimatch": "^9.0.5",
+    "esbuild": "^0.25.0",
+    "app-builder-lib": "^26.17.0",
+    "builder-util-runtime": "^9.7.0",
+    "@electron/get": "^5.1.0",
+    "braces": "^3.0.3",
+    "postcss-selector-parser": "^7.1.6"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.14.0",
+    "@tauri-apps/cli": "^2.2.0",
+    "@types/react": "^18.2.66",
+    "@types/react-dom": "^18.2.22",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.19",
+    "electron": "^39.2.7",
+    "electron-builder": "^26.17.0",
+    "eslint": "^9.14.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "eslint-plugin-react-refresh": "^0.4.14",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^3.4.19",
+    "typescript": "^5.9.3",
+    "vite": "^5.4.21"
+  },
+  "build": {
+    "appId": "com.goft3.app",
+    "productName": "GOFT3",
+    "files": [
+      "dist/**/*",
+      "electron.js",
+      "preload.js"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "icon.ico"
+    },
+    "linux": {
+      "target": [
+        "deb"
+      ],
+      "icon": "icon.png",
+      "category": "Office"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "installerIcon": "icon.ico",
+      "uninstallerIcon": "icon.ico",
+      "uninstallDisplayName": "GOFT3",
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "GOFT3"
+    }
+  }
+}

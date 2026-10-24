@@ -1,0 +1,11 @@
+{
+  "version": "1.1.0",
+  "notes": "وصف التغييرات في هذا الإصدار",
+  "pub_date": "2026-10-24T00:00:00Z",
+  "platforms": {
+    "windows-x86_64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRMkQzL1pmVUdWNzZjNy80QWNGd1h5UjJZNlNxMElJR1h4eis5T3k4TFdJeDBtL1Uwb3lKRkdzTy9rWWlSSDA4NE42QTQ2dURLY1ZZNmZYL0RLZ2R5dUZyVVplaktaZUFRPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkyNzg4MzgyCWZpbGU6R09GVDNfMS4wLjlfeDY0LXNldHVwLmV4ZQl2ZXJzaW9uOjEuMC45CjNsdHM2TVVTV0tEWEt0SXg5SWpEZ1pPOG5WRU96S3hNenlBNXM4WUIyNWdnb01FZHgwaVM5Y3lqTXVsL1lvZ1hKUEM3L3lGZngwZzhHNERDczVpUENnPT0K",
+      "url": "https://github.com/abdelben2025/goft3/releases/download/v1.1.0/GOFT3_1.1.0_x64-setup.nsis.zip"
+    }
+  }
+}

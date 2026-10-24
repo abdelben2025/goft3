@@ -1,0 +1,295 @@
+use rusqlite::{params, Connection, Result};
+use std::path::PathBuf;
+use std::sync::Mutex;
+use tauri::AppHandle;
+use tauri::Manager;
+
+pub struct DatabaseState {
+    pub conn: Mutex<Connection>,
+}
+
+pub fn get_db_path(app: &AppHandle) -> Result<PathBuf, Box<dyn std::error::Error>> {
+    // Prefer the folder next to the executable (portable mode) when writable
+    if let Ok(exe_path) = std::env::current_exe() {
+        if let Some(exe_dir) = exe_path.parent() {
+            if exe_dir.exists() {
+                let probe = exe_dir.join(".goft3_write_probe");
+                if std::fs::write(&probe, b"ok").is_ok() {
+                    let _ = std::fs::remove_file(&probe);
+                    return Ok(exe_dir.join("goft3_local.db"));
+                }
+            }
+        }
+    }
+
+    // Fallback: per-user app data directory (e.g. installed under Program Files)
+    let app_dir = app.path().app_data_dir()?;
+    std::fs::create_dir_all(&app_dir)?;
+    Ok(app_dir.join("goft3_local.db"))
+}
+
+pub fn init_database(db_path: &PathBuf) -> Result<Connection> {
+    let conn = Connection::open(db_path)?;
+
+    // Enable WAL mode for high concurrency & reliability
+    conn.execute_batch("PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;")?;
+
+    // Create Tables
+    conn.execute_batch(r#"
+        CREATE TABLE IF NOT EXISTS T_USER (
+            ID_USER INTEGER PRIMARY KEY AUTOINCREMENT,
+            USERNAME TEXT NOT NULL UNIQUE,
+            PASSWORD TEXT NOT NULL,
+            ROLE TEXT NOT NULL CHECK (ROLE IN ('admin', 'user', 'viewer')),
+            ALLOWED_PAGES TEXT,
+            ALLOWED_OPERATIONS TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS T_BENEFICIAIRE (
+            ID_BENEFICIAIRE INTEGER PRIMARY KEY AUTOINCREMENT,
+            BENEFICIAIRE TEXT NOT NULL,
+            ADRESSE TEXT NOT NULL,
+            RC TEXT,
+            CODE_FISCALE TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS T_COMPTE_BANCAIRE (
+            ID_COMPTE INTEGER PRIMARY KEY AUTOINCREMENT,
+            ID_BENEFICIAIRE INTEGER NOT NULL,
+            RIB TEXT NOT NULL,
+            BANQUE TEXT NOT NULL,
+            FOREIGN KEY (ID_BENEFICIAIRE) REFERENCES T_BENEFICIAIRE(ID_BENEFICIAIRE) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS T_CATEGORIE (
+            ID_CATEGORIE INTEGER PRIMARY KEY AUTOINCREMENT,
+            C_CATEGORIE TEXT NOT NULL,
+            INT_CATEGORIE TEXT NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS T_SCATEGORIE (
+            ID_SCATEGORIE INTEGER PRIMARY KEY AUTOINCREMENT,
+            ID_CATEGORIE INTEGER NOT NULL,
+            C_SCATEGORIE TEXT NOT NULL,
+            INT_SCATEGORIE TEXT NOT NULL,
+            FOREIGN KEY (ID_CATEGORIE) REFERENCES T_CATEGORIE(ID_CATEGORIE) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS T_OPERATION (
+            ID_OPERATION INTEGER PRIMARY KEY AUTOINCREMENT,
+            N_OPERATION TEXT NOT NULL,
+            N_OPERATION_ANCIEN TEXT,
+            INT_OPERATION TEXT NOT NULL,
+            ID_CATEGORIE INTEGER NOT NULL,
+            status TEXT NOT NULL,
+            CREATED_BY REAL,
+            ID_SCATEGORIE INTEGER,
+            TYPE_OP TEXT,
+            FOREIGN KEY (ID_CATEGORIE) REFERENCES T_CATEGORIE(ID_CATEGORIE),
+            FOREIGN KEY (ID_SCATEGORIE) REFERENCES T_SCATEGORIE(ID_SCATEGORIE)
+        );
+
+        CREATE TABLE IF NOT EXISTS T_RUBRIQUE (
+            ID_RUBRIQUE INTEGER PRIMARY KEY AUTOINCREMENT,
+            RUBRIQUE TEXT NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS T_BORDEREAU (
+            ID_BORDEREAU INTEGER PRIMARY KEY AUTOINCREMENT,
+            N_BORDEREAU TEXT,
+            ANNEE TEXT NOT NULL,
+            DATE_BORDEREAU TEXT,
+            DESTINATAIRE TEXT,
+            DOCUMENTS_JOINTS TEXT,
+            COPIES_NOTE TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS T_PIECE (
+            ID_PIECE INTEGER PRIMARY KEY AUTOINCREMENT,
+            NAT_PIECE TEXT NOT NULL,
+            ID_PIECE_INIT INTEGER,
+            ID_OPERATION INTEGER NOT NULL,
+            PIECE TEXT NOT NULL,
+            ID_BENEFICIAIRE INTEGER,
+            ID_COMPTE INTEGER,
+            MONTANT_PIECE REAL NOT NULL,
+            ID_SCATEGORIE INTEGER NOT NULL,
+            ID_RUBRIQUE INTEGER,
+            DELAI_EX_JOURS TEXT,
+            SAI_ENG INTEGER NOT NULL DEFAULT 0,
+            SAI_PAI INTEGER NOT NULL DEFAULT 0,
+            N_VISA_CM TEXT,
+            DATE_VISA_CM TEXT,
+            CAUTION TEXT,
+            DATE_OD_PIECE TEXT,
+            N_OD_PIECE TEXT,
+            DATE_DEPOT_PIECE TEXT,
+            BORDEREAU_PIECE TEXT,
+            FOREIGN KEY (ID_OPERATION) REFERENCES T_OPERATION(ID_OPERATION) ON DELETE CASCADE,
+            FOREIGN KEY (ID_BENEFICIAIRE) REFERENCES T_BENEFICIAIRE(ID_BENEFICIAIRE),
+            FOREIGN KEY (ID_COMPTE) REFERENCES T_COMPTE_BANCAIRE(ID_COMPTE),
+            FOREIGN KEY (ID_SCATEGORIE) REFERENCES T_SCATEGORIE(ID_SCATEGORIE),
+            FOREIGN KEY (ID_RUBRIQUE) REFERENCES T_RUBRIQUE(ID_RUBRIQUE)
+        );
+
+        CREATE TABLE IF NOT EXISTS T_ENGAGEMENT (
+            ID_ENGAGEMENT INTEGER PRIMARY KEY AUTOINCREMENT,
+            ID_OPERATION INTEGER NOT NULL,
+            ID_PIECE INTEGER NOT NULL,
+            ID_BORDEREAU INTEGER,
+            N_ENG TEXT NOT NULL,
+            ANNEE TEXT NOT NULL,
+            NATURE_ENG TEXT NOT NULL,
+            OBJET_ENG TEXT NOT NULL,
+            MONTANT_ENG REAL NOT NULL,
+            AE_ENG REAL NOT NULL,
+            TOTAL_ENG_ANTERIEURE REAL NOT NULL,
+            SOLDE_ANTERIEURE REAL NOT NULL,
+            SOLDE_RELIQUAT REAL NOT NULL,
+            DATE_ENG TEXT,
+            N_VISA_CB TEXT,
+            DATE_VISA_CB TEXT,
+            BORD_DOCS TEXT,
+            BORD_COPIES TEXT,
+            BORD_OBJET TEXT,
+            FOREIGN KEY (ID_OPERATION) REFERENCES T_OPERATION(ID_OPERATION) ON DELETE CASCADE,
+            FOREIGN KEY (ID_PIECE) REFERENCES T_PIECE(ID_PIECE) ON DELETE CASCADE,
+            FOREIGN KEY (ID_BORDEREAU) REFERENCES T_BORDEREAU(ID_BORDEREAU)
+        );
+
+        CREATE TABLE IF NOT EXISTS T_PAIEMENT (
+            ID_PAIEMENT INTEGER PRIMARY KEY AUTOINCREMENT,
+            ID_OPERATION INTEGER NOT NULL,
+            ID_ENG INTEGER NOT NULL,
+            ID_PIECE INTEGER NOT NULL,
+            N_PAI TEXT NOT NULL,
+            ANNEE TEXT NOT NULL,
+            DATE_PAI TEXT NOT NULL,
+            OBJET_PAI TEXT NOT NULL,
+            MONTANT_PAI REAL NOT NULL,
+            TOTAL_PAI REAL NOT NULL,
+            N_MANDAT TEXT,
+            DATE_MANDAT TEXT,
+            DATE_ADMIS TEXT,
+            MONTANT_TRAVAUX_REALISES REAL,
+            AVANCE_FORFAITAIRE REAL,
+            AVANCE_APPROVISIONNEMENT REAL,
+            RETENUE_GARANTIE REAL,
+            PENALITE_RETARD REAL,
+            AUTRE_DEDUCTION REAL,
+            REMBOURSEMENT_AVANCE_FORFAITAIRE REAL,
+            REMBOURSEMENT_AVANCE_APPROVISIONNEMENT REAL,
+            FOREIGN KEY (ID_OPERATION) REFERENCES T_OPERATION(ID_OPERATION) ON DELETE CASCADE,
+            FOREIGN KEY (ID_ENG) REFERENCES T_ENGAGEMENT(ID_ENGAGEMENT) ON DELETE CASCADE,
+            FOREIGN KEY (ID_PIECE) REFERENCES T_PIECE(ID_PIECE) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS T_CP (
+            ID_CP INTEGER PRIMARY KEY AUTOINCREMENT,
+            ID_OPERATION INTEGER NOT NULL,
+            ANNEE TEXT NOT NULL,
+            MONTANT_INITIALE_CP REAL NOT NULL,
+            MONTANT_FINALE_CP REAL NOT NULL,
+            FOREIGN KEY (ID_OPERATION) REFERENCES T_OPERATION(ID_OPERATION) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS T_LOT_OPERATION (
+            ID_LOT INTEGER PRIMARY KEY AUTOINCREMENT,
+            ID_OPERATION INTEGER NOT NULL,
+            N_LOT TEXT NOT NULL,
+            INTITULE_LOT TEXT NOT NULL,
+            MONTANT_INITIALE_LOT REAL NOT NULL,
+            MONTANT_FINALE_LOT REAL NOT NULL,
+            ATTRIBUER INTEGER NOT NULL DEFAULT 0,
+            FOREIGN KEY (ID_OPERATION) REFERENCES T_OPERATION(ID_OPERATION) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS T_LOT_PIECE (
+            ID_LOT_PIECE INTEGER PRIMARY KEY AUTOINCREMENT,
+            ID_LOT INTEGER NOT NULL,
+            ID_PIECE INTEGER NOT NULL,
+            DELAI_EX_JOURS TEXT,
+            FOREIGN KEY (ID_LOT) REFERENCES T_LOT_OPERATION(ID_LOT) ON DELETE CASCADE,
+            FOREIGN KEY (ID_PIECE) REFERENCES T_PIECE(ID_PIECE) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS T_RUBRIQUE_OP (
+            ID_RUBRIQUE_OP INTEGER PRIMARY KEY AUTOINCREMENT,
+            ID_OPERATION INTEGER NOT NULL,
+            ID_RUBRIQUE INTEGER NOT NULL,
+            MONTANT_INITIALE REAL NOT NULL,
+            MONTANT_FINALE REAL,
+            FOREIGN KEY (ID_OPERATION) REFERENCES T_OPERATION(ID_OPERATION) ON DELETE CASCADE,
+            FOREIGN KEY (ID_RUBRIQUE) REFERENCES T_RUBRIQUE(ID_RUBRIQUE)
+        );
+
+        CREATE TABLE IF NOT EXISTS T_SCATEGORIE_OP (
+            ID_SCATEGORIE_OP INTEGER PRIMARY KEY AUTOINCREMENT,
+            ID_OPERATION INTEGER NOT NULL,
+            ID_SCATEGORIE INTEGER NOT NULL,
+            MONTANT_INITIALE REAL NOT NULL,
+            MONTANT_FINALE REAL,
+            FOREIGN KEY (ID_OPERATION) REFERENCES T_OPERATION(ID_OPERATION) ON DELETE CASCADE,
+            FOREIGN KEY (ID_SCATEGORIE) REFERENCES T_SCATEGORIE(ID_SCATEGORIE)
+        );
+
+        CREATE TABLE IF NOT EXISTS T_ODS (
+            ID_ODS INTEGER PRIMARY KEY AUTOINCREMENT,
+            OBJET_ODS TEXT NOT NULL,
+            NATURE_ODS TEXT NOT NULL,
+            DATE_ODS TEXT NOT NULL,
+            ID_PIECE INTEGER NOT NULL,
+            ID_LOT INTEGER,
+            FOREIGN KEY (ID_PIECE) REFERENCES T_PIECE(ID_PIECE) ON DELETE CASCADE,
+            FOREIGN KEY (ID_LOT) REFERENCES T_LOT_OPERATION(ID_LOT)
+        );
+
+        CREATE TABLE IF NOT EXISTS T_DIRECTION (
+            ID_DIRECTION INTEGER PRIMARY KEY AUTOINCREMENT,
+            PORTEFEUILLE TEXT NOT NULL,
+            INT_PORTEFEUILLE TEXT NOT NULL,
+            ORDONATEUR TEXT NOT NULL,
+            DIRECTION TEXT NOT NULL,
+            ACTION TEXT NOT NULL,
+            INT_ACTION TEXT NOT NULL,
+            SACTION TEXT,
+            INT_SACTION TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS T_PROGRAMME (
+            ID_PROGRAMME INTEGER PRIMARY KEY AUTOINCREMENT,
+            PROGRAMME TEXT NOT NULL,
+            INT_PROGRAMME TEXT NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS T_SPROGRAMME (
+            ID_SPROGRAMME INTEGER PRIMARY KEY AUTOINCREMENT,
+            ID_PROGRAMME INTEGER NOT NULL,
+            SPROGRAMME TEXT NOT NULL,
+            INT_SPROGRAMME TEXT NOT NULL,
+            FOREIGN KEY (ID_PROGRAMME) REFERENCES T_PROGRAMME(ID_PROGRAMME) ON DELETE CASCADE
+        );
+    "#)?;
+
+    // Ensure at least one admin user exists
+    let count: i64 = conn
+        .query_row("SELECT COUNT(*) FROM T_USER", [], |row| row.get(0))
+        .unwrap_or(0);
+    if count == 0 {
+        // Valid bcrypt hash of "admin123" (verified)
+        conn.execute(
+            "INSERT INTO T_USER (USERNAME, PASSWORD, ROLE) VALUES (?1, ?2, ?3)",
+            params![
+                "admin",
+                "$2b$10$rA9vBL8p087PyWkp4gge1OkLV2tTLhb.ABfM2k/b.LlpyLoaKM68C",
+                "admin"
+            ],
+        )?;
+    }
+
+    // Encrypt local DB files at rest with Windows EFS (WAL/SHM included).
+    // Safe to call on every startup; EFS is idempotent per file.
+    crate::security::harden_local_db_files(db_path);
+
+    Ok(conn)
+}

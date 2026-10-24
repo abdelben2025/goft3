@@ -9,20 +9,9 @@ pub struct DatabaseState {
 }
 
 pub fn get_db_path(app: &AppHandle) -> Result<PathBuf, Box<dyn std::error::Error>> {
-    // Prefer the folder next to the executable (portable mode) when writable
-    if let Ok(exe_path) = std::env::current_exe() {
-        if let Some(exe_dir) = exe_path.parent() {
-            if exe_dir.exists() {
-                let probe = exe_dir.join(".goft3_write_probe");
-                if std::fs::write(&probe, b"ok").is_ok() {
-                    let _ = std::fs::remove_file(&probe);
-                    return Ok(exe_dir.join("goft3_local.db"));
-                }
-            }
-        }
-    }
-
-    // Fallback: per-user app data directory (e.g. installed under Program Files)
+    // Always use the per-user app data directory so the database location is
+    // identical (and writable) regardless of where the app is installed —
+    // e.g. Program Files, LOCALAPPDATA, or a custom folder like C:\GOFT3.
     let app_dir = app.path().app_data_dir()?;
     std::fs::create_dir_all(&app_dir)?;
     Ok(app_dir.join("goft3_local.db"))

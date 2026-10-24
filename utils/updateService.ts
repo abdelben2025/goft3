@@ -17,9 +17,6 @@ export type UpdateProgressHandler = (percent: number) => void;
 // The pending update returned by tauri-plugin-updater (kept between check and install)
 let pendingUpdate: any = null;
 
-// Updater manifest endpoint (must match the pubkey/version in tauri.conf.json)
-const UPDATE_ENDPOINT = 'https://github.com/abdelben2025/goft3/releases/latest/download/latest.json';
-
 /**
  * Reads the actual app version from the Tauri runtime when available,
  * falling back to the bundled APP_VERSION constant (web preview).
@@ -51,21 +48,10 @@ export const checkForUpdates = async (): Promise<UpdateInfo | null> => {
         return { hasUpdate: false, latestVersion: currentVersion, downloadUrl: '', offline: true };
     }
 
-    // Pre-flight probe of the manifest endpoint: deterministically distinguish
-    // "no release published yet" (HTTP 404) from real network/server failures.
-    try {
-        const probe = await fetch(UPDATE_ENDPOINT, { method: 'HEAD', cache: 'no-store' });
-        if (probe.status === 404) {
-            return { hasUpdate: false, latestVersion: currentVersion, downloadUrl: '', checkFailed: true, noReleases: true };
-        }
-        if (!probe.ok) {
-            return { hasUpdate: false, latestVersion: currentVersion, downloadUrl: '', checkFailed: true };
-        }
-    } catch (probeError) {
-        console.warn('Update manifest probe failed:', probeError);
-        return { hasUpdate: false, latestVersion: currentVersion, downloadUrl: '', checkFailed: true };
-    }
-
+    // NOTE: We intentionally do NOT pre-flight the endpoint from JS. A browser
+    // fetch from the webview is subject to CORS and fails even when the endpoint
+    // is fine, producing a false "cannot reach update server". We rely on the
+    // Tauri updater's own Rust network stack (check()) instead.
     try {
         const { check } = await import('@tauri-apps/plugin-updater');
         const update = await check();
@@ -83,7 +69,11 @@ export const checkForUpdates = async (): Promise<UpdateInfo | null> => {
         };
     } catch (error) {
         console.warn('Update check skipped (Updater error).', error);
-        return { hasUpdate: false, latestVersion: currentVersion, downloadUrl: '', checkFailed: true };
+        // Best-effort: a 404 / "not found" usually means no release published yet.
+        const raw = String((error as any)?.message || '');
+        const status = String((error as any)?.status ?? '');
+        const noReleases = /404|not found|no release|unable to find|does not exist/i.test(raw) || /404/.test(status);
+        return { hasUpdate: false, latestVersion: currentVersion, downloadUrl: '', checkFailed: true, noReleases };
     }
 };
 

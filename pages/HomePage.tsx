@@ -10,11 +10,10 @@ import Card from '../components/Card';
 
 interface HomePageProps {
     navigate: (page: Page, id?: number, tab?: string) => void;
-    onLogout: () => void;
     currentUser: User;
 }
 
-const HomePage: React.FC<HomePageProps> = ({ navigate, onLogout, currentUser }) => {
+const HomePage: React.FC<HomePageProps> = ({ navigate, currentUser }) => {
     const { onlineUsers } = useData();
     const { t, dir } = useLanguage();
     
@@ -248,13 +247,6 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, onLogout, currentUser }) 
                     >
                         <i className="bi bi-search text-lg md:text-xl group-hover:scale-110 transfrom transition-transform"></i>
                     </button>
-                    <button
-                        onClick={onLogout}
-                        className="bg-white text-red-500 border border-red-100 p-2 md:p-3 rounded-xl shadow-sm hover:bg-red-50 transition-all duration-100 flex items-center justify-center group flex-shrink-0"
-                        title={t('btn.logout')}
-                    >
-                        <i className={`bi ${dir === 'rtl' ? 'bi-box-arrow-left' : 'bi-box-arrow-right'} text-lg md:text-xl group-hover:scale-110 transfrom transition-transform`}></i>
-                    </button>
                 </motion.div>
             </header>
 
@@ -410,7 +402,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, onLogout, currentUser }) 
                                     onClick={() => setSelectedFilter(null)}
                                     className="text-[10px] bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1 rounded transition-colors font-bold"
                                 >
-                                    عرض الكل
+                                    غلق العرض 
                                 </button>
                             )}
                         </div>

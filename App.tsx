@@ -312,7 +312,7 @@ const AuthenticatedApp: React.FC<{
                     // Check if it's a sub-page or print page that might be allowed implicitly?
                     // For now, if not in list, redirect to HOME
                     if (!currentPage.startsWith('PRINT_') && currentPage !== 'OPERATION_DETAILS') {
-                         return <HomePage navigate={navigate} onLogout={handleLogoutWithSync} currentUser={currentUser} />;
+                         return <HomePage navigate={navigate} currentUser={currentUser} />;
                     }
                 }
             } catch (e) {
@@ -321,16 +321,16 @@ const AuthenticatedApp: React.FC<{
         }
 
         if (isViewer && !viewerAllowedPages.includes(currentPage)) {
-            return <HomePage navigate={navigate} onLogout={handleLogoutWithSync} currentUser={currentUser} />;
+            return <HomePage navigate={navigate} currentUser={currentUser} />;
         }
 
         if (adminOnlyPages.includes(currentPage) && !isAdmin) {
-            return <HomePage navigate={navigate} onLogout={handleLogoutWithSync} currentUser={currentUser} />;
+            return <HomePage navigate={navigate} currentUser={currentUser} />;
         }
 
         switch (currentPage) {
             case 'HOME':
-                return <HomePage navigate={navigate} onLogout={handleLogoutWithSync} currentUser={currentUser} />;
+                return <HomePage navigate={navigate} currentUser={currentUser} />;
             case 'OPERATIONS':
                 return <OperationsPage navigate={navigate} currentUser={currentUser} onGoBack={onGoBack} onUpdateUser={onUpdateUser} />;
             case 'OPERATION_DETAILS':
@@ -339,7 +339,7 @@ const AuthenticatedApp: React.FC<{
                     try {
                         const allowedOps = JSON.parse(currentUser.ALLOWED_OPERATIONS) as any[];
                         if (allowedOps.length > 0 && !allowedOps.map(Number).includes(Number(selectedOperationId))) {
-                             return <HomePage navigate={navigate} onLogout={handleLogoutWithSync} currentUser={currentUser} />;
+                             return <HomePage navigate={navigate} currentUser={currentUser} />;
                         }
                     } catch (e) {
                          console.error("Error parsing allowed operations in App.tsx", e);
@@ -425,7 +425,7 @@ const AuthenticatedApp: React.FC<{
             case 'PRINT_MONTHLY_PAYMENTS':
                 return <PrintMonthlyPaymentsPage navigate={navigate} />;
             default:
-                return <HomePage navigate={navigate} onLogout={handleLogoutWithSync} currentUser={currentUser} />;
+                return <HomePage navigate={navigate} currentUser={currentUser} />;
         }
     }, [currentUser, currentPage, navigate, onLogout, handleLogoutWithSync, selectedEngagementId, selectedOperationId, selectedPaiementId, selectedTab, onGoBack, onUpdateUser]);
 

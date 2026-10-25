@@ -72,6 +72,14 @@ input::placeholder, textarea::placeholder {
 
 @media print {
   .no-print { display: none !important; }
+  /* منع صفحة فارغة إضافية: إلغاء الارتفاع الإجباري والهوامش أثناء الطباعة */
+  html, body {
+    height: auto !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .min-h-screen { min-height: 0 !important; }
 }
 
 @keyframes pulse-green {

@@ -9,6 +9,7 @@ import PageWrapper from '../components/PageWrapper';
 import Modal from '../components/Modal';
 import ConfirmActionModal from '../components/ConfirmActionModal';
 import AddBeneficiaryForm from '../components/forms/AddBeneficiaryForm';
+import BeneficiaryDetailsModal from '../components/BeneficiaryDetailsModal';
 import { exportToFormattedExcel } from '../utils/exportToCsv';
 import CustomDropdown from '../components/CustomDropdown';
 import ExcelJS from 'exceljs';
@@ -27,6 +28,7 @@ const BeneficiairesPage: React.FC<BeneficiairesPageProps> = ({ navigate, onGoBac
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingBeneficiary, setEditingBeneficiary] = useState<{ beneficiary: Beneficiaire, accounts: CompteBancaire[] } | undefined>(undefined);
     const [selectedBeneficiaryId, setSelectedBeneficiaryId] = useState<number | null>(null);
+    const [detailsBeneficiaryId, setDetailsBeneficiaryId] = useState<number | null>(null);
     const [highlightId, setHighlightId] = useState<number | null>(null);
     const [filterId, setFilterId] = useState<string>('');
     const [formKey, setFormKey] = useState(0); // Add key state to force remount
@@ -56,11 +58,6 @@ const BeneficiairesPage: React.FC<BeneficiairesPageProps> = ({ navigate, onGoBac
             return () => clearTimeout(timer);
         }
     }, [initialBeneficiaryId]);
-
-    const selectedBeneficiaryAccounts = useMemo(() => {
-        if (!selectedBeneficiaryId) return [];
-        return db.T_COMPTE_BANCAIRE.filter(acc => acc.ID_BENEFICIAIRE === selectedBeneficiaryId).sort((a, b) => a.ID_COMPTE - b.ID_COMPTE);
-    }, [selectedBeneficiaryId, db.T_COMPTE_BANCAIRE]);
 
     const beneficiaryOptions = useMemo(() => {
         return db.T_BENEFICIAIRE.map(b => ({ value: b.ID_BENEFICIAIRE, label: b.BENEFICIAIRE }));
@@ -383,15 +380,13 @@ const BeneficiairesPage: React.FC<BeneficiairesPageProps> = ({ navigate, onGoBac
             }
         >
             <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".xlsx, .xls" />
-            <div className="bg-white p-3 rounded-lg shadow-md overflow-auto max-h-[calc(100vh-16rem)] custom-scrollbar">
+            <div className="bg-white p-3 rounded-lg shadow-md overflow-auto max-h-[calc(100vh-5rem)] custom-scrollbar">
                 <table className="w-full text-right min-w-[900px] relative">
                     <thead className="bg-blue-200 sticky top-0 z-20 shadow-sm">
                         <tr>
                             <th className="p-1 text-xs font-semibold text-gray-700 uppercase tracking-wider bg-blue-200 sticky top-0 z-20">{t('col.beneficiary')}</th>
                             <th className="p-1 text-xs font-semibold text-gray-700 uppercase tracking-wider bg-blue-200 sticky top-0 z-20">{t('col.address')}</th>
-                            <th className="p-1 text-xs font-semibold text-gray-700 uppercase tracking-wider bg-blue-200 sticky top-0 z-20">{t('col.bank_accounts')}</th>
-                            <th className="p-1 text-xs font-semibold text-gray-700 uppercase tracking-wider bg-blue-200 sticky top-0 z-20">{t('col.rc')}</th>
-                            <th className="p-1 text-xs font-semibold text-gray-700 uppercase tracking-wider bg-blue-200 sticky top-0 z-20">{t('col.tax_id')}</th>
+                            <th className="p-1 text-xs font-semibold text-gray-700 uppercase tracking-wider bg-blue-200 sticky top-0 z-20">تفاصيل المستفيد</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -412,45 +407,28 @@ const BeneficiairesPage: React.FC<BeneficiairesPageProps> = ({ navigate, onGoBac
                                     {b.BENEFICIAIRE}
                                 </td>
                                 <td className="p-2 text-gray-700">{b.ADRESSE}</td>
-                                <td className="p-2 text-gray-700 text-center">{db.T_COMPTE_BANCAIRE.filter(acc => acc.ID_BENEFICIAIRE === b.ID_BENEFICIAIRE).length}</td>
-                                <td className="p-2 text-gray-700">{b.RC || '---'}</td>
-                                <td className="p-2 text-gray-700">{b.CODE_FISCALE || '---'}</td>
+                                <td className="p-2 text-center">
+                                    <button
+                                        type="button"
+                                        onClick={(e) => { e.stopPropagation(); setDetailsBeneficiaryId(b.ID_BENEFICIAIRE); }}
+                                        className="inline-flex items-center gap-1 bg-blue-600 text-white text-[11px] font-bold px-3 py-1 rounded-full hover:bg-blue-700 transition-colors"
+                                    >
+                                        <i className="bi bi-eye"></i> تفاصيل
+                                    </button>
+                                </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
             </div>
 
-            {selectedBeneficiaryId && (
-                <div className="mt-4 bg-white p-3 rounded-lg shadow-md">
-                    <h3 className="text-base font-bold text-gray-800 mb-2">
-                        {t('col.bank_accounts')} {db.T_BENEFICIAIRE.find(b => b.ID_BENEFICIAIRE === selectedBeneficiaryId)?.BENEFICIAIRE}
-                    </h3>
-                     {selectedBeneficiaryAccounts.length > 0 ? (
-                        <div className="overflow-auto max-h-64 custom-scrollbar">
-                            <table className="w-full text-right relative">
-                                <thead className="bg-gray-200 sticky top-0 z-10 shadow-sm">
-                                    <tr>
-                                        <th className="p-1 text-xs font-semibold text-gray-700 bg-gray-200 sticky top-0 z-10">رقم الحساب</th>
-                                        <th className="p-1 text-xs font-semibold text-gray-700 bg-gray-200 sticky top-0 z-10">البنك</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {selectedBeneficiaryAccounts.map(acc => (
-                                        <tr key={acc.ID_COMPTE} className="border-b text-xs">
-                                            <td className="p-1 text-gray-700">{acc.RIB}</td>
-                                            <td className="p-1 text-gray-700">{acc.BANQUE}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    ) : (
-                        <p className="text-center text-gray-500 py-2 text-xs">{t('lbl.no_data')}</p>
-                    )}
-                </div>
-            )}
-             <Modal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditingBeneficiary(undefined); }} title={editingBeneficiary ? "تعديل مستفيد" : "إضافة مستفيد"}>
+            <BeneficiaryDetailsModal
+                isOpen={detailsBeneficiaryId !== null}
+                beneficiaryId={detailsBeneficiaryId}
+                onClose={() => setDetailsBeneficiaryId(null)}
+            />
+
+            <Modal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditingBeneficiary(undefined); }} title={editingBeneficiary ? "تعديل مستفيد" : "إضافة مستفيد"}>
                 <AddBeneficiaryForm key={formKey} onClose={() => { setIsModalOpen(false); setEditingBeneficiary(undefined); }} onSave={handleSaveBeneficiary} initialData={editingBeneficiary} />
             </Modal>
             <ConfirmActionModal

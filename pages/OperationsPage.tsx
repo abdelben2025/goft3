@@ -6,7 +6,6 @@ import { useToast } from '../context/ToastContext';
 import { errorMessage } from '../utils/errorMessage';
 import { useLanguage } from '../context/LanguageContext';
 import PageWrapper from '../components/PageWrapper';
-import Card from '../components/Card';
 import Modal from '../components/Modal';
 import ConfirmActionModal from '../components/ConfirmActionModal';
 import AddOperationForm from '../components/forms/AddOperationForm';
@@ -108,86 +107,6 @@ const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onU
         
         return Array.from(types).sort();
     }, [db.T_OPERATION]);
-
-    const summary = useMemo(() => {
-        if (loading) return { totalAE: 0, totalEngagements: 0, totalPaiements: 0, totalCPCurrentYear: 0, activitySummary: '---', programSummary: '---', sprogramSummary: '---' };
-        
-        const openOperations = db.T_OPERATION.filter(op => {
-            // Authorization Check
-            if (currentUser.ROLE !== 'admin' && currentUser.ALLOWED_OPERATIONS) {
-                try {
-                    const allowedOps = JSON.parse(currentUser.ALLOWED_OPERATIONS) as number[];
-                    if (allowedOps.length > 0 && !allowedOps.includes(op.ID_OPERATION)) {
-                        return false;
-                    }
-                } catch (e) {
-                    console.error("Auth check error:", e);
-                }
-            }
-
-            if (op.status !== 'جارية') return false;
-            if (selectedActivity) {
-                if (op.N_OPERATION.split('.')[5] !== selectedActivity) return false;
-            }
-            if (debouncedSearchQuery) {
-                const query = debouncedSearchQuery.toLowerCase();
-                if (!op.N_OPERATION.toLowerCase().includes(query) && !op.INT_OPERATION.toLowerCase().includes(query)) return false;
-            }
-            return true;
-        });
-        const openOperationIds = new Set(openOperations.map(op => op.ID_OPERATION));
-
-        const totalAE = db.T_RUBRIQUE_OP.filter(item => openOperationIds.has(item.ID_OPERATION)).reduce((sum, item) => sum + (item.MONTANT_FINALE ?? item.MONTANT_INITIALE), 0);
-        const totalEngagements = db.T_ENGAGEMENT.filter(eng => openOperationIds.has(eng.ID_OPERATION) && (eng.NATURE_ENG === 'التزام' || eng.NATURE_ENG === 'سحب') && parseInt(eng.ANNEE) <= parseInt(selectedYear)).reduce((sum, item) => sum + item.MONTANT_ENG, 0);
-        const totalPaiements = db.T_PAIEMENT.filter(pai => openOperationIds.has(pai.ID_OPERATION) && parseInt(pai.ANNEE) <= parseInt(selectedYear)).reduce((sum, item) => sum + item.MONTANT_PAI, 0);
-        const totalCPCurrentYear = db.T_CP.filter(cp => openOperationIds.has(cp.ID_OPERATION) && cp.ANNEE === selectedYear).reduce((sum, item) => sum + item.MONTANT_FINALE_CP, 0);
-
-        // Advanced Logic for counts based on mask: N.1.2.3.4.5... (parts index 3=Prog, 4=SProg, 5=Activity)
-        const actGroups: Record<string, number> = {};
-        const prgGroups: Record<string, number> = {};
-        const sprGroups: Record<string, number> = {};
-
-        openOperations.forEach(op => {
-            const parts = op.N_OPERATION.split('.');
-            const prg = parts[3] || '---';
-            const spr = parts[4] || '---';
-            const act = parts[5] || '---';
-
-            actGroups[act] = (actGroups[act] || 0) + 1;
-            prgGroups[prg] = (prgGroups[prg] || 0) + 1;
-            sprGroups[spr] = (sprGroups[spr] || 0) + 1;
-        });
-
-        // 1. Activity Text
-        let activitySummary = '';
-        if (selectedActivity) {
-            activitySummary = `النشاط ${selectedActivity}: ${actGroups[selectedActivity] || 0} عملية`;
-        } else {
-            // Find activity with most operations for preview or generic total
-            const topAct = Object.entries(actGroups).sort((a,b) => b[1] - a[1])[0];
-            activitySummary = topAct ? `النشاط ${topAct[0]}: ${topAct[1]} عملية` : '0 عمليات';
-        }
-
-        // 2. Program Text
-        const topPrg = Object.entries(prgGroups).sort((a,b) => b[1] - a[1])[0];
-        const programSummary = topPrg ? `البرنامج ${topPrg[0]}: ${topPrg[1]} عملية` : '0 عمليات';
-
-        // 3. Sub-Program Text (List top 3 if multiple exist)
-        const spEntries = Object.entries(sprGroups).sort((a,b) => a[0].localeCompare(b[0])).slice(0, 3);
-        const sprogramSummary = spEntries.length > 0 
-            ? spEntries.map(e => `${e[0]} به ${e[1]}`).join(' | ') 
-            : '0 عمليات';
-
-        return { 
-            totalAE, 
-            totalEngagements, 
-            totalPaiements, 
-            totalCPCurrentYear,
-            activitySummary,
-            programSummary,
-            sprogramSummary
-        };
-    }, [db, loading, selectedYear, selectedActivity, debouncedSearchQuery, currentUser.ROLE, currentUser.ALLOWED_OPERATIONS]);
 
     const engGroups = useMemo(() => {
         const map = new Map<number, typeof db.T_ENGAGEMENT>();
@@ -387,14 +306,16 @@ const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onU
         Object.keys(grouped).sort().forEach(catCode => {
             const scatsInCat = grouped[catCode];
             const catName = scatsInCat[Object.keys(scatsInCat)[0]][Object.keys(scatsInCat[Object.keys(scatsInCat)[0]])[0]][Object.keys(scatsInCat[Object.keys(scatsInCat)[0]][Object.keys(scatsInCat[Object.keys(scatsInCat)[0]])[0]])[0]][0].catInt || catCode;
-            
-            tableRows.push({ type: 'catHeader', id: `cat-${catCode}`, catCode, catName });
+            const catOpsCount = Object.values(scatsInCat).reduce((sum, scat) => sum + Object.values(scat).reduce((s, prg) => s + Object.values(prg).reduce((x, arr) => x + arr.length, 0), 0), 0);
+
+            tableRows.push({ type: 'catHeader', id: `cat-${catCode}`, catCode, catName, count: catOpsCount });
 
             Object.keys(scatsInCat).sort().forEach(scatCode => {
                 const programsInScat = scatsInCat[scatCode];
                 const scatName = scatCode === 'NO_SCAT' ? 'مبالغ غير موزعة' : (programsInScat[Object.keys(programsInScat)[0]][Object.keys(programsInScat[Object.keys(programsInScat)[0]])[0]][0].scatInt || scatCode);
-                
-                tableRows.push({ type: 'scatHeader', id: `scat-${catCode}-${scatCode}`, scatCode, scatName });
+                const scatOpsCount = Object.values(programsInScat).reduce((s, prg) => s + Object.values(prg).reduce((x, arr) => x + arr.length, 0), 0);
+
+                tableRows.push({ type: 'scatHeader', id: `scat-${catCode}-${scatCode}`, scatCode, scatName, count: scatOpsCount });
 
                 Object.keys(programsInScat).sort().forEach(prgCode => {
                     const sprogramsInPrg = programsInScat[prgCode];
@@ -403,7 +324,7 @@ const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onU
                         const opsInSprg = sprogramsInPrg[sprgCode];
                         
                         // Optional: Sub-program Header
-                        tableRows.push({ type: 'sprgHeader', id: `sprg-${catCode}-${scatCode}-${prgCode}-${sprgCode}`, prgCode, sprgCode });
+                        tableRows.push({ type: 'sprgHeader', id: `sprg-${catCode}-${scatCode}-${prgCode}-${sprgCode}`, prgCode, sprgCode, count: opsInSprg.length });
 
                         tableRows.push(...opsInSprg);
                         
@@ -963,46 +884,10 @@ const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onU
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-2">
-                    <Card title={t('card.final_ae')} value={formatCurrency(summary.totalAE)} icon="bi-journal-check" color="bg-blue-600" compact />
-                    <Card title={t('card.total_eng')} value={formatCurrency(summary.totalEngagements)} icon="bi-pen" color="bg-amber-600" compact />
-                    <Card title={t('card.total_pay')} value={formatCurrency(summary.totalPaiements)} icon="bi-cash-coin" color="bg-emerald-600" compact />
-                    <Card title={`إعتماد الدفع ${selectedYear}`} value={formatCurrency(summary.totalCPCurrentYear)} icon="bi-calendar-check" color="bg-indigo-600" compact />
-                    
-                    <div className="bg-white p-1.5 h-11 rounded-lg shadow-sm border border-gray-100 flex items-center overflow-hidden">
-                        <div className="p-1 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600 shrink-0">
-                            <i className="bi bi-bar-chart-steps text-xs"></i>
-                        </div>
-                        <div className="mr-1 overflow-hidden min-w-0">
-                            <p className="text-[8px] text-gray-500 font-bold uppercase truncate">الأنشطة</p>
-                            <p className="text-[10px] font-bold text-gray-800 truncate">{summary.activitySummary}</p>
-                        </div>
-                    </div>
-
-                    <div className="bg-white p-1.5 h-11 rounded-lg shadow-sm border border-gray-100 flex items-center overflow-hidden">
-                        <div className="p-1 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
-                            <i className="bi bi-collection-play text-xs"></i>
-                        </div>
-                        <div className="mr-1 overflow-hidden min-w-0">
-                            <p className="text-[8px] text-gray-500 font-bold uppercase truncate">البرامج</p>
-                            <p className="text-[10px] font-bold text-gray-800 truncate">{summary.programSummary}</p>
-                        </div>
-                    </div>
-
-                    <div className="bg-white p-1.5 h-11 rounded-lg shadow-sm border border-gray-100 flex items-center overflow-hidden">
-                        <div className="p-1 rounded-lg bg-cyan-100 flex items-center justify-center text-cyan-600 shrink-0">
-                            <i className="bi bi-diagram-3-fill text-xs"></i>
-                        </div>
-                        <div className="mr-1 overflow-hidden min-w-0">
-                            <p className="text-[8px] text-gray-500 font-bold uppercase truncate">البرامج الفرعية</p>
-                            <p className="text-[10px] font-bold text-gray-800 truncate">{summary.sprogramSummary}</p>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200 mt-2">
-                <div className="overflow-auto max-h-[calc(100vh-420px)] custom-scrollbar">
+                <div className="overflow-auto max-h-[calc(100vh-120px)] custom-scrollbar">
                     <table className="w-full text-center min-w-[1200px] border-collapse relative">
                         <thead className="bg-sky-100 text-gray-600 sticky top-0 z-20 shadow-sm">
                             <tr className="border-b border-gray-200">
@@ -1075,6 +960,7 @@ const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onU
                                                     <i className="bi bi-folder-fill"></i>
                                                     <span>الصنف: {item.catName}</span>
                                                     <span className="opacity-70 text-xs px-2 py-0.5 bg-blue-500 rounded ml-2">{item.catCode}</span>
+                                                    <span className="text-[10px] bg-white/20 rounded-full px-2 py-0.5">عدد العمليات: {item.count}</span>
                                                 </div>
                                             </td>
                                         </tr>
@@ -1086,6 +972,7 @@ const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onU
                                             <td colSpan={11} className="p-2 px-8 text-right underline decoration-blue-200 decoration-2 underline-offset-2">
                                                 <i className="bi bi-arrow-return-left ml-2 text-blue-400"></i>
                                                 الصنف الفرعي: {item.scatName} {item.scatCode !== 'NO_SCAT' ? `(${item.scatCode})` : ''}
+                                                <span className="text-[10px] bg-blue-100 text-blue-700 rounded-full px-2 py-0.5 mr-2">عدد العمليات: {item.count}</span>
                                             </td>
                                         </tr>
                                     );
@@ -1097,6 +984,7 @@ const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onU
                                                 <span className="inline-flex items-center">
                                                     <span className="w-2 h-2 rounded-full bg-gray-300 ml-2"></span>
                                                     البرنامج: {item.prgCode} <i className="bi bi-dot mx-1"></i> البرنامج الفرعي: {item.sprgCode}
+                                                    <span className="text-[10px] bg-gray-200 text-gray-600 rounded-full px-2 py-0.5 mr-2">عدد العمليات: {item.count}</span>
                                                 </span>
                                             </td>
                                         </tr>

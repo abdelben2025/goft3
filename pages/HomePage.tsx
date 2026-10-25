@@ -509,6 +509,22 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, currentUser }) => {
                     </div>
                 </motion.div>
             )}
+
+            {/* Shortcuts hint */}
+            <div className="w-full max-w-none mt-8 text-center text-[10px] text-gray-400 font-medium leading-relaxed select-none">
+                <span className="inline-flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+                    <span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+O</kbd> العمليات</span>
+                    <span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+D</kbd> الوثائق</span>
+                    <span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+B</kbd> المستفيدين</span>
+                    <span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+S</kbd> الإعدادات</span>
+                    <span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+H</kbd> الرئيسية</span>
+                    <span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+F</kbd> الوضعية المالية</span>
+                    <span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+P</kbd> البرامج</span>
+                    <span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+C</kbd> الأصناف</span>
+                    <span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+K</kbd> البحث</span>
+                    <span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Alt+←</kbd> رجوع</span>
+                </span>
+            </div>
         </div>
     );
 };

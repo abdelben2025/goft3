@@ -52,6 +52,25 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose, navigate }
         );
     };
 
+    const opYear = useMemo(() => {
+        const m = new Map<number, number>();
+        db.T_ENGAGEMENT.forEach(e => {
+            const y = parseInt(e.ANNEE, 10);
+            if (!isNaN(y)) {
+                const cur = m.get(e.ID_OPERATION);
+                if (!cur || y < cur) m.set(e.ID_OPERATION, y);
+            }
+        });
+        db.T_CP.forEach(c => {
+            const y = parseInt(c.ANNEE, 10);
+            if (!isNaN(y)) {
+                const cur = m.get(c.ID_OPERATION);
+                if (!cur || y < cur) m.set(c.ID_OPERATION, y);
+            }
+        });
+        return m;
+    }, [db.T_ENGAGEMENT, db.T_CP]);
+
     const results = useMemo(() => {
         if (query.trim().length < 2) return [];
         const q = query.toLowerCase().trim();
@@ -92,12 +111,19 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose, navigate }
         }
 
         if (active('transfer')) {
+            // Logic: if the query contains a dot (.) treat it as an amount search;
+            // otherwise treat it as a transfer-number-only search.
+            const amountMode = q.includes('.');
             db.T_PAIEMENT.forEach(p => {
-                const byNum = (p.N_MANDAT || '').toLowerCase().includes(q);
-                const amountStr = String(p.MONTANT_PAI).toLowerCase();
-                const formattedAmount = formatCurrency(p.MONTANT_PAI).toLowerCase();
-                const byAmount = amountStr.includes(q) || formattedAmount.includes(q);
-                if (byNum || byAmount) {
+                let match = false;
+                if (amountMode) {
+                    const rawAmount = String(p.MONTANT_PAI).toLowerCase();
+                    const formattedAmount = formatCurrency(p.MONTANT_PAI).toLowerCase();
+                    match = rawAmount.includes(q) || formattedAmount.includes(q);
+                } else {
+                    match = (p.N_MANDAT || '').toLowerCase().includes(q);
+                }
+                if (match) {
                     foundResults.push({
                         type: 'transfer',
                         data: p,
@@ -110,8 +136,32 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose, navigate }
             });
         }
 
+        // ترتيب النتائج: السنة المالية الحالية أولًا، ثم السنوات السابقة تنازليًا، ثم بدون سنة.
+        const currentYear = new Date().getFullYear();
+        const yearOf = (r: any): number => {
+            if (r.type === 'transfer') return parseInt(r.data.ANNEE, 10) || 0;
+            if (r.type === 'operation' || r.type === 'lot') return opYear.get(r.id) || 0;
+            if (r.type === 'piece') {
+                const opY = opYear.get(r.data.ID_OPERATION) || 0;
+                if (opY) return opY;
+                const engY = db.T_ENGAGEMENT.find(e => Number(e.ID_PIECE) === Number(r.data.ID_PIECE))?.ANNEE;
+                const paiY = db.T_PAIEMENT.find(p => Number(p.ID_PIECE) === Number(r.data.ID_PIECE))?.ANNEE;
+                return parseInt(engY || paiY || '', 10) || 0;
+            }
+            return 0; // مستفيد
+        };
+        foundResults.sort((a, b) => {
+            const ya = yearOf(a);
+            const yb = yearOf(b);
+            const rankA = ya === currentYear ? 0 : (ya > 0 ? 1 : 2);
+            const rankB = yb === currentYear ? 0 : (yb > 0 ? 1 : 2);
+            if (rankA !== rankB) return rankA - rankB;
+            if (rankA === 1) return yb - ya; // السنوات السابقة تنازليًا
+            return 0;
+        });
+
         return foundResults.slice(0, 50);
-    }, [query, db, selectedModes]);
+    }, [query, db, selectedModes, opYear]);
 
     const openBeneficiary = (id: number) => setBeneficiaryId(id);
 

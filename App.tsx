@@ -246,14 +246,29 @@ const AuthenticatedApp: React.FC<{
 
         // Keyboard shortcuts
         const handleKeyDown = (e: KeyboardEvent) => {
-            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            const ctrl = e.ctrlKey || e.metaKey;
+            const key = e.key.toLowerCase();
+
+            if (ctrl && key === 'k') {
                 e.preventDefault();
                 setIsSearchOpen(prev => !prev);
+                return;
             }
-            if (e.altKey && e.key === 's') {
+            if (e.altKey && key === 's') {
                 e.preventDefault();
                 setIsSearchOpen(prev => !prev);
+                return;
             }
+
+            if (ctrl && key === 'o') { e.preventDefault(); navigate('OPERATIONS'); return; }
+            if (ctrl && key === 'd') { e.preventDefault(); navigate('DOCUMENTS'); return; }
+            if (ctrl && key === 'b') { e.preventDefault(); navigate('BENEFICIARIES'); return; }
+            if (ctrl && key === 's') { e.preventDefault(); navigate('SETTINGS'); return; }
+            if (ctrl && key === 'h') { e.preventDefault(); navigate('HOME'); return; }
+            if (ctrl && key === 'f') { e.preventDefault(); navigate('FINANCIAL_STATUS'); return; }
+            if (ctrl && key === 'p') { e.preventDefault(); navigate('PROGRAMME'); return; }
+            if (ctrl && key === 'c') { e.preventDefault(); navigate('CATEGORIE'); return; }
+            if (e.altKey && key === 'arrowleft') { e.preventDefault(); onGoBack?.(); return; }
         };
         window.addEventListener('keydown', handleKeyDown);
 
@@ -265,7 +280,7 @@ const AuthenticatedApp: React.FC<{
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('open-global-search', handleOpenSearch);
         };
-    }, [currentUser, joinPresence, leavePresence, refreshData]);
+    }, [currentUser, joinPresence, leavePresence, refreshData, navigate, onGoBack]);
 
     const renderPage = useMemo(() => {
         const isAdmin = currentUser.ROLE === 'admin';

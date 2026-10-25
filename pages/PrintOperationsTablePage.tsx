@@ -248,7 +248,7 @@ const PrintOperationsTablePage: React.FC<PrintOperationsTablePageProps> = ({ nav
     const direction = db.T_DIRECTION[0];
 
     return (
-        <div className="bg-gray-200 p-4 min-h-screen">
+        <div className="p-4 min-h-screen">
             <style>{`
                 @media print {
                     @page {
@@ -258,8 +258,6 @@ const PrintOperationsTablePage: React.FC<PrintOperationsTablePageProps> = ({ nav
                     .no-print { display: none !important; }
                     body {
                         margin: 0;
-                        -webkit-print-color-adjust: exact;
-                        print-color-adjust: exact;
                         background: white;
                     }
                     .print-area {
@@ -300,7 +298,7 @@ const PrintOperationsTablePage: React.FC<PrintOperationsTablePageProps> = ({ nav
                 </div>
             </div>
             
-            <div className="print-area bg-white p-6 mx-auto max-w-full shadow-lg border border-gray-300">
+            <div className="print-area bg-white p-6 mx-auto max-w-full">
                 <header className="text-center mb-4 relative">
                     <p className="font-bold text-sm mb-4">{t('print.header.republic')}</p>
                     <div className="flex justify-between text-xs font-bold mb-4">

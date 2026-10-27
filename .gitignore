@@ -15,6 +15,9 @@ dist-ssr
 # Tauri / Rust build artifacts
 src-tauri/target
 
+# Accidental user-home copy
+/~
+
 # Staged release artifacts (uploaded as GitHub Release assets, not committed)
 release/
 

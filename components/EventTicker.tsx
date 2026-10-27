@@ -39,15 +39,10 @@ const EventTicker: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
                     </div>
                 )}
 
-                {isLocalDbConnected ? (
-                    <div className="flex items-center gap-2 bg-blue-600 px-3 py-0.5 rounded-full" title="قاعدة البيانات المحلية (goft3_local.db)">
-                        <i className="bi bi-database-check"></i>
-                        <span className="text-xs font-bold">قاعدة البيانات المحلية موجودة</span>
-                    </div>
-                ) : (
-                    <div className="flex items-center gap-2 bg-gray-600 px-3 py-0.5 rounded-full" title="قاعدة البيانات المحلية (goft3_local.db)">
+                {!isLocalDbConnected && (
+                    <div className="flex items-center gap-2 bg-red-100 text-red-700 border border-red-300 px-3 py-0.5 rounded-full" title="قاعدة البيانات المحلية (goft3_local.db) غير متوفرة">
                         <i className="bi bi-database-x"></i>
-                        <span className="text-xs font-bold">قاعدة البينات المحلية غير موجودة</span>
+                        <span className="text-xs font-bold">قاعدة البيانات المحلية غير موجودة</span>
                     </div>
                 )}
             </div>

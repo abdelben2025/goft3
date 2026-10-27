@@ -16,7 +16,10 @@ const natureOdsOptions = ["انطلاق", "ايقاف", "استئناف", "خت�
 
 const AddOdsForm: React.FC<AddOdsFormProps> = ({ onClose, onSave, pieceId, initialData, associatedOds, associatedLots = [] }) => {
     const [objetOds, setObjetOds] = useState('');
-    const [natureOds, setNatureOds] = useState(natureOdsOptions[0]);
+    const [natureOds, setNatureOds] = useState(() => {
+        if (initialData) return initialData.NATURE_ODS;
+        return associatedOds.length === 0 ? 'انطلاق' : 'ايقاف';
+    });
     const [dateOds, setDateOds] = useState('');
     const [selectedLotId, setSelectedLotId] = useState<number | ''>(''); // Empty means "Global" / "Piece"
     const [notification, setNotification] = useState<{ message: string; type: 'error' | 'info' } | null>(null);
@@ -46,45 +49,65 @@ const AddOdsForm: React.FC<AddOdsFormProps> = ({ onClose, onSave, pieceId, initi
             return;
         }
 
-        // Filter ODS history based on the current scope (Global or specific Lot)
-        const currentScopeOds = associatedOds.filter(o => 
+        // Build the full timeline for the current scope, including this record (new or edited)
+        const scopeOds = associatedOds.filter(o =>
             (selectedLotId === '' && !o.ID_LOT) || (o.ID_LOT === selectedLotId)
         );
 
-        const sortedOds = [...currentScopeOds]
-            .filter(ods => ods.ID_ODS !== initialData?.ID_ODS)
-            .sort((a, b) => compareDates(a.DATE_ODS, b.DATE_ODS));
+        const pendingRecord = initialData
+            ? { ...initialData, DATE_ODS: dateOds, NATURE_ODS: natureOds }
+            : { ID_ODS: Number.MIN_SAFE_INTEGER, DATE_ODS: dateOds, NATURE_ODS: natureOds, ID_LOT: selectedLotId || null };
 
-        const lastOds = sortedOds.length > 0 ? sortedOds[sortedOds.length - 1] : null;
+        const timeline = [
+            ...scopeOds.filter(o => o.ID_ODS !== initialData?.ID_ODS),
+            pendingRecord,
+        ].sort((a, b) => compareDates(a.DATE_ODS, b.DATE_ODS));
 
         setNotification(null); // Reset on each change
 
-        if (lastOds) {
-            // Allow 'Conclusion' (ختام) on the same day as 'Resumption' (استئناف)
-            const isClosingOnResumptionDay = (natureOds === 'ختام' && lastOds.NATURE_ODS === 'استئناف' && compareDates(dateOds, lastOds.DATE_ODS) === 0);
-
-            if (compareDates(dateOds, lastOds.DATE_ODS) < 0 || (compareDates(dateOds, lastOds.DATE_ODS) === 0 && !isClosingOnResumptionDay)) {
-                setNotification({ message: `التاريخ الجديد يجب أن يكون بعد تاريخ آخر أمر خدمة (${lastOds.DATE_ODS}) لهذا النطاق.`, type: 'error' });
+        // Chronological order: a later order must not be placed before its predecessor
+        for (let i = 1; i < timeline.length; i++) {
+            if (compareDates(timeline[i].DATE_ODS, timeline[i - 1].DATE_ODS) < 0) {
+                setNotification({ message: `التاريخ الجديد يجب أن لا يكون قبل التاريخ السابق لأمر الخدمة (${timeline[i - 1].DATE_ODS}).`, type: 'error' });
                 return;
             }
+        }
 
-            const lastNature = lastOds.NATURE_ODS;
+        // The first order must be a start (انطلاق)
+        if (timeline[0] && timeline[0].NATURE_ODS !== 'انطلاق') {
+            setNotification({ message: 'أول أمر خدمة لهذا النطاق يجب أن يكون "انطلاق".', type: 'error' });
+            return;
+        }
 
-            if (lastNature === 'انطلاق' || lastNature === 'استئناف') {
-                if (!['ايقاف', 'ختام'].includes(natureOds)) {
-                    setNotification({ message: 'بعد الإنطلاق أو الإستئناف، يجب أن يكون الأمر التالي "ايقاف" أو "ختام".', type: 'error' });
-                }
-            } else if (lastNature === 'ايقاف') {
-                if (natureOds !== 'استئناف') {
-                    setNotification({ message: 'بعد الإيقاف، يجب أن يكون الأمر التالي "استئناف".', type: 'error' });
-                }
-            } else if (lastNature === 'ختام') {
+        // Nature transition rules between consecutive orders
+        for (let i = 0; i < timeline.length - 1; i++) {
+            const nat = timeline[i].NATURE_ODS;
+            const nextNat = timeline[i + 1].NATURE_ODS;
+
+            if (nat === 'ختام') {
                 setNotification({ message: 'لا يمكن إضافة أمر خدمة جديد بعد الختام.', type: 'error' });
+                return;
             }
-        } else {
-            if (natureOds !== 'انطلاق') {
-                setNotification({ message: 'أول أمر خدمة لهذا النطاق يجب أن يكون "انطلاق".', type: 'error' });
+            if ((nat === 'انطلاق' || nat === 'استئناف') && !['ايقاف', 'ختام'].includes(nextNat)) {
+                setNotification({ message: 'بعد الإنطلاق أو الإستئناف، يجب أن يكون الأمر التالي "ايقاف" أو "ختام".', type: 'error' });
+                return;
             }
+            if (nat === 'ايقاف' && nextNat !== 'استئناف') {
+                setNotification({ message: 'بعد الإيقاف، يجب أن يكون الأمر التالي "استئناف".', type: 'error' });
+                return;
+            }
+        }
+
+        // No more than one start (انطلاق) or closing (ختام) per scope
+        const startsCount = timeline.filter(o => o.NATURE_ODS === 'انطلاق').length;
+        if (startsCount > 1) {
+            setNotification({ message: 'لا يمكن إضافة أكثر من أمر "انطلاق" لنفس النطاق.', type: 'error' });
+            return;
+        }
+        const closuresCount = timeline.filter(o => o.NATURE_ODS === 'ختام').length;
+        if (closuresCount > 1) {
+            setNotification({ message: 'لا يمكن إضافة أكثر من أمر "ختام" لنفس النطاق.', type: 'error' });
+            return;
         }
     }, [dateOds, natureOds, associatedOds, initialData, selectedLotId]);
 

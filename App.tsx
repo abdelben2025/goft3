@@ -6,6 +6,7 @@ import HomePage from './pages/HomePage';
 import OperationsPage from './pages/OperationsPage';
 import OperationDetailsPage from './pages/OperationDetailsPage';
 import DocumentsPage from './pages/DocumentsPage';
+import DocumentDetailsPage from './pages/DocumentDetailsPage';
 import BeneficiairesPage from './pages/BeneficiairesPage';
 import FinancialStatusPage from './pages/FinancialStatusPage';
 import FinancialStatusByStructurePage from './pages/FinancialStatusByStructurePage';
@@ -293,6 +294,7 @@ const AuthenticatedApp: React.FC<{
             'OPERATIONS',
             'OPERATION_DETAILS',
             'DOCUMENTS',
+            'DOCUMENT_DETAILS',
             'BENEFICIARIES',
             'FINANCIAL_STATUS',
             'FINANCIAL_STATUS_BY_STRUCTURE',
@@ -363,6 +365,8 @@ const AuthenticatedApp: React.FC<{
                 return <OperationDetailsPage navigate={navigate} operationId={selectedOperationId!} initialTab={selectedTab} currentUser={currentUser} onGoBack={onGoBack} />;
             case 'DOCUMENTS':
                 return <DocumentsPage navigate={navigate} initialOperationId={selectedOperationId} initialPieceId={selectedTab} currentUser={currentUser} onGoBack={onGoBack} />;
+            case 'DOCUMENT_DETAILS':
+                return <DocumentDetailsPage navigate={navigate} pieceId={selectedOperationId} currentUser={currentUser} onGoBack={onGoBack} />;
             case 'BENEFICIARIES':
                 return <BeneficiairesPage navigate={navigate} currentUser={currentUser} onGoBack={onGoBack} initialBeneficiaryId={selectedOperationId} />;
             case 'FINANCIAL_STATUS':
@@ -703,7 +707,7 @@ const App: React.FC = () => {
 
         const opId = (id !== undefined && id !== null && !isNaN(id)) ? id : null;
 
-        if (page === 'OPERATION_DETAILS' || page === 'DOCUMENTS' || page === 'BENEFICIARIES' || page === 'FINANCIAL_STATUS_BY_STRUCTURE' || page === 'PRINT_FINANCIAL_STATUS_BY_STRUCTURE' || page === 'PRINT_FINANCIAL_STATUS_BY_STRUCTURE_COMMITMENT' || page === 'PRINT_PROJECT_TRACKING' || page === 'PRINT_PAYMENT_CLAIMS' || page === 'PRINT_AE_INSUFFICIENCY' || page === 'PRINT_BORDEREAU' || page === 'CUSTOM_REPORT') {
+        if (page === 'OPERATION_DETAILS' || page === 'DOCUMENTS' || page === 'DOCUMENT_DETAILS' || page === 'BENEFICIARIES' || page === 'FINANCIAL_STATUS_BY_STRUCTURE' || page === 'PRINT_FINANCIAL_STATUS_BY_STRUCTURE' || page === 'PRINT_FINANCIAL_STATUS_BY_STRUCTURE_COMMITMENT' || page === 'PRINT_PROJECT_TRACKING' || page === 'PRINT_PAYMENT_CLAIMS' || page === 'PRINT_AE_INSUFFICIENCY' || page === 'PRINT_BORDEREAU' || page === 'CUSTOM_REPORT') {
             setSelectedOperationId(opId);
         } else if (page === 'PRINT_ENGAGEMENT') {
             setSelectedEngagementId(opId);

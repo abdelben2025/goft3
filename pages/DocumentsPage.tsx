@@ -9,12 +9,9 @@ import PageWrapper from '../components/PageWrapper';
 import Modal from '../components/Modal';
 import ConfirmActionModal from '../components/ConfirmActionModal';
 import AddDocumentForm from '../components/forms/AddDocumentForm';
-import AddLotPieceForm from '../components/forms/AddLotPieceForm';
-import AddOdsForm from '../components/forms/AddOdsForm';
 import AddEngagementForm from '../components/forms/AddEngagementForm';
 import AddPaiementForm from '../components/forms/AddPaiementForm';
 import { formatCurrency } from '../utils/currencyUtils';
-import { normalizeDate, parseDate, compareDates, calculateElapsedDays, getEffectiveDurationDays, isFinancialDuration, formatDurationArabic } from '../utils/dateUtils';
 import CustomDropdown from '../components/CustomDropdown';
 import ExcelJS from 'exceljs';
 import { Search, X } from 'lucide-react';
@@ -68,6 +65,7 @@ const DocumentRow = React.memo<{
     isHighlighted: boolean;
     highlightColor: 'red' | 'amber' | 'blue' | null;
     onSelect: (piece: any) => void;
+    onShowDetails: (piece: any) => void;
     onNavigate: (type: 'ENG' | 'PAI', piece: any) => void;
     onAction: (type: 'ENG' | 'PAI', pieceId: number) => void;
     onNavigateBeneficiary: (beneficiaryId: number) => void;
@@ -78,7 +76,7 @@ const DocumentRow = React.memo<{
     isChild?: boolean;
 }>(({ 
     piece, index, isSelected, isHighlighted, highlightColor, 
-    onSelect, onNavigate, onAction, onNavigateBeneficiary, onNavigateStructure,
+    onSelect, onShowDetails, onNavigate, onAction, onNavigateBeneficiary, onNavigateStructure,
     isConcernedWithEngagement, isConcernedWithPaiement, isViewer,
     isChild = false
 }) => {
@@ -103,6 +101,16 @@ const DocumentRow = React.memo<{
             onClick={() => onSelect(piece)}
         >
             <td className="p-1 text-sky-600 text-right font-mono text-[8px]">{index + 1}</td>
+            <td className="p-1 text-center">
+                <button
+                    onClick={(e) => { e.stopPropagation(); onShowDetails(piece); }}
+                    className="inline-flex items-center gap-1 bg-sky-50 hover:bg-sky-100 text-sky-700 px-1.5 py-0.5 rounded border border-sky-200 font-bold transition-colors text-[8px] shadow-sm select-none"
+                    title="تفاصيل الوثيقة"
+                >
+                    <i className="bi bi-eye-fill text-[8px]"></i>
+                    <span>تفاصيل</span>
+                </button>
+            </td>
             <td className="p-1 text-right">
                 <div className={`flex text-right items-right gap-2 justify-start ${isChild ? 'pr-5' : ''}`}>
                     {isChild && (
@@ -651,132 +659,6 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
         return totalAE - totalEngaged;
     }, [selectedOperationId, db.T_RUBRIQUE_OP, db.T_ENGAGEMENT]);
 
-    const associatedLotPieces = useMemo(() => {
-        if (!selectedPiece) return [];
-        return db.T_LOT_PIECE.filter(lp => lp.ID_PIECE === selectedPiece.ID_PIECE);
-    }, [selectedPiece, db.T_LOT_PIECE]);
-
-    const associatedLotsData = useMemo(() => {
-        return associatedLotPieces.map(lp => {
-            const lotInfo = db.T_LOT_OPERATION.find(lot => lot.ID_LOT === lp.ID_LOT);
-            if (!lotInfo) return null;
-            return {
-                ...lotInfo,
-                ID_LOT_PIECE: lp.ID_LOT_PIECE,
-                DELAI_EX_JOURS: lp.DELAI_EX_JOURS // Include Lot-specific duration
-            };
-        }).filter((item): item is NonNullable<typeof item> => item !== null);
-    }, [associatedLotPieces, db.T_LOT_OPERATION]);
-
-    const associatedLotObjects = useMemo(() => {
-        return associatedLotsData.map(l => ({ 
-            ID_LOT: l.ID_LOT, 
-            N_LOT: l.N_LOT, 
-            INTITULE_LOT: l.INTITULE_LOT,
-            ID_OPERATION: l.ID_OPERATION,
-            MONTANT_INITIALE_LOT: l.MONTANT_INITIALE_LOT,
-            MONTANT_FINALE_LOT: l.MONTANT_FINALE_LOT,
-            ATTRIBUER: l.ATTRIBUER
-        }));
-    }, [associatedLotsData]);
-
-    const associatedOds = useMemo(() => {
-        if (!selectedPiece) return [];
-        return db.T_ODS.filter(ods => ods.ID_PIECE === selectedPiece.ID_PIECE);
-    }, [selectedPiece, db.T_ODS]);
-
-    const odsCalculations = useMemo(() => {
-        if (!selectedPiece || !['صفقة', 'اتفاقية'].includes(selectedPiece.NAT_PIECE)) return null;
-
-        const useFinancialRule = isFinancialDuration(selectedPiece.DELAI_EX_JOURS);
-        const baseDuration = getEffectiveDurationDays(selectedPiece.DELAI_EX_JOURS);
-        
-        // Filter and sort ODS
-        const sortedOds = [...associatedOds].sort((a, b) => compareDates(a.DATE_ODS, b.DATE_ODS));
-        const commencementOds = sortedOds.find(o => o.NATURE_ODS === 'انطلاق');
-        
-        const terminationDocs = db.T_PIECE.filter(p => p.ID_PIECE_INIT === selectedPiece.ID_PIECE && p.NAT_PIECE === 'قرار فسخ');
-        const totalTerminatedAmount = terminationDocs.reduce((sum, p) => sum + (p.MONTANT_PIECE || 0), 0);
-        const isTerminated = terminationDocs.length > 0;
-        const isFullyTerminated = isTerminated && totalTerminatedAmount >= (selectedPiece.MONTANT_PIECE || 0);
-
-        if (!commencementOds) return { baseDuration, startDate: null, isTerminated, isFullyTerminated, totalTerminatedAmount };
-
-        const startDate = parseDate(commencementOds.DATE_ODS);
-        if (!startDate) return { baseDuration, startDate: null, isTerminated, isFullyTerminated, totalTerminatedAmount };
-
-        let totalSuspensionDays = 0;
-        let lastStopDate: Date | null = null;
-        let isSuspended = false;
-
-        sortedOds.forEach(ods => {
-            const odsDate = parseDate(ods.DATE_ODS);
-            if (!odsDate) return;
-
-            if (ods.NATURE_ODS === 'ايقاف') {
-                lastStopDate = odsDate;
-                isSuspended = true;
-            } else if (ods.NATURE_ODS === 'استئناف' && lastStopDate) {
-                totalSuspensionDays += calculateElapsedDays(lastStopDate, odsDate, useFinancialRule);
-                lastStopDate = null;
-                isSuspended = false;
-            } else if (ods.NATURE_ODS === 'ختام') {
-                isSuspended = false; // Works are done
-            }
-        });
-
-        // If currently suspended, calculate suspension days up to today for information
-        let currentSuspensionDays = 0;
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        if (isSuspended && lastStopDate) {
-            currentSuspensionDays = calculateElapsedDays(lastStopDate, today, useFinancialRule);
-        }
-
-        // Expected End Date (Projected based on closed suspension periods)
-        const expectedEndDate = new Date(startDate);
-        // We add base duration and closed suspension periods
-        expectedEndDate.setDate(startDate.getDate() + baseDuration + totalSuspensionDays);
-
-        const isCompleted = sortedOds.some(o => o.NATURE_ODS === 'ختام');
-        const remainingDays = isCompleted ? 0 : calculateElapsedDays(today, expectedEndDate, useFinancialRule);
-        
-        const isLate = !isCompleted && today > expectedEndDate;
-        let delayDays = 0;
-        if (isLate) {
-            delayDays = calculateElapsedDays(expectedEndDate, today, useFinancialRule);
-        }
-        
-        const closingOds = sortedOds.find(o => o.NATURE_ODS === 'ختام');
-        const warrantyEndDate = closingOds ? new Date(parseDate(closingOds.DATE_ODS)!) : null;
-        if (warrantyEndDate) {
-            // Warranty is usually 1 year + 1 day from provisional acceptance
-            warrantyEndDate.setDate(warrantyEndDate.getDate() + 1);
-            warrantyEndDate.setFullYear(warrantyEndDate.getFullYear() + 1);
-        }
-
-        const isWarrantyExpired = warrantyEndDate ? today >= warrantyEndDate : false;
-
-        return {
-            baseDuration,
-            startDate,
-            totalSuspensionDays,
-            currentSuspensionDays,
-            expectedEndDate,
-            remainingDays,
-            delayDays,
-            isLate,
-            isSuspended,
-            isCompleted,
-            isTerminated,
-            isFullyTerminated,
-            totalTerminatedAmount,
-            warrantyEndDate,
-            isWarrantyExpired
-        };
-    }, [selectedPiece, associatedOds, db.T_PIECE]);
-
     const operationOptions = useMemo(() => {
         let ops = db.T_OPERATION;
         if (currentUser.ROLE !== 'admin' && currentUser.ALLOWED_OPERATIONS) {
@@ -965,34 +847,6 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
         }
     };
 
-    const handleSaveLotPiece = async (data: any) => {
-        const piece = db.T_PIECE.find(p => p.ID_PIECE === data.ID_PIECE);
-        if (piece && !checkPermission(piece.ID_OPERATION)) {
-            alert('ليس لديك صلاحية التعديل على هذه العملية.');
-            return;
-        }
-
-        if (data.ID_LOT) {
-            const existingLink = db.T_LOT_PIECE.find(lp => lp.ID_LOT === data.ID_LOT && lp.ID_LOT_PIECE !== data.ID_LOT_PIECE);
-            if (existingLink) {
-                alert('هذه الحصة مرتبطة بالفعل بوثيقة أخرى أو بنفس الوثيقة.');
-                return;
-            }
-        }
-
-        try {
-            await handleSave('T_LOT_PIECE', data, 'ID_LOT_PIECE');
-            if (data.ID_LOT) {
-                const lot = db.T_LOT_OPERATION.find(l => l.ID_LOT === data.ID_LOT);
-                if (lot) {
-                    await updateItem('T_LOT_OPERATION', lot.ID_LOT, { ...lot, ATTRIBUER: true });
-                }
-            }
-        } catch (error) {
-            showToast(`حدث خطأ أثناء ربط الحصة — السبب: ${errorMessage(error)}`, 'error');
-        }
-    };
-
     const handleDelete = async (table: keyof Database, id: number | null, idField: string) => {
         if (id === null || isViewer || isDeleting) return;
 
@@ -1089,148 +943,10 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
         });
     };
     
-    const allLotsForOperation = useMemo(() => {
-        if (!selectedPiece) return [];
-        return db.T_LOT_OPERATION.filter(lot => lot.ID_OPERATION === selectedPiece.ID_OPERATION);
-    }, [selectedPiece, db.T_LOT_OPERATION]);
-
-    const alreadyAssociatedLotIds = useMemo(() => {
-        return db.T_LOT_PIECE.map(lp => lp.ID_LOT);
-    }, [db.T_LOT_PIECE]);
-
     const handleSelectPiece = useCallback((piece: Piece) => {
         setSelectedPiece(piece);
         setHighlightId(null);
     }, []);
-
-    const selectedPieceDetails = useMemo(() => {
-        if (!selectedPiece) return null;
-
-        const isContract = ['صفقة', 'اتفاقية'].includes(selectedPiece.NAT_PIECE);
-        const isAmendment = selectedPiece.NAT_PIECE === 'ملحق';
-        const isTermination = selectedPiece.NAT_PIECE === 'قرار فسخ';
-        const isWorkSituation = ['وضعية الأشغال', 'وضعية التسبيق الجزافي', 'وضعية التسبيق على التموين', 'فاتورة','حكم قضائي'].includes(selectedPiece.NAT_PIECE);
-        
-        let amendmentLabel = '';
-        if (isAmendment) {
-            if (selectedPiece.MONTANT_PIECE > 0) amendmentLabel = 'ملحق بالزيادة';
-            else if (selectedPiece.MONTANT_PIECE < 0) amendmentLabel = 'ملحق بالنقصان';
-            else amendmentLabel = 'ملحق بدون تأثير مالي';
-        }
-        
-        // Final relevant ID for aggregations (use parent if amendment, termination, or work situation)
-        const basePieceId = (isAmendment || isWorkSituation || isTermination) && selectedPiece.ID_PIECE_INIT 
-            ? selectedPiece.ID_PIECE_INIT 
-            : selectedPiece.ID_PIECE;
-
-        const basePiece = db.T_PIECE.find(p => p.ID_PIECE === basePieceId);
-
-        // Find engagement for Financial Controller visa
-        const engagement = db.T_ENGAGEMENT.find(e => e.ID_PIECE === selectedPiece.ID_PIECE);
-
-        // Find payment for invoice/work situation
-        const paiement = db.T_PAIEMENT.find(p => p.ID_PIECE === selectedPiece.ID_PIECE);
-        
-        // Find all linked pieces (main contract + all its children/amendments/situations)
-        const linkedPieceIds = db.T_PIECE
-            .filter(p => p.ID_PIECE === basePieceId || p.ID_PIECE_INIT === basePieceId)
-            .map(p => p.ID_PIECE);
-
-        // Calculate totals based strictly on registered Engagements and Payments as requested
-        const relatedEngagements = db.T_ENGAGEMENT.filter(e => linkedPieceIds.includes(e.ID_PIECE));
-        const newTotalAmount = relatedEngagements.reduce((sum, e) => {
-            let amt = e.MONTANT_ENG;
-            if (['إلغاء', 'إنخفاض التقييم'].includes(e.NATURE_ENG)) amt = -amt;
-            return sum + amt;
-        }, 0);
-
-        const relatedPayments = db.T_PAIEMENT.filter(p => linkedPieceIds.includes(p.ID_PIECE));
-        const totalPaid = relatedPayments.reduce((sum, p) => sum + p.MONTANT_PAI, 0);
-
-        // Delay penalty from all related payments
-        const delayPenalty = relatedPayments.reduce((sum, p) => sum + (p.PENALITE_RETARD || 0), 0);
-
-        // Counts for informational chips
-        const amendmentsCount = db.T_PIECE.filter(p => p.ID_PIECE_INIT === basePieceId && p.NAT_PIECE === 'ملحق').length;
-        const workSituationsCount = db.T_PIECE.filter(p => p.ID_PIECE_INIT === basePieceId && ['وضعية الأشغال', 'وضعية التسبيق الجزافي', 'وضعية التسبيق على التموين', 'فاتورة', 'حكم قضائي'].includes(p.NAT_PIECE)).length;
-
-        const unregisteredRelatedCount = db.T_PIECE.filter(p => {
-            if (p.ID_PIECE_INIT !== basePieceId) return false;
-            const isCommitmentType = ['صفقة', 'اتفاقية', 'ملحق', 'فاتورة', 'مقرر', 'قرار','حكم قضائي'].includes(p.NAT_PIECE);
-            const isPaymentType = ['وضعية الأشغال', 'فاتورة', 'قرار', 'وضعية التسبيق الجزافي', 'وضعية التسبيق على التموين','حكم قضائي'].includes(p.NAT_PIECE);
-            const isUncommitted = isCommitmentType && !p.SAI_ENG;
-            let isUnpaid = false;
-            if (isPaymentType) {
-                if (p.NAT_PIECE === 'وضعية الأشغال') {
-                    isUnpaid = !p.SAI_ENG && !p.SAI_PAI;
-                } else {
-                    isUnpaid = !p.SAI_PAI;
-                }
-            }
-            return isUncommitted || isUnpaid;
-        }).length;
-
-        const terminationPiece = db.T_PIECE.find(p => p.ID_PIECE_INIT === basePieceId && p.NAT_PIECE === 'قرار فسخ');
-        const terminationAmount = terminationPiece?.MONTANT_PIECE || 0;
-
-        let remainingAmount = newTotalAmount - totalPaid;
-        if (Math.abs(remainingAmount) < 0.005) {
-            remainingAmount = 0;
-        }
-        
-        const progressPercent = newTotalAmount > 0 ? (totalPaid / newTotalAmount) * 100 : 0;
-
-        const unregisteredPaymentsAmount = db.T_PIECE
-            .filter(p => p.ID_PIECE === basePieceId || p.ID_PIECE_INIT === basePieceId)
-            .filter(p => {
-                const isPaymentType = ['وضعية الأشغال', 'فاتورة', 'قرار', 'حكم قضائي', 'وضعية التسبيق الجزافي', 'وضعية التسبيق على التموين'].includes(p.NAT_PIECE);
-                if (!isPaymentType) return false;
-                if (p.NAT_PIECE === 'قرار' && p.PIECE?.includes('فسخ')) return false;
-                if (p.NAT_PIECE.includes('فسخ')) return false;
-                
-                if (p.NAT_PIECE === 'فاتورة') {
-                    return !p.SAI_PAI;
-                      
-                } else if (p.NAT_PIECE === 'حكم قضائي') {
-                    return !p.SAI_PAI;   
-
-                } else if (p.NAT_PIECE === 'وضعية الأشغال') {
-                    return !p.SAI_ENG && !p.SAI_PAI;
-                } else {
-                    return !p.SAI_PAI;
-                }
-            })
-            .reduce((sum, p) => sum + (p.MONTANT_PIECE || 0), 0);
-
-        const beneficiaire = selectedPiece.ID_BENEFICIAIRE 
-            ? db.T_BENEFICIAIRE.find(b => b.ID_BENEFICIAIRE === selectedPiece.ID_BENEFICIAIRE) 
-            : null;
-        
-        const compte = selectedPiece.ID_COMPTE 
-            ? db.T_COMPTE_BANCAIRE.find(c => c.ID_COMPTE === selectedPiece.ID_COMPTE) 
-            : null;
-
-        return {
-            isContract,
-            isAmendment,
-            amendmentLabel,
-            basePiece,
-            engagement,
-            paiement,
-            beneficiaire,
-            compte,
-            amendmentsCount,
-            terminationAmount,
-            workSituationsCount,
-            unregisteredRelatedCount,
-            totalPaid,
-            delayPenalty,
-            newTotalAmount,
-            remainingAmount,
-            progressPercent,
-            unregisteredPaymentsAmount
-        };
-    }, [selectedPiece, db]);
 
     const handleImportClick = () => {
         fileInputRef.current?.click();
@@ -1668,6 +1384,10 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
         navigate('FINANCIAL_STATUS_BY_STRUCTURE', opId, String(rubricId));
     }, [navigate, selectedPiece]);
 
+    const handleShowDetails = useCallback((p: any) => {
+        navigate('DOCUMENT_DETAILS', p.ID_PIECE);
+    }, [navigate]);
+
     if (loading) return <div className="p-8 text-center">{t('loading')}</div>;
 
     return (
@@ -1857,14 +1577,15 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                 </div>
             </div>
             
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <div className="lg:col-span-2 space-y-4">
+            <div className="space-y-4">
+                <div className="space-y-4">
                     <div className="bg-white p-3 rounded-lg shadow-md">
                         <div className="overflow-auto max-h-[calc(100vh-16rem)]">
                             <table className="w-full text-left text-xs">
                                 <thead className="bg-sky-100 sticky top-0 z-10 border-b shadow-sm">
                                     <tr>
                                         <th className="p-1 text-center text-[8px] font-bold text-gray-500 uppercase tracking-wider w-8">#</th>
+                                        <th className="p-1 text-center text-[9px] font-bold text-gray-500 uppercase tracking-wider w-16">تفاصيل</th>
                                         <th className="p-1 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">
                                             <SearchHeader 
                                                 title={t('col.document')}
@@ -1988,7 +1709,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                                             const opt = row.data;
                                             return (
                                                 <tr key={row.key} className="bg-gradient-to-l from-blue-50 to-transparent text-right border-y border-blue-100/60 font-black">
-                                                    <td colSpan={7} className="p-1.5 text-right">
+                                                    <td colSpan={8} className="p-1.5 text-right">
                                                         <div className="flex items-center gap-2 justify-start leading-none pr-1">
                                                             <span className="bg-sky-300 text-black text-[8px] px-1.5 py-0.5 rounded-[20px] shadow-sm select-none">
                                                              {opt?.N_OPERATION}
@@ -2005,7 +1726,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                                             return (
                                                 <React.Fragment key={row.key}>
                                                     <tr className="bg-gray-100 text-black-600">
-                                                        <td colSpan={7} className="p-1 text-right text-[9px] border border-black-200">
+                                                        <td colSpan={8} className="p-1 text-right text-[9px] border border-black-200">
                                                             <div className="flex items-center gap-1.5 justify-end">
                                                                 <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-sm"></span>
                                                                 <span className="px-1 rounded-[20px] bg-blue-50 border border-blue-200"> مجموع الالتزام = {formatCurrency(totalCommitment)} </span>
@@ -2030,6 +1751,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                                                     isHighlighted={highlightId === piece.ID_PIECE}
                                                     highlightColor={highlightColor}
                                                     onSelect={handleSelectPiece}
+                                                    onShowDetails={handleShowDetails}
                                                     onNavigate={handleNavigateToDoc}
                                                     onAction={handleActionOnDoc}
                                                     onNavigateBeneficiary={handleNavigateBeneficiary}
@@ -2054,460 +1776,6 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                     </div>
                 </div>
 
-                <div className="lg:col-span-1 space-y-4">
-                    <div className="bg-white p-3 rounded-lg shadow-md">
-                        <div className="flex justify-between items-center mb-2">
-                            <h3 className="text-xs font-bold text-gray-800">{t('lbl.linked_lots')}</h3>
-                            {!isViewer && (
-                                <button 
-                                    onClick={() => {
-                                        if(loading) { alert("يجب الانتظار حتى يتم تحديث النافذة"); return; }
-                                        if (!selectedPiece) return;
-                                        if (!['صفقة', 'اتفاقية', 'فاتورة'].includes(selectedPiece.NAT_PIECE)) {
-                                            alert('عذراً، يمكن ربط الحصص فقط بـ "صفقة" أو "اتفاقية" أو "فاتورة".');
-                                            return;
-                                        }
-                                        if (checkPermission(selectedPiece.ID_OPERATION)) {
-                                            setModalState({ type: 'LOT_PIECE', timestamp: Date.now() });
-                                        } else {
-                                            alert('ليس لديك صلاحية الإضافة.');
-                                        }
-                                    }}
-                                    disabled={!selectedPiece} 
-                                    className="bg-indigo-300 text-black font-bold px-1 py-0.6 rounded-lg border border-indigo-200 shadow-md text-[12px] hover:bg-indigo-400 cursor-pointer disabled:bg-gray-150"
-                                >
-                                    <i className="bi bi-paperclip"></i>
-                                </button>
-                            )}
-                        </div>
-                        {selectedPiece && (() => {
-                            const linkedOperation = db.T_OPERATION.find(op => op.ID_OPERATION === selectedPiece.ID_OPERATION);
-                            if (linkedOperation) {
-                                return (
-                                    <div>
-                                    <div className="leading-tight bg-indigo-50 p-1 border-0">
-                                     <div className="text-[9px] text-center text-gray-500 font-bold leading-tight">
-                                        العملية: {linkedOperation.N_OPERATION} 
-                                     </div>
-                                     <div className="text-[9px] text-center text-gray-500 font-medium leading-tight">
-                                        {linkedOperation.INT_OPERATION}
-                                     </div>
-                                    </div>  
-                                    </div>
-                                    
-                                );
-                            }
-                            return null;
-                        })()}
-                        {associatedLotsData.length > 0 ? (
-                            <ul>
-                                {associatedLotsData.map(lot => (
-                                    <li key={lot.ID_LOT_PIECE} className="flex justify-between items-center border-t py-1 flex-wrap">
-                                        <span className="text-[9px] text-center text-gray-700">{lot.N_LOT} - {lot.INTITULE_LOT}  {lot.DELAI_EX_JOURS && <span className="text-[9px] text-blue-600 bg-blue-50 px-1 rounded mx-1">{formatDurationArabic(lot.DELAI_EX_JOURS)}</span>}</span>
-                                        
-                                        {!isViewer && (
-                                            <button onClick={() => handleDelete('T_LOT_PIECE', lot.ID_LOT_PIECE, 'ID_LOT_PIECE')} disabled={isDeleting} className="text-red-500 hover:text-red-700 text-xs disabled:text-gray-400 disabled:cursor-not-allowed">
-                                                <i className="bi bi-trash"></i>
-                                            </button>
-                                        )}
-                                    </li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <p className="text-[9px] text-gray-500 text-center">{t('lbl.no_data')}</p>
-                        )}
-                    </div>
-
-                    <div className="bg-white p-3 rounded-lg shadow-md">
-                        <div className="flex justify-between items-center mb-2">
-                            <div className="flex items-center gap-2">
-                                <h3 className="text-xs font-bold text-gray-800">{t('lbl.ods_table')}</h3>
-                                {odsCalculations && selectedPiece && (
-                                    <div className="flex gap-1">
-                                        <span className="bg-blue-100 text-blue-700 text-[8px] font-bold px-0.5 py-0.5 rounded-full border border-blue-200">
-                                            مدة الإنجاز: {formatDurationArabic(selectedPiece.DELAI_EX_JOURS)}
-                                        </span>
-                                        {selectedPiece.CAUTION && (
-                                            <span className="bg-purple-100 text-purple-700 text-[8px] font-bold px-0.5 py-0.5 rounded-full border border-purple-200">
-                                                نسبة الضمان: {selectedPiece.CAUTION}
-                                            </span>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                            {!isViewer && (
-                                <button 
-                                    onClick={() => {
-                                        if(loading) { alert("يجب الانتظار حتى يتم تحديث النافذة"); return; }
-                                        if (!selectedPiece) return;
-                                        if (!['صفقة', 'اتفاقية'].includes(selectedPiece.NAT_PIECE)) {
-                                            alert('عذراً، يمكن إضافة أوامر خدمة فقط لـ "صفقة" أو "اتفاقية".');
-                                            return;
-                                        }
-                                        if (checkPermission(selectedPiece.ID_OPERATION)) {
-                                            setModalState({ type: 'ODS', timestamp: Date.now() });
-                                        } else {
-                                            alert('ليس لديك صلاحية الإضافة.');
-                                        }
-                                    }}
-                                    disabled={!selectedPiece}
-                                    className="bg-indigo-300 text-black font-bold px-1 py-0.6 rounded-lg border border-indigo-200 shadow-md text-[12px] hover:bg-indigo-400 cursor-pointer disabled:bg-gray-150"
-                                >
-                                    <i className="bi bi-plus-circle"></i>
-                                </button>
-                            )}
-                        </div>
-
-                        {/* ODS Information and Deadline Alerts */}
-                        {odsCalculations && (
-                            <div className={`mb-2 p-2 rounded-lg border text-right space-y-1 ${
-                                odsCalculations.isTerminated
-                                    ? 'bg-red-100 border-red-300'
-                                    : odsCalculations.startDate ? (
-                                        odsCalculations.isCompleted 
-                                            ? 'bg-green-50 border-green-200' 
-                                            : odsCalculations.isSuspended 
-                                                ? 'bg-amber-50 border-amber-200'
-                                                : (odsCalculations.isLate || odsCalculations.remainingDays <= 15) 
-                                                    ? 'bg-red-50 border-red-500 animate-blink-red'
-                                                    : 'bg-blue-50 border-blue-200'
-                                    ) : 'bg-gray-50 border-gray-200'
-                            }`}>
-                                {odsCalculations.isTerminated ? (
-                                    <div className="text-center py-1">
-                                        <span className="text-[9px] font-black text-red-700">
-                                            <i className="bi bi-x-circle-fill ml-1"></i>
-                                            {odsCalculations.isFullyTerminated 
-                                                ? "تم فسخ العقد" 
-                                                : `تم فسخ المبلغ (${formatCurrency(odsCalculations.totalTerminatedAmount)}) من العقد`
-                                            }
-                                        </span>
-                                    </div>
-                                ) : (odsCalculations.startDate && odsCalculations.baseDuration > 0) ? (
-                                    <>
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-[10px] font-bold text-gray-600">تاريخ الانتهاء المتوقع:</span>
-                                            <span className={`text-[11px] font-black ${odsCalculations.remainingDays <= 15 && !odsCalculations.isCompleted ? 'text-red-700' : 'text-blue-800'}`}>
-                                                {normalizeDate(odsCalculations.expectedEndDate.toISOString().split('T')[0])}
-                                            </span>
-                                        </div>
-                                        <div className="flex justify-between items-center border-t border-black/5 pt-1">
-                                            <span className="text-[9px] font-bold text-gray-600">
-                                                {odsCalculations.isLate ? 'عدد أيام التأخير' : 'الأيام المتبقية:'}
-                                            </span>
-                                            <span className={`text-[10px] font-black ${odsCalculations.isLate || (odsCalculations.remainingDays <= 15 && !odsCalculations.isCompleted) ? 'text-red-700' : 'text-blue-800'}`}>
-                                                {odsCalculations.isCompleted ? 'مكتمل' : (odsCalculations.isLate ? `${odsCalculations.delayDays} يوم` : `${odsCalculations.remainingDays} يوم`)}
-                                            </span>
-                                        </div>
-                                        {odsCalculations.isSuspended && (
-                                            <div className="mt-1 bg-amber-100 text-amber-800 text-[9px] font-bold p-1 rounded text-center border border-amber-300">
-                                                <i className="bi bi-pause-circle-fill ml-1"></i>
-                                                الأشغال موقوفة حالياً ({odsCalculations.currentSuspensionDays} يوم)
-                                            </div>
-                                        )}
-                                        {odsCalculations.isCompleted && (
-                                            <div className="mt-1 bg-green-100 text-green-800 text-[9px] font-bold p-1 rounded text-center border border-green-300">
-                                                <i className="bi bi-check-circle-fill ml-1"></i>
-                                            انتهاء اشغال المشروع
-                                            </div>
-                                        )}
-                                    </>
-                                ) : (
-                                    <div className="text-center py-1">
-                                        {odsCalculations.baseDuration === 0 ? (
-                                            <span className="text-[10px] font-black text-gray-700">
-                                                <i className="bi bi-info-circle ml-1"></i>
-                                                العقد بدون مدة
-                                            </span>
-                                        ) : selectedPieceDetails?.engagement?.N_VISA_CB ? (
-                                            <span className="text-[10px] font-black text-amber-700">
-                                                <i className="bi bi-exclamation-circle ml-1"></i>
-                                                الأشغال لم تنطلق بعد
-                                            </span>
-                                        ) : (
-                                            <span className="text-[9px] font-bold text-gray-500 italic">في انتظار أمر انطلاق الأشغال</span>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {associatedOds.length > 0 ? (
-                            <div className="max-h-60 overflow-y-auto">
-                                <ul>
-                                    {associatedOds.map(ods => {
-                                        const lotName = ods.ID_LOT ? associatedLotsData.find(l => l.ID_LOT === ods.ID_LOT)?.N_LOT : null;
-                                        return (
-                                            <li key={ods.ID_ODS} className="border-b py-1 hover:bg-blue-100 cursor-pointer" 
-                                                onClick={() => { 
-                                                    if(loading) { alert("يجب الانتظار حتى يتم تحديث النافذة"); return; }
-                                                    if (isViewer) return;
-                                                    if(checkPermission(selectedPiece!.ID_OPERATION)) setModalState({ type: 'ODS', data: ods, timestamp: Date.now() }); 
-                                                    else alert('ليس لديك صلاحية التعديل.');
-                                                }}
-                                            >
-                                                <div className="flex justify-between items-center">
-                                                    <div>
-                                                        <div className="flex items-center gap-2">
-                                                            <p className="text-[10px] font-semibold text-gray-800">{ods.NATURE_ODS}  {normalizeDate(ods.DATE_ODS)}</p>
-                                                            {lotName && <span className="text-[9px] bg-yellow-200 px-1 rounded text-gray-800">حصة {lotName}</span>}
-                                                        </div>
-                                                        <p className="text-[9px] text-gray-600 mt-0.5">{ods.OBJET_ODS}</p>
-                                                    </div>
-                                                    {!isViewer && (
-                                                        <button onClick={(e) => { e.stopPropagation(); handleDelete('T_ODS', ods.ID_ODS, 'ID_ODS'); }} disabled={isDeleting} className="text-red-500 hover:text-red-700 text-xs disabled:text-gray-400 disabled:cursor-not-allowed">
-                                                            <i className="bi bi-trash"></i>
-                                                        </button>
-                                                    )}
-                                                </div>
-                                                
-                                            </li>
-                                        );
-                                    })}
-                                </ul>
-                            </div>
-                        ) : (
-                            <p className="text-[10px] text-gray-500 text-center">{t('lbl.no_data')}</p>
-                        )}
-                    </div>
-
-                    {/* Selected Piece Info Box */}
-                    {selectedPiece && selectedPiece.NAT_PIECE !== 'أخرى' && (
-                        <div className="bg-white rounded-lg shadow-md border-r-4 border-sky-400 overflow-hidden">
-                            <div className="bg-gray-50 px-3 py-2 border-b flex items-center justify-between">
-                                <h3 className="text-xs font-bold text-blue-800 flex items-center gap-2">
-                                    <i className="bi bi-info-circle-fill"></i>
-                                    {selectedPiece.NAT_PIECE === 'قرار فسخ' && selectedPieceDetails?.basePiece ? selectedPieceDetails.basePiece.PIECE : selectedPiece.PIECE}
-                                </h3>
-                                <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${selectedPieceDetails?.isAmendment ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>
-                                    {selectedPieceDetails?.isAmendment ? selectedPieceDetails.amendmentLabel : selectedPiece.NAT_PIECE}
-                                </span>
-                            </div>
-
-                            <div className="p-3 space-y-3">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    {/* Parent Piece info - Show for Amendments, Decisions and Work Situations */}
-                                    {(['ملحق', 'قرار فسخ', 'وضعية الأشغال', 'وضعية التسبيق الجزافي', 'وضعية التسبيق على التموين', 'فاتورة', 'حكم قضائي'].includes(selectedPiece.NAT_PIECE)) && selectedPieceDetails?.basePiece && (
-                                        <div className="col-span-1 md:col-span-2 bg-blue-50 p-2 rounded border border-blue-100">
-                                            <p className="text-[9px] text-gray-500 font-bold mb-1">الوثيقة الأصلية (الصفقة/الاتفاقية):</p>
-                                            <p className="text-[10px] font-bold text-blue-900 leading-tight">
-                                                {selectedPieceDetails.basePiece.PIECE}
-                                            </p>
-                                        </div>
-                                    )}
-
-                                    {/* Procurement Visa info - Only for Contracts (General info) */}
-                                    {['صفقة', 'اتفاقية'].includes(selectedPiece.NAT_PIECE) && (
-                                        <>
-                                            <div className="col-span-1 md:col-span-2 grid grid-cols-2 gap-2 border-b pb-2">
-                                                <div className="space-y-1">
-                                                    <p className="text-[9px] text-gray-500 font-bold">رقم التعريف الجبائي (NIF):</p>
-                                                    <p className="text-[10px] font-semibold text-gray-800 text-right" dir="ltr">
-                                                        {selectedPieceDetails?.beneficiaire?.CODE_FISCALE || '---'}
-                                                    </p>
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <p className="text-[9px] text-gray-500 font-bold">رقم السجل التجاري (NRC):</p>
-                                                    <p className="text-[10px] font-semibold text-gray-800 text-right" dir="ltr">
-                                                        {selectedPieceDetails?.beneficiaire?.RC || '---'}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <p className="text-[9px] text-gray-500 font-bold">عنوان المستفيد:</p>
-                                                <p className="text-[10px] font-semibold text-gray-800 leading-tight">
-                                                    {selectedPieceDetails?.beneficiaire?.ADRESSE || '---'}
-                                                </p>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <p className="text-[9px] text-gray-500 font-bold">الحساب البنكي (RIB):</p>
-                                                <div className="flex flex-wrap gap-x-2 items-center">
-                                                    <p className="text-[10px] font-bold text-gray-800 font-mono">
-                                                        {selectedPieceDetails?.compte?.RIB || '---'}
-                                                    </p>
-                                                    {selectedPieceDetails?.compte?.BANQUE && (
-                                                        <span className="text-[8px] bg-blue-50 text-blue-700 px-1 py-0.2 rounded border border-blue-100 font-bold">
-                                                            {selectedPieceDetails.compte.BANQUE}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </>
-                                    )}
-
-                                    {/* Procurement Visa info - Show for Contracts, and for Amendments if they have data */}
-                                    {(selectedPiece.NAT_PIECE === 'صفقة' || (selectedPiece.NAT_PIECE === 'ملحق' && (selectedPiece.N_VISA_CM || selectedPiece.DATE_VISA_CM))) && (
-                                        <div className="space-y-1 border-t pt-2">
-                                            <p className="text-[9px] text-gray-500 font-bold mb-1">تأشيرة لجنة الصفقات:</p>
-                                            <div className="bg-pink-50 p-1 rounded border border-pink-200">
-                                                <p className="text-[10px] font-bold text-gray-700">
-                                                    رقم: {selectedPiece.N_VISA_CM || '---'}
-                                                </p>
-                                                <p className="text-[9px] text-gray-500 font-semibold">
-                                                    بتاريخ: {selectedPiece.DATE_VISA_CM ? normalizeDate(selectedPiece.DATE_VISA_CM) : '---'}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Commitment info - Show for relevant contract/decision types */}
-                                    {(['صفقة', 'اتفاقية', 'ملحق', 'مقرر', 'قرار فسخ', 'فاتورة','حكم قضائي'].includes(selectedPiece.NAT_PIECE)) && (
-                                        <div className={`space-y-1 ${['صفقة', 'اتفاقية'].includes(selectedPiece.NAT_PIECE) ? 'border-t pt-2' : 'border-t pt-2'}`}>
-                                            <p className="text-[9px] text-gray-500 font-bold mb-1">تأشيرة المراقب المالي:</p>
-                                            {selectedPieceDetails?.engagement ? (
-                                                <div className="bg-blue-50 p-1 rounded border border-blue-200">
-                                                    <p className="text-[10px] font-bold text-blue-700">
-                                                        رقم: {selectedPieceDetails.engagement.N_VISA_CB || '---'} في: {normalizeDate(selectedPieceDetails.engagement.DATE_VISA_CB)}
-                                                    </p>
-                                                    <p className="text-[9px] text-blue-600 font-semibold">
-                                                        بطاقة: {selectedPieceDetails.engagement.N_ENG}/{selectedPieceDetails.engagement.ANNEE}
-                                                    </p>
-                                                </div>
-                                            ) : (
-                                                <p className="text-[10px] font-semibold text-red-500 italic">غير ملتزم بها بعد</p>
-                                            )}
-                                        </div>
-                                    )}
-
-                                    {/* Payment Info - For specific groups */}
-                                    {['فاتورة', 'وضعية الأشغال', 'وضعية التسبيق الجزافي', 'وضعية التسبيق على التموين','حكم قضائي'].includes(selectedPiece.NAT_PIECE) && (
-                                        <div className="space-y-1 border-t pt-2">
-                                            <p className="text-[9px] text-gray-500 font-bold mb-1">رقم و تاريخ الحوالة (تاريخ القبول):</p>
-                                            <div className="bg-green-50 p-1 rounded border border-green-100">
-                                                <div className="flex justify-between items-center">
-                                                    <div>
-                                                        <p className="text-[10px] font-bold text-green-700">
-                                                            {selectedPieceDetails?.paiement?.N_MANDAT ? `رقم: ${selectedPieceDetails.paiement.N_MANDAT}` : 'بدون رقم'} 
-                                                        </p>
-                                                        <p className="text-[9px] text-green-600 font-semibold">
-                                                            {selectedPieceDetails?.paiement?.DATE_MANDAT ? `بتاريخ: ${normalizeDate(selectedPieceDetails.paiement.DATE_MANDAT)}` : ''}
-                                                        </p>
-                                                    </div>
-                                                    <div className="bg-white/50 px-1 py-0.5 rounded border border-green-200">
-                                                        <p className="text-[8px] text-gray-500 font-bold leading-none mb-0.5">تاريخ القبول</p>
-                                                        <p className="text-[10px] font-bold text-green-800 leading-none">
-                                                            {selectedPieceDetails?.paiement?.DATE_ADMIS ? normalizeDate(selectedPieceDetails.paiement.DATE_ADMIS) : '---'}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            {selectedPieceDetails && selectedPieceDetails.delayPenalty !== 0 && (
-                                                <div className="mt-1 bg-red-50 p-1.5 rounded border border-red-100 flex justify-between items-center">
-                                                    <p className="text-[9px] text-red-500 font-bold">عقوبة التأخير:</p>
-                                                    <p className="text-[10px] font-black text-red-700 text-left" dir="ltr">
-                                                        {formatCurrency(selectedPieceDetails.delayPenalty)}
-                                                    </p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Financial totals for pieces related to a contract/agreement */}
-                                {(['صفقة', 'اتفاقية', 'قرار فسخ', 'ملحق', 'وضعية الأشغال', 'فاتورة', 'وضعية التسبيق الجزافي', 'وضعية التسبيق على التموين','حكم قضائي'].includes(selectedPiece.NAT_PIECE)) && selectedPieceDetails && (
-                                    <div className="border-t pt-2 space-y-2">
-                                        <div className="grid grid-cols-2 gap-2">
-                                            {selectedPieceDetails.terminationAmount !== 0 && (
-                                                <div className="bg-red-50 p-1.5 rounded border border-red-100">
-                                                    <p className="text-[9px] text-red-500 font-bold">مبلغ الفسخ: {formatCurrency(selectedPieceDetails.terminationAmount)}</p>
-                                                    
-                                                </div>
-                                            )}
-                                            <div className="bg-blue-50 p-1.5 rounded border border-blue-100 flex justify-between items-center">
-                                                <p className="text-[9px] text-blue-500 font-bold">المبلغ الجديد: {formatCurrency(selectedPieceDetails.newTotalAmount)}</p>
-                                                {selectedPieceDetails.amendmentsCount > 0 && (
-                                                    <span className="text-[8px] bg-blue-200 text-blue-800 px-1.5 py-0.5 rounded-full font-bold">
-                                                        {selectedPieceDetails.amendmentsCount} ملحق
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        <div className="bg-orange-50 p-2 rounded border border-orange-100 flex justify-between items-center">
-                                            <div>
-                                                <p className="text-[9px] text-orange-600 font-bold">إجمالي الدفع: {formatCurrency(selectedPieceDetails.totalPaid)}</p>
-                                                {selectedPieceDetails.unregisteredPaymentsAmount > 0 && (
-                                                    <p className="text-[8px] text-red-600 font-bold mt-0.5">
-                                                        دفع غير مسجل: {formatCurrency(selectedPieceDetails.unregisteredPaymentsAmount)}
-                                                     </p>
-                                                 )}
-                                            </div>
-                                            <div className="text-right space-y-1">
-                                                {selectedPieceDetails.workSituationsCount > 0 && selectedPieceDetails.totalPaid > 0 && (
-                                                    <span className="text-[9px] bg-orange-200 text-orange-800 px-1.5 py-0.5 rounded-full font-bold block text-center">
-                                                        {selectedPieceDetails.workSituationsCount} وضعية
-                                                    </span>
-                                                )}
-                                                {selectedPieceDetails.unregisteredRelatedCount > 0 && (
-                                                    <span className="text-[9px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full font-bold block text-center" title="عدد الوثائق غير المسجلة">
-                                                        {selectedPieceDetails.unregisteredRelatedCount} غ. مسجلة
-                                                    </span>
-                                                )}
-                                                {selectedPieceDetails.delayPenalty !== 0 && (
-                                                    <div className="bg-red-100 text-red-700 px-1.5 py-0.5 rounded border border-red-200">
-                                                        <p className="text-[8px] font-bold leading-none mb-0.5">إجمالي العقوبات</p>
-                                                        <p className="text-[9px] font-black leading-none text-left" dir="ltr">
-                                                            {formatCurrency(selectedPieceDetails.delayPenalty)}
-                                                        </p>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-1">
-                                            <div className="flex justify-between items-center">
-                                                <p className="text-[9px] text-gray-500 font-bold">نسبة التقدم المالي:</p>
-                                                <span className="text-[10px] font-bold text-gray-700">
-                                                    {Math.min(100, selectedPieceDetails.progressPercent).toFixed(1)}%
-                                                </span>
-                                            </div>
-                                            <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden border border-gray-200">
-                                                <div 
-                                                    className={`h-full ${selectedPieceDetails.progressPercent >= 100 ? 'bg-green-500' : 'bg-blue-500'}`} 
-                                                    style={{ width: `${Math.min(100, selectedPieceDetails.progressPercent)}%` }}
-                                                ></div>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex justify-between items-center border-t pt-1">
-                                            <p className="text-[9px] text-gray-500 font-bold">المبلغ المتبقي:</p>
-                                            <p className={`text-[10px] font-black ${selectedPieceDetails.remainingAmount < 0 ? 'text-red-600' : 'text-gray-700'}`} dir="ltr">
-                                              {formatCurrency(selectedPieceDetails.remainingAmount)}
-                                            </p>
-                                        </div>
-
-                                        {/* Warranty Info Section */}
-                                        {odsCalculations?.warrantyEndDate && (
-                                            <div className="border-t border-dashed pt-2 mt-1">
-                                                <div className="bg-purple-50 p-2 rounded border border-purple-200">
-                                                    <div className="flex justify-between items-center mb-1">
-                                                        <p className="text-[9px] text-purple-700 font-bold">تاريخ انتهاء الضمان:</p>
-                                                        <span className="text-[10px] font-black text-purple-900">
-                                                            {normalizeDate(odsCalculations.warrantyEndDate.toISOString().split('T')[0])}
-                                                        </span>
-                                                    </div>
-                                                    {(selectedPiece.CAUTION || db.T_PIECE.some(p => p.ID_PIECE_INIT === (selectedPieceDetails.basePiece?.ID_PIECE || selectedPiece.ID_PIECE) && (p.PIECE.includes('ضمان') || p.PIECE.toLowerCase().includes('caution')))) && (
-                                                        odsCalculations.isWarrantyExpired ? (
-                                                            <div className="flex items-center gap-1 text-[9px] text-green-700 font-black mt-1 bg-green-100/50 px-1 rounded">
-                                                                <i className="bi bi-shield-check"></i>
-                                                                يمكن رفع اليد الضمان {selectedPiece.CAUTION ? `(${selectedPiece.CAUTION})` : ''}
-                                                            </div>
-                                                        ) : (
-                                                            <div className="flex items-center gap-1 text-[9px] text-red-600 font-black mt-1 bg-red-100/50 px-1 rounded border border-red-200">
-                                                                <i className="bi bi-exclamation-triangle"></i>
-                                                                لا يمكن رفع اليد الضمان
-                                                            </div>
-                                                        )
-                                                    )}
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    )}
-                </div>
             </div>
 
             <Modal isOpen={modalState.type === 'DOCUMENT'} onClose={() => setModalState({ type: null })} title={modalState.data ? "تعديل وثيقة" : "إضافة وثيقة جديدة"} maxWidth="2xl">
@@ -2532,32 +1800,6 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                     ods={db.T_ODS}
                     selectedOperationId={selectedOperationId ? parseInt(selectedOperationId) : null}
                 />
-            </Modal>
-            <Modal isOpen={modalState.type === 'LOT_PIECE'} onClose={() => setModalState({ type: null })} title="ربط حصة">
-                {selectedPiece && (
-                    <AddLotPieceForm
-                        key={modalState.timestamp ? `lot-piece-${modalState.timestamp}` : 'add-lot-piece'}
-                        onClose={() => setModalState({ type: null })}
-                        onSave={handleSaveLotPiece}
-                        pieceId={selectedPiece.ID_PIECE}
-                        allLotsForOperation={allLotsForOperation}
-                        alreadyAssociatedLotIds={alreadyAssociatedLotIds}
-                        initialData={modalState.data}
-                    />
-                )}
-            </Modal>
-            <Modal isOpen={modalState.type === 'ODS'} onClose={() => setModalState({ type: null })} title={modalState.data ? "تعديل أمر خدمة" : "إضافة أمر خدمة"}>
-                {selectedPiece && (
-                    <AddOdsForm
-                        key={modalState.timestamp ? `ods-${modalState.timestamp}` : 'add-ods'}
-                        onClose={() => setModalState({ type: null })}
-                        onSave={(data) => handleSave('T_ODS', data, 'ID_ODS')}
-                        pieceId={selectedPiece.ID_PIECE}
-                        initialData={modalState.data}
-                        associatedOds={associatedOds}
-                        associatedLots={associatedLotObjects}
-                    />
-                )}
             </Modal>
             
             {/* New Modals for Immediate Engagement/Payment */}

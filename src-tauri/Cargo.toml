@@ -1,6 +1,6 @@
 [package]
 name = "goft3"
-version = "1.1.17"
+version = "1.1.18"
 description = "Gestion des Opérations Financiaire Titre 3"
 authors = ["Abdelatif Benketira"]
 edition = "2021"

@@ -115,14 +115,62 @@ const PrintFinancialStatusPage: React.FC<{ navigate: (page: Page) => void }> = (
     const { rows, totals, direction } = printData;
     const monthName = t(`month.${parseInt(month)}`);
 
+    // تقسيم الصفوف إلى صفحات (كل صفحة صفوف ثابتة) لحساب المجموع الفرعي لكل صفحة
+    const ROWS_PER_PAGE = 12;
+    const pages: { rows: typeof rows; subtotal: { cpFinale: number; paiementsPrevious: number; paiementsCurrentMonth: number; totalPaiementsCurrentYear: number; remainingBalance: number } }[] = [];
+    for (let i = 0; i < rows.length; i += ROWS_PER_PAGE) {
+        const chunk = rows.slice(i, i + ROWS_PER_PAGE);
+        const subtotal = chunk.reduce((acc, row) => {
+            acc.cpFinale += row.cpFinale;
+            acc.paiementsPrevious += row.paiementsPrevious;
+            acc.paiementsCurrentMonth += row.paiementsCurrentMonth;
+            acc.totalPaiementsCurrentYear += row.totalPaiementsCurrentYear;
+            acc.remainingBalance += row.remainingBalance;
+            return acc;
+        }, { cpFinale: 0, paiementsPrevious: 0, paiementsCurrentMonth: 0, totalPaiementsCurrentYear: 0, remainingBalance: 0 });
+        pages.push({ rows: chunk, subtotal });
+    }
+    const totalPages = pages.length;
+
     return (
         <div className="bg-white p-4 min-h-screen">
             <style>{`
                 @media print {
-                    @page { size: A4 landscape; margin: 1.5cm; }
+                    @page {
+                        size: A4 landscape;
+                        margin: 0.5cm;
+                    }
                     .no-print { display: none !important; }
-                    body { margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                    .print-area { margin: 0 !important; padding: 0 !important; box-shadow: none !important; border: none !important; font-size: 10pt; }
+                    body {
+                        margin: 0;
+                        background: white;
+                    }
+                    .print-area {
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        box-shadow: none !important;
+                        border: none !important;
+                        font-size: 8.5pt !important;
+                        width: 100% !important;
+                    }
+                    .print-area table {
+                        page-break-inside: auto;
+                        width: 100% !important;
+                        border-collapse: collapse;
+                    }
+                    .print-area tr {
+                        page-break-inside: avoid;
+                        page-break-after: auto;
+                    }
+                    .print-area thead {
+                        display: table-header-group;
+                    }
+                    .print-area th, .print-area td {
+                        border: 1px solid black !important;
+                        padding: 3px 4px !important;
+                        word-wrap: break-word;
+                        font-size: 8.5pt !important;
+                    }
                 }
                 .print-area { font-family: 'Amiri', serif; }
                 .print-area, .print-area p, .print-area h1, .print-area div, .print-area th, .print-area td { color: black !important; }
@@ -141,40 +189,58 @@ const PrintFinancialStatusPage: React.FC<{ navigate: (page: Page) => void }> = (
                     <p className="font-bold text-right">{direction?.DIRECTION}</p>
                     <h1 className="text-lg font-bold underline mt-4">{t('print.title.financial_status', { month: monthName, year })}</h1>
                 </header>
-                <table className="w-full border-collapse border border-black text-center text-xs">
-                    <thead className="bg-gray-100 font-bold">
-                        <tr>
-                            <th className="border border-black p-1 w-[30%]">{t('col.operation_info')}</th>
-                            <th className="border border-black p-1">{t('col.cp_year', {year})}</th>
-                            <th className="border border-black p-1">{t('col.previous_payment')}</th>
-                            <th className="border border-black p-1">{t('col.monthly_payment')}</th>
-                            <th className="border border-black p-1">{t('col.total_payments')}</th>
-                            <th className="border border-black p-1">{t('col.balance')}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {rows.map(row => (
-                            <tr key={row.ID_OPERATION}>
-                                <td className="border border-black p-1 text-right">{row.N_OPERATION}<br/>{row.INT_OPERATION}</td>
-                                <td className="border border-black p-1">{formatCurrency(row.cpFinale)}</td>
-                                <td className="border border-black p-1">{formatCurrency(row.paiementsPrevious)}</td>
-                                <td className="border border-black p-1">{formatCurrency(row.paiementsCurrentMonth)}</td>
-                                <td className="border border-black p-1">{formatCurrency(row.totalPaiementsCurrentYear)}</td>
-                                <td className="border border-black p-1">{formatCurrency(row.remainingBalance)}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                    <tfoot className="bg-gray-200 font-bold">
-                        <tr>
-                            <td className="border border-black p-1 text-center">{t('lbl.total')}</td>
-                            <td className="border border-black p-1">{formatCurrency(totals.cpFinale)}</td>
-                            <td className="border border-black p-1">{formatCurrency(totals.paiementsPrevious)}</td>
-                            <td className="border border-black p-1">{formatCurrency(totals.paiementsCurrentMonth)}</td>
-                            <td className="border border-black p-1">{formatCurrency(totals.totalPaiementsCurrentYear)}</td>
-                            <td className="border border-black p-1">{formatCurrency(totals.remainingBalance)}</td>
-                        </tr>
-                    </tfoot>
-                </table>
+                {pages.map((page, pageIdx) => (
+                    <div
+                        key={pageIdx}
+                        className="mb-5"
+                        style={{ pageBreakAfter: pageIdx === totalPages - 1 ? 'auto' : 'always', breakAfter: pageIdx === totalPages - 1 ? 'auto' : 'page' }}
+                    >
+                        <table className="w-full border-collapse border border-black text-center text-xs" style={{ pageBreakInside: 'avoid' }}>
+                            <thead className="bg-gray-100 font-bold">
+                                <tr>
+                                    <th className="border border-black p-1 w-[30%]">{t('col.operation_info')}</th>
+                                    <th className="border border-black p-1">{t('col.cp_year', {year})}</th>
+                                    <th className="border border-black p-1">{t('col.previous_payment')}</th>
+                                    <th className="border border-black p-1">{t('col.monthly_payment')}</th>
+                                    <th className="border border-black p-1">{t('col.total_payments')}</th>
+                                    <th className="border border-black p-1">{t('col.balance')}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {page.rows.map(row => (
+                                    <tr key={row.ID_OPERATION}>
+                                        <td className="border border-black p-1 text-right">{row.N_OPERATION}<br/>{row.INT_OPERATION}</td>
+                                        <td className="border border-black p-1">{formatCurrency(row.cpFinale)}</td>
+                                        <td className="border border-black p-1">{formatCurrency(row.paiementsPrevious)}</td>
+                                        <td className="border border-black p-1">{formatCurrency(row.paiementsCurrentMonth)}</td>
+                                        <td className="border border-black p-1">{formatCurrency(row.totalPaiementsCurrentYear)}</td>
+                                        <td className="border border-black p-1">{formatCurrency(row.remainingBalance)}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                            <tfoot className="bg-gray-200 font-bold">
+                                <tr>
+                                    <td className="border border-black p-1 text-center">المجموع الفرعي</td>
+                                    <td className="border border-black p-1">{formatCurrency(page.subtotal.cpFinale)}</td>
+                                    <td className="border border-black p-1">{formatCurrency(page.subtotal.paiementsPrevious)}</td>
+                                    <td className="border border-black p-1">{formatCurrency(page.subtotal.paiementsCurrentMonth)}</td>
+                                    <td className="border border-black p-1">{formatCurrency(page.subtotal.totalPaiementsCurrentYear)}</td>
+                                    <td className="border border-black p-1">{formatCurrency(page.subtotal.remainingBalance)}</td>
+                                </tr>
+                                {pageIdx === totalPages - 1 && (
+                                    <tr className="bg-gray-300">
+                                        <td className="border border-black p-1 text-center">{t('lbl.total')} (الإجمالي الكلي)</td>
+                                        <td className="border border-black p-1">{formatCurrency(totals.cpFinale)}</td>
+                                        <td className="border border-black p-1">{formatCurrency(totals.paiementsPrevious)}</td>
+                                        <td className="border border-black p-1">{formatCurrency(totals.paiementsCurrentMonth)}</td>
+                                        <td className="border border-black p-1">{formatCurrency(totals.totalPaiementsCurrentYear)}</td>
+                                        <td className="border border-black p-1">{formatCurrency(totals.remainingBalance)}</td>
+                                    </tr>
+                                )}
+                            </tfoot>
+                        </table>
+                    </div>
+                ))}
             </div>
         </div>
     );

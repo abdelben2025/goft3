@@ -177,14 +177,14 @@ const PrintMandatPage: React.FC<PrintMandatPageProps> = ({ navigate, paiementId 
     const printStyles = `
         @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap');
         body { font-family: 'Amiri', serif; direction: rtl; }
-        .print-area { direction: rtl; font-family: 'Amiri', serif; color: black; padding: 20px; background: white; }
+        .print-area { direction: rtl; font-family: 'Amiri', serif; color: black; padding: 10px; background: white; }
         .text-center { text-align: center; }
         .font-bold { font-weight: bold; }
-        .text-sm { font-size: 0.875rem; }
-        .text-xs { font-size: 0.65rem; }
-        .text-lg { font-size: 1rem; }
-        .my-2 { margin-top: 0.5rem; margin-bottom: 0.5rem; }
-        .mb-1 { margin-bottom: 0.25rem; }
+        .text-sm { font-size: 0.80rem; }
+        .text-xs { font-size: 0.70rem; }
+        .text-lg { font-size: 0.98rem; }
+        .my-2 { margin-top: 0.3rem; margin-bottom: 0.3rem; }
+        .mb-1 { margin-bottom: 0.2rem; }
         .flex { display: flex; }
         .justify-between { justify-content: space-between; }
         .w-1\\/3 { width: 33.333333%; }
@@ -192,17 +192,17 @@ const PrintMandatPage: React.FC<PrintMandatPageProps> = ({ navigate, paiementId 
         .w-2\\/4 { width: 50%; }
         .w-1\\/4 { width: 25%; }
         .text-right { text-align: right; }
-        .space-y-1 > * + * { margin-top: 0.25rem; }
-        .pt-2 { padding-top: 0.5rem; }
-        .p-2 { padding: 0.5rem; }
+        .space-y-1 > * + * { margin-top: 0.15rem; }
+        .pt-2 { padding-top: 0.3rem; }
+        .p-2 { padding: 0.3rem; }
         .border { border-width: 1px; }
         .border-black { border-color: black; }
         .inline-block { display: inline-block; }
         .bg-gray-100 { background-color: #f3f4f6; }
         table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid black; padding: 2px; }
+        th, td { border: 1px solid black; padding: 1px 2px; word-wrap: break-word; overflow-wrap: break-word; }
         .text-right { text-align: right; }
-        .my-2 { margin-top: 0.5rem; margin-bottom: 0.5rem; }
+        .my-2 { margin-top: 0.3rem; margin-bottom: 0.3rem; }
         .w-\\[5\\%\\] { width: 5%; }
         .w-\\[3\\%\\] { width: 3%; }
         .w-\\[15\\%\\] { width: 15%; }
@@ -212,12 +212,17 @@ const PrintMandatPage: React.FC<PrintMandatPageProps> = ({ navigate, paiementId 
         .w-\\[13\\%\\] { width: 13%; }
         .align-middle { vertical-align: middle; }
         .align-top { vertical-align: top; }
-        .h-20 { height: 5rem; }
-        .h-6 { height: 1.5rem; }
-        .mt-16 { margin-top: 4rem; }
-        .mt-8 { margin-top: 2rem; }
-        .mt-5 { margin-top: 1.25rem; }
-        .mt-1 { margin-top: 0.25rem; }
+        .h-20 { height: 3.5rem; }
+        .h-6 { height: 1.2rem; }
+        .mt-16 { margin-top: 2.5rem; }
+        .mt-8 { margin-top: 1.5rem; }
+        .mt-5 { margin-top: 1rem; }
+        .mt-1 { margin-top: 0.2rem; }
+        .mt-6 { margin-top: 1rem; }
+        .mb-2 { margin-bottom: 0.5rem; }
+        .gap-4 { gap: 1rem; }
+        .gap-2 { gap: 0.5rem; }
+        .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
     `;
 
     const handlePrintJS = () => {
@@ -251,6 +256,9 @@ const PrintMandatPage: React.FC<PrintMandatPageProps> = ({ navigate, paiementId 
     const { paiement, operation, engagement, beneficiary, direction, scategorie, categorie, programme, sprogramme, montantBrut, totalDeductions, montantNet, actionCode, actionName } = printData;
     const account = activeAccount;
 
+    const objetText = paiement.OBJET_PAI || '';
+    const isLongObjet = objetText.length > 60;
+
     return (
         <div className="bg-white min-h-screen">
             <style>{printStyles}</style>
@@ -269,6 +277,8 @@ const PrintMandatPage: React.FC<PrintMandatPageProps> = ({ navigate, paiementId 
                     }
                     @page { margin: 0; size: A4 landscape; }
                     .no-print { display: none !important; }
+                    #print-content { page-break-inside: avoid; break-inside: avoid; }
+                    .print-area td, .print-area th { page-break-inside: avoid; break-inside: avoid; }
                 }
             `}</style>
             <div className="no-print mb-1 flex justify-between items-center bg-gray-100 p-3 rounded shadow">
@@ -328,11 +338,11 @@ const PrintMandatPage: React.FC<PrintMandatPageProps> = ({ navigate, paiementId 
                                 </div>
                             </div>
                         </div>
-                        <div className="mt-0 flex-grow text-[12px]">
-                            <p><span className="font-bold">موضوع الدفع: </span>{paiement.OBJET_PAI}</p>
-                            <p>تسمية العملية: <span className="text-center">{operation.INT_OPERATION}</span></p>				
-                            <p><span className="font-bold">رقم العملية: </span>{operation.N_OPERATION}
-                                {operation.N_OPERATION_ANCIEN && (<span>&nbsp;<span className="font-bold">رقم العملية القديم: </span>{operation.N_OPERATION_ANCIEN}</span>)}</p>
+                        <div className={`mt-0 flex-grow ${isLongObjet ? 'text-[10px] leading-snug' : 'text-[12px]'}`}>
+                            <p className="break-words"><span className="text-[12px] font-bold">موضوع الدفع: </span><span className="text-[11px]">{objetText}</span></p>
+                            <p><span className="text-[13px] font-bold text-center">تسمية العملية:</span><span className="text-[13px] text-center">{operation.INT_OPERATION}</span></p>				
+                            <p><span className="text-[13px] font-bold">رقم العملية: </span><span className="text-[12px]">{operation.N_OPERATION}
+                               </span><span className="text-[12px]">{operation.N_OPERATION_ANCIEN  && (<span>&nbsp;<span className="font-bold">رقم العملية القديم: </span>{operation.N_OPERATION_ANCIEN}</span>)}</span></p>
                             <p className="mt-1 leading-none"><span className="font-bold">أحكام التدخل: </span>(T4, T5 et T6)</p>
                         </div>
                     </div>
@@ -395,17 +405,17 @@ const PrintMandatPage: React.FC<PrintMandatPageProps> = ({ navigate, paiementId 
                         <tr>
                             <td className="border border-black align-top p-1 text-center">{engagement.N_ENG}/{engagement.ANNEE}</td>
                             <td className="border border-black align-top p-1 text-center">{sprogramme?.SPROGRAMME}</td>
-                            <td className="border border-black align-top p-1 text-center">
+                            <td className="border border-black align-top p-1 text-center text-[12px]">
                                 <p>الصنف: {categorie?.C_CATEGORIE} {categorie?.INT_CATEGORIE}</p>
                                 <p>الصنف الفرعي: {scategorie?.C_SCATEGORIE} {scategorie?.INT_SCATEGORIE}</p>
                             </td>
-                            <td className="border border-black align-top p-1 text-center">{formatCurrency(montantBrut)}</td>
+                            <td className="border border-black align-top p-1 text-center text-[12px]">{formatCurrency(montantBrut)}</td>
                             <td className="border border-black align-top p-1 text-center"></td>
                             <td className="border border-black align-top p-1 text-center">{formatCurrency(totalDeductions > 0 ? totalDeductions : null)}</td>
-                            <td className="border border-black align-top text-xs text-center">{beneficiary.BENEFICIAIRE}</td>
-                            <td className="border border-black align-top text-xs text-center">{account?.RIB}<br />{account?.BANQUE}</td>
-                            <td className="border border-black align-top text-xs text-center">{paiement.OBJET_PAI}</td>
-                            <td className="border border-black align-top p-1 text-center font-bold">{formatCurrency(montantNet)}</td>
+                            <td className="border border-black align-top text-[12px] text-center">{beneficiary.BENEFICIAIRE}</td>
+                            <td className="border border-black align-top text-[12px] text-center">{account?.RIB}<br />{account?.BANQUE}</td>
+                            <td className={`border border-black align-top text-center ${isLongObjet ? 'text-[11px] break-words leading-snug' : 'text-[12px]'}`}>{objetText}</td>
+                            <td className="border border-black align-top p-1 text-center font-bold text-[12px]">{formatCurrency(montantNet)}</td>
                             <td className="border border-black align-top p-1"></td>
                         </tr>
                     </tbody>

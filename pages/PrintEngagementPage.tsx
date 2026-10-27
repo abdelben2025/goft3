@@ -60,7 +60,21 @@ const PrintEngagementPage: React.FC<PrintEngagementPageProps> = ({ navigate, eng
         
         const lotPieces = db.T_LOT_PIECE.filter(lp => lp.ID_PIECE === pieceIdForLots);
         const lots = lotPieces.map(lp => db.T_LOT_OPERATION.find(l => l.ID_LOT === lp.ID_LOT)).filter((lot): lot is NonNullable<typeof lot> => !!lot);
-        
+
+        // تفصيل الهيكلة المرتبطة بهذه الوثيقة فقط (عبر ID_RUBRIQUE للوثيقة)
+        const rubriquesForInvoice: { name: string; montant: number }[] = [];
+        if (piece.ID_RUBRIQUE) {
+            const rub = db.T_RUBRIQUE.find(r => r.ID_RUBRIQUE === piece.ID_RUBRIQUE);
+            const ro = db.T_RUBRIQUE_OP.find(r => r.ID_OPERATION === operation.ID_OPERATION && r.ID_RUBRIQUE === piece.ID_RUBRIQUE);
+            const montant = ro ? (ro.MONTANT_FINALE ?? ro.MONTANT_INITIALE) : undefined;
+            if (rub) {
+                rubriquesForInvoice.push({ name: rub.RUBRIQUE, montant: montant ?? 0 });
+            }
+        }
+        // استثناء تفصيل "الإشهار" من الاستبدال (إن لم تكن له حصة مرتبطة)
+        const hasInvoiceLot = lotPieces.length > 0;
+        const filteredRubriquesForInvoice = rubriquesForInvoice.filter(r => !(r.name === 'الإشهار' && !hasInvoiceLot));
+
         const beneficiary = piece.ID_BENEFICIAIRE ? db.T_BENEFICIAIRE.find(b => b.ID_BENEFICIAIRE === piece.ID_BENEFICIAIRE) : null;
 
         const budgetAmount = db.T_SCATEGORIE_OP
@@ -114,7 +128,7 @@ const PrintEngagementPage: React.FC<PrintEngagementPageProps> = ({ navigate, eng
         return {
             engagement, operation, direction, categorie, scategorie, scategorieOp,
             lots, beneficiary, budgetAmount, displayedTotalEng, displayedSoldeAnt,
-            displayedMontantEng, displayedReliquat
+            displayedMontantEng, displayedReliquat, rubriquesForInvoice: filteredRubriquesForInvoice
         };
     }, [db, loading, engagementId]);
 
@@ -159,7 +173,10 @@ const PrintEngagementPage: React.FC<PrintEngagementPageProps> = ({ navigate, eng
     if (loading) return <div className="p-8 text-center">جار تحميل البيانات...</div>;
     if (!printData) return <div className="p-8 text-center text-red-500">لم يتم العثور على البيانات.</div>;
 
-    const { engagement, operation, direction, lots, beneficiary, budgetAmount, displayedTotalEng, displayedSoldeAnt, displayedMontantEng, displayedReliquat } = printData;
+    const { engagement, operation, direction, lots, beneficiary, budgetAmount, displayedTotalEng, displayedSoldeAnt, displayedMontantEng, displayedReliquat, rubriquesForInvoice = [] } = printData;
+
+    const piece = db.T_PIECE.find(p => p.ID_PIECE === engagement.ID_PIECE);
+    const isInvoice = piece?.NAT_PIECE === 'فاتورة';
     
     const opParts = operation.N_OPERATION.split('.');
     const opProg = opParts[3] || '';
@@ -264,21 +281,29 @@ const PrintEngagementPage: React.FC<PrintEngagementPageProps> = ({ navigate, eng
 
                 <div className="space-y-1 text-[9pt] mb-4">
                     <p><b>موضوع الالتزام:</b> {engagement.OBJET_ENG}</p>
-                    {lots.length > 0 && (
+                    {isInvoice && lots.length === 0 && rubriquesForInvoice.length > 0 ? (
                         <div className="pr-4 text-[9pt] text-center">
-                            {lots.map(l => {
-                                const nLotStr = String(l.N_LOT || '').trim();
-                                const hasLetter = /[a-zA-Z\u0600-\u06FF]/.test(nLotStr);
-                                const hasNumber = /\d/.test(nLotStr);
-                                const showLotNumber = nLotStr && !(hasLetter && hasNumber);
-                                
-                                return (
-                                    <p key={l.ID_LOT}>
-                                        - {showLotNumber ? `الحصة ${l.N_LOT}: ` : ''}{l.INTITULE_LOT}
-                                    </p>
-                                );
-                            })}
+                            {rubriquesForInvoice.map((r, i) => (
+                                <p key={i}>- {r.name}</p>
+                            ))}
                         </div>
+                    ) : (
+                        lots.length > 0 && (
+                            <div className="pr-4 text-[9pt] text-center">
+                                {lots.map(l => {
+                                    const nLotStr = String(l.N_LOT || '').trim();
+                                    const hasLetter = /[a-zA-Z\u0600-\u06FF]/.test(nLotStr);
+                                    const hasNumber = /\d/.test(nLotStr);
+                                    const showLotNumber = nLotStr && !(hasLetter && hasNumber);
+                                    
+                                    return (
+                                        <p key={l.ID_LOT}>
+                                            - {showLotNumber ? `الحصة ${l.N_LOT}: ` : ''}{l.INTITULE_LOT}
+                                        </p>
+                                    );
+                                })}
+                            </div>
+                        )
                     )}
                     {beneficiary?.BENEFICIAIRE && beneficiary.BENEFICIAIRE !== '---' && (
                         <p><b>لفائدة:</b> {beneficiary.BENEFICIAIRE}</p>

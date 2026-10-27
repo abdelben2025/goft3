@@ -144,6 +144,7 @@ export interface Piece {
     N_VISA_CM: string | null;
     DATE_VISA_CM: string | null;
     CAUTION?: string | null;
+    TYPE_CAUTION?: string | null;
     DATE_OD_PIECE?: string | null;
     N_OD_PIECE?: string | null;
     DATE_DEPOT_PIECE?: string | null;

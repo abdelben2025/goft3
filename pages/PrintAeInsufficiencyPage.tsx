@@ -152,44 +152,44 @@ const PrintAeInsufficiencyPage: React.FC<PrintAeInsufficiencyPageProps> = ({ nav
         <div className="bg-white p-4 min-h-screen">
             <style>{`
                 @media print {
-                    @page { size: A4 portrait; margin: 0.4cm; }
+                    @page {
+                        size: A4 landscape;
+                        margin: 0.5cm;
+                    }
                     .no-print { display: none !important; }
-                    body { margin: 0 !important; padding: 0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                    html, body { height: auto !important; overflow: visible !important; }
+                    body {
+                        margin: 0;
+                        background: white;
+                    }
                     .print-area {
                         margin: 0 !important;
                         padding: 0 !important;
                         box-shadow: none !important;
                         border: none !important;
-                        font-size: 9pt;
+                        font-size: 8.5pt !important;
                         width: 100% !important;
-                        max-width: 100% !important;
-                        overflow: visible !important;
                     }
-                    .print-page {
-                        box-shadow: none !important;
-                        border: none !important;
-                        padding: 0.15cm 0.2cm !important;
-                        margin: 0 !important;
-                        height: auto !important;
-                        min-height: 0 !important;
-                        overflow: visible !important;
-                        page-break-after: always;
-                        break-after: page;
+                    .print-area table {
                         page-break-inside: auto;
-                        break-inside: auto;
+                        width: 100% !important;
+                        border-collapse: collapse;
                     }
-                    .print-page:last-child {
-                        page-break-after: avoid !important;
-                        break-after: avoid !important;
+                    .print-area tr {
+                        page-break-inside: avoid;
+                        page-break-after: auto;
                     }
-                    .print-page table { page-break-inside: auto; break-inside: auto; }
-                    .print-page tr { page-break-inside: avoid; break-inside: avoid; }
-                    .print-page thead { display: table-header-group; }
+                    .print-area thead {
+                        display: table-header-group;
+                    }
+                    .print-area th, .print-area td {
+                        border: 1px solid black !important;
+                        padding: 3px 4px !important;
+                        word-wrap: break-word;
+                        font-size: 8.5pt !important;
+                    }
                 }
                 .print-area { font-family: 'Amiri', serif; }
-                .print-area table, .print-area th, .print-area td { border-color: black !important; }
-                .print-area th, .print-area td { padding: 0.2rem 0.35rem !important; line-height: 1.25; font-size: 11px; }
+                .print-area, .print-area p, .print-area h1, .print-area div, .print-area th, .print-area td { color: black !important; }
             `}</style>
             
             <div className="no-print mb-4 flex flex-col md:flex-row gap-4 justify-between items-start md:items-center bg-white p-4 rounded shadow border border-gray-100 font-sans">

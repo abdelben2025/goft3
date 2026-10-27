@@ -80,6 +80,13 @@ input::placeholder, textarea::placeholder {
     padding: 0 !important;
   }
   .min-h-screen { min-height: 0 !important; }
+  /* إعادة محتوى الطباعة إلى التدفق الطبيعي حتى لا يُترك فراغ
+     يسبب صفحة بيضاء ثانية (بدل position: absolute) */
+  #print-content {
+    position: static !important;
+    top: auto !important;
+    width: auto !important;
+  }
 }
 
 @keyframes pulse-green {

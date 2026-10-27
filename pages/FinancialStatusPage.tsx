@@ -236,12 +236,12 @@ const FinancialStatusPage: React.FC<FinancialStatusPageProps> = ({ navigate, onG
             <div className="bg-blue-200 p-3 rounded-lg shadow-md mb-4">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                     <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">{t('filter.year')}</label>
+                       <label className="block text-xs font-medium text-gray-700 mb-1">{t('filter.year')}</label> 
                         <CustomDropdown
                             options={years.map(y => ({ value: y, label: y }))}
                             value={selectedYear}
                             onChange={setSelectedYear}
-                            placeholder={t('filter.select_year')}
+                            
                         />
                     </div>
                     <div>
@@ -250,7 +250,7 @@ const FinancialStatusPage: React.FC<FinancialStatusPageProps> = ({ navigate, onG
                             options={monthOptions}
                             value={selectedMonth}
                             onChange={setSelectedMonth}
-                            placeholder={t('filter.month')}
+                            
                         />
                     </div>
                     <div>

@@ -4,6 +4,12 @@ import { normalizeDate, getCurrentDate } from '../../utils/dateUtils';
 import { DateInputField } from '../DateInputField';
 import { formatCurrency, parseCurrency, formatAmountInput, formatCurrencyForInput } from '../../utils/currencyUtils';
 
+const parseWorkStatementNumber = (text?: string): number | null => {
+    if (!text) return null;
+    const numMatch = text.match(/رقم:\s*(\d+)/);
+    return numMatch ? parseInt(numMatch[1], 10) : null;
+};
+
 interface AddPaiementFormProps {
     onClose: () => void;
     onSave: (paiement: any) => void | Promise<void>;
@@ -165,12 +171,25 @@ const AddPaiementForm: React.FC<AddPaiementFormProps> = ({ onClose, onSave, oper
                 setMontantTravauxRealisesStr('0');
                 setAvanceForfaitaireStr(formatCurrency(selectedPiece.MONTANT_PIECE));
                 setAvanceApprovisionnementStr('0');
+                // التسبيق الجزافي هو الدفع الأول => لا دفعات سابقة
                 setPreviousPaymentsStr('0');
             } else if (selectedPiece.NAT_PIECE === 'وضعية التسبيق على التموين') {
+                const contractId = selectedPiece.ID_PIECE_INIT;
+                let prevSum = 0;
+                if (contractId) {
+                    prevSum = allPaiementsForOp
+                        .filter(pay => {
+                            const p = pieces.find(pc => Number(pc.ID_PIECE) === Number(pay.ID_PIECE));
+                            return p && Number(p.ID_PIECE_INIT) === Number(contractId) &&
+                                (p.NAT_PIECE === 'وضعية التسبيق الجزافي' || p.NAT_PIECE === 'وضعية التسبيق على التموين') &&
+                                (!initialData || Number(pay.ID_PAIEMENT) !== Number(initialData.ID_PAIEMENT));
+                        })
+                        .reduce((sum, pay) => sum + pay.MONTANT_PAI, 0);
+                }
                 setMontantTravauxRealisesStr('0');
                 setAvanceForfaitaireStr('0');
                 setAvanceApprovisionnementStr(formatCurrency(selectedPiece.MONTANT_PIECE));
-                setPreviousPaymentsStr('0');
+                setPreviousPaymentsStr(formatCurrency(prevSum));
             } else if (selectedPiece.NAT_PIECE === 'وضعية الأشغال') {
                 // العثور على الالتزام الأب
                 const relatedEngagement = engagements.find(e =>
@@ -178,22 +197,39 @@ const AddPaiementForm: React.FC<AddPaiementFormProps> = ({ onClose, onSave, oper
                     (Number(e.ID_PIECE) === Number(selectedPiece.ID_PIECE))
                 );
                 const tempEngId = relatedEngagement?.ID_ENGAGEMENT || 0;
+                const contractId = selectedPiece.ID_PIECE_INIT;
 
-                // أ. حساب مجموع دفعات الأشغال السابقة فقط
+                // رقم الوضعية الحالية
+                const currentSeq = parseWorkStatementNumber(selectedPiece.PIECE) ?? Infinity;
+
+                // أ. حساب مجموع دفعات الأشغال السابقة (الوضعيات الأقدم فقط)
                 const sumPreviousWorksOnly = allPaiementsForOp
                     .filter(p => Number(p.ID_ENG) === Number(tempEngId))
                     .reduce((sum, p) => {
                         const payPiece = pieces.find(i => Number(i.ID_PIECE) === Number(p.ID_PIECE));
-                        return (payPiece?.NAT_PIECE === 'وضعية الأشغال') ? sum + p.MONTANT_PAI : sum;
+                        if (payPiece?.NAT_PIECE !== 'وضعية الأشغال') return sum;
+                        const seq = parseWorkStatementNumber(payPiece.PIECE) ?? 0;
+                        return seq < currentSeq ? sum + p.MONTANT_PAI : sum;
                     }, 0);
 
-                setPreviousPaymentsStr(formatCurrency(sumPreviousWorksOnly));
+                // مجموع التسبيقات المدفوعة لهذا العقد
+                let sumAdvances = 0;
+                if (contractId) {
+                    sumAdvances = allPaiementsForOp
+                        .filter(pay => {
+                            const p = pieces.find(pc => Number(pc.ID_PIECE) === Number(pay.ID_PIECE));
+                            return p && Number(p.ID_PIECE_INIT) === Number(contractId) &&
+                                (p.NAT_PIECE === 'وضعية التسبيق الجزافي' || p.NAT_PIECE === 'وضعية التسبيق على التموين');
+                        })
+                        .reduce((sum, pay) => sum + pay.MONTANT_PAI, 0);
+                }
+
+                // مجموع الدفعات السابقة = التسبيقات + الوضعيات الأقدم
+                setPreviousPaymentsStr(formatCurrency(sumAdvances + sumPreviousWorksOnly));
                 setMontantTravauxRealisesStr(formatCurrency(sumPreviousWorksOnly + selectedPiece.MONTANT_PIECE));
 
                 // ب. تعبئة التسبيقات آلياً إذا وجدت
-                if (selectedPiece.ID_PIECE_INIT) {
-                    const contractId = selectedPiece.ID_PIECE_INIT;
-
+                if (contractId) {
                     // جلب تسبيق جزافي مدفوع مسبقاً
                     const forfaitaireAmount = allPaiementsForOp
                         .filter(pay => {
@@ -219,7 +255,7 @@ const AddPaiementForm: React.FC<AddPaiementFormProps> = ({ onClose, onSave, oper
                 setPreviousPaymentsStr('0');
             }
         }
-    }, [pieces, engagements, allPaiementsForOp]);
+    }, [pieces, engagements, allPaiementsForOp, initialData]);
 
     // مراقبة تغيير الوثيقة المختارة لتشغيل التعبئة التلقائية
     const handlePieceChange = (newPieceId: number) => {
@@ -263,16 +299,50 @@ const AddPaiementForm: React.FC<AddPaiementFormProps> = ({ onClose, onSave, oper
             setRemboursementAvanceForfaitaireStr(formatCurrency(initialData.REMBOURSEMENT_AVANCE_FORFAITAIRE || 0));
             setRemboursementAvanceApprovisionnementStr(formatCurrency(initialData.REMBOURSEMENT_AVANCE_APPROVISIONNEMENT || 0));
 
-            // حساب الدفعات السابقة لوضعية الأشغال في وضع التعديل
+            // حساب الدفعات السابقة في وضع التعديل
             const relatedPiece = pieces.find(pc => Number(pc.ID_PIECE) === Number(initialData.ID_PIECE));
-            if (relatedPiece && relatedPiece.NAT_PIECE === 'وضعية الأشغال') {
-                const prevSum = allPaiementsForOp
-                    .filter(p => Number(p.ID_ENG) === Number(initialData.ID_ENG) && Number(p.ID_PAIEMENT) !== Number(initialData.ID_PAIEMENT))
-                    .reduce((sum, p) => {
+            if (relatedPiece && (relatedPiece.NAT_PIECE === 'وضعية الأشغال' || relatedPiece.NAT_PIECE === 'وضعية التسبيق الجزافي' || relatedPiece.NAT_PIECE === 'وضعية التسبيق على التموين')) {
+                const priorPayments = allPaiementsForOp.filter(p =>
+                    Number(p.ID_ENG) === Number(initialData.ID_ENG) && Number(p.ID_PAIEMENT) !== Number(initialData.ID_PAIEMENT)
+                );
+                if (relatedPiece.NAT_PIECE === 'وضعية الأشغال') {
+                    const currentSeq = parseWorkStatementNumber(relatedPiece.PIECE) ?? Infinity;
+                    const prevSum = priorPayments.reduce((sum, p) => {
                         const payPiece = pieces.find(i => Number(i.ID_PIECE) === Number(p.ID_PIECE));
-                        return (payPiece?.NAT_PIECE === 'وضعية الأشغال') ? sum + p.MONTANT_PAI : sum;
+                        if (payPiece?.NAT_PIECE !== 'وضعية الأشغال') return sum;
+                        const seq = parseWorkStatementNumber(payPiece.PIECE) ?? 0;
+                        return seq < currentSeq ? sum + p.MONTANT_PAI : sum;
                     }, 0);
-                setPreviousPaymentsStr(formatCurrency(prevSum));
+                    const contractId = relatedPiece.ID_PIECE_INIT;
+                    let prevAdvances = 0;
+                    if (contractId) {
+                        prevAdvances = allPaiementsForOp
+                            .filter(pay => {
+                                const p = pieces.find(pc => Number(pc.ID_PIECE) === Number(pay.ID_PIECE));
+                                return p && Number(p.ID_PIECE_INIT) === Number(contractId) &&
+                                    (p.NAT_PIECE === 'وضعية التسبيق الجزافي' || p.NAT_PIECE === 'وضعية التسبيق على التموين');
+                            })
+                            .reduce((sum, pay) => sum + pay.MONTANT_PAI, 0);
+                    }
+                    setPreviousPaymentsStr(formatCurrency(prevAdvances + prevSum));
+                } else if (relatedPiece.NAT_PIECE === 'وضعية التسبيق على التموين') {
+                    const contractId = relatedPiece.ID_PIECE_INIT;
+                    let prevSum = 0;
+                    if (contractId) {
+                        prevSum = allPaiementsForOp
+                            .filter(pay => {
+                                const p = pieces.find(pc => Number(pc.ID_PIECE) === Number(pay.ID_PIECE));
+                                return p && Number(p.ID_PIECE_INIT) === Number(contractId) &&
+                                    (p.NAT_PIECE === 'وضعية التسبيق الجزافي' || p.NAT_PIECE === 'وضعية التسبيق على التموين') &&
+                                    Number(pay.ID_PAIEMENT) !== Number(initialData.ID_PAIEMENT);
+                            })
+                            .reduce((sum, pay) => sum + pay.MONTANT_PAI, 0);
+                    }
+                    setPreviousPaymentsStr(formatCurrency(prevSum));
+                } else {
+                    // التسبيق الجزافي هو الدفع الأول => لا دفعات سابقة
+                    setPreviousPaymentsStr('0');
+                }
             }
 
             isEditLoaded.current = true;
@@ -282,26 +352,69 @@ const AddPaiementForm: React.FC<AddPaiementFormProps> = ({ onClose, onSave, oper
         }
     }, [initialData, defaultPieceId, pieces, allPaiementsForOp, handlePieceChange]);
 
-    // حساب صافي الدفع
+    // حساب صافي الدفع: ثابت دائماً = مبلغ الوثيقة
     useEffect(() => {
-        const tr = parseCurrency(montantTravauxRealisesStr);
-        const af = parseCurrency(avanceForfaitaireStr);
-        const aa = parseCurrency(avanceApprovisionnementStr);
-        const pp = parseCurrency(previousPaymentsStr);
-        const rg = parseCurrency(retenueGarantieStr);
-        const ad = parseCurrency(autreDeductionStr);
-        const raf = parseCurrency(remboursementAvanceForfaitaireStr);
-        const raa = parseCurrency(remboursementAvanceApprovisionnementStr);
-
-        const net = isInvoicePayment ? tr : (tr + af + aa - pp - rg - ad - raf - raa);
+        const selectedPiece = pieces.find(p => Number(p.ID_PIECE) === Number(idPiece));
+        const net = selectedPiece?.MONTANT_PIECE || 0;
         setMontantPai(net);
-        setMontantPaiStr(formatCurrency(net));
-    }, [
-        montantTravauxRealisesStr, avanceForfaitaireStr, avanceApprovisionnementStr,
-        previousPaymentsStr, retenueGarantieStr, autreDeductionStr,
-        remboursementAvanceForfaitaireStr, remboursementAvanceApprovisionnementStr,
-        isInvoicePayment
-    ]);
+		setMontantPaiStr(formatCurrency(net));
+		
+    }, [idPiece, pieces]);
+
+    // تعبئة تلقائية لحقل اقتطاع الضمان عندما يكون نوع ضمان العقد RETENTION
+    useEffect(() => {
+        const selectedPiece = pieces.find(p => Number(p.ID_PIECE) === Number(idPiece));
+        if (!selectedPiece) return;
+        let contract: Piece | undefined = selectedPiece;
+        const visited = new Set<number>();
+        while (contract && contract.ID_PIECE_INIT && !visited.has(Number(contract.ID_PIECE))) {
+            visited.add(Number(contract.ID_PIECE));
+            contract = pieces.find(p => Number(p.ID_PIECE) === Number(contract!.ID_PIECE_INIT));
+        }
+        if (!contract || contract.TYPE_CAUTION !== 'RETENTION') return;
+        const match = (contract.CAUTION || '').match(/\d+(\.\d+)?/);
+        if (!match) return;
+        const raw = parseFloat(match[0]);
+        const pct = raw > 1 ? raw : raw * 100;
+        const reimbCurrent = parseCurrency(remboursementAvanceForfaitaireStr) + parseCurrency(remboursementAvanceApprovisionnementStr);
+        const retention = (montantPai + reimbCurrent) * pct / 100;
+        setRetenueGarantieStr(formatCurrency(retention));
+    }, [idPiece, pieces, montantPai, remboursementAvanceForfaitaireStr, remboursementAvanceApprovisionnementStr]);
+
+    // حساب مبلغ الأشغال (تراكمي): وضعية حالية + تسديدات التسبيقات + اقتطاع الضمان + الوضعيات الأقدم
+    useEffect(() => {
+        const selectedPiece = pieces.find(p => Number(p.ID_PIECE) === Number(idPiece));
+        if (!selectedPiece || selectedPiece.NAT_PIECE !== 'وضعية الأشغال') return;
+
+        const relatedEngagement = engagements.find(e =>
+            (selectedPiece.ID_PIECE_INIT && Number(e.ID_PIECE) === Number(selectedPiece.ID_PIECE_INIT)) ||
+            (Number(e.ID_PIECE) === Number(selectedPiece.ID_PIECE))
+        );
+        const engId = relatedEngagement?.ID_ENGAGEMENT || 0;
+        const currentSeq = parseWorkStatementNumber(selectedPiece.PIECE) ?? Infinity;
+
+        const sumEarlier = allPaiementsForOp
+            .filter(p => Number(p.ID_ENG) === Number(engId))
+            .reduce((sum, p) => {
+                const payPiece = pieces.find(i => Number(i.ID_PIECE) === Number(p.ID_PIECE));
+                if (payPiece?.NAT_PIECE !== 'وضعية الأشغال') return sum;
+                const seq = parseWorkStatementNumber(payPiece.PIECE) ?? 0;
+                return seq < currentSeq ? sum + p.MONTANT_PAI : sum;
+            }, 0);
+
+        const reimbPrev = allPaiementsForOp
+            .filter(p => Number(p.ID_ENG) === Number(engId) && (!initialData || Number(p.ID_PAIEMENT) !== Number(initialData.ID_PAIEMENT)))
+            .reduce((sum, p) => {
+                const payPiece = pieces.find(i => Number(i.ID_PIECE) === Number(p.ID_PIECE));
+                if (payPiece?.NAT_PIECE !== 'وضعية الأشغال') return sum;
+                const seq = parseWorkStatementNumber(payPiece.PIECE) ?? 0;
+                if (seq >= currentSeq) return sum;
+                return sum + (p.REMBOURSEMENT_AVANCE_FORFAITAIRE || 0) + (p.REMBOURSEMENT_AVANCE_APPROVISIONNEMENT || 0);
+            }, 0);
+        const reimbCurrent = parseCurrency(remboursementAvanceForfaitaireStr) + parseCurrency(remboursementAvanceApprovisionnementStr);
+        const retention = parseCurrency(retenueGarantieStr);
+        setMontantTravauxRealisesStr(formatCurrency(selectedPiece.MONTANT_PIECE + retention + reimbPrev + reimbCurrent + sumEarlier));
+    }, [idPiece, pieces, engagements, allPaiementsForOp, remboursementAvanceForfaitaireStr, remboursementAvanceApprovisionnementStr, retenueGarantieStr, initialData]);
 
     // ترقيم الدفعات آلياً عند تغيير السنة
     useEffect(() => {

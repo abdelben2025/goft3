@@ -110,6 +110,7 @@ pub fn init_database(db_path: &PathBuf) -> Result<Connection> {
             N_VISA_CM TEXT,
             DATE_VISA_CM TEXT,
             CAUTION TEXT,
+            TYPE_CAUTION TEXT,
             DATE_OD_PIECE TEXT,
             N_OD_PIECE TEXT,
             DATE_DEPOT_PIECE TEXT,

@@ -49,7 +49,8 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
     const [idPieceInit, setIdPieceInit] = useState<number | null>(null);
     const [nVisaCm, setNVisaCm] = useState<string>('');
     const [dateVisaCm, setDateVisaCm] = useState<string>('');
-    const [caution, setCaution] = useState<string>('');
+    const [caution, setCaution] = useState<string>('5%');
+    const [cautionType, setCautionType] = useState<string>('BANK');
     const [isFieldsLocked, setIsFieldsLocked] = useState(false);
     const [pieceValidationMessage, setPieceValidationMessage] = useState<string | null>(null);
     const [pieceValidationType, setPieceValidationType] = useState<'error' | 'warning'>('error');
@@ -308,6 +309,7 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
             setNVisaCm(initialData.N_VISA_CM || '');
             setDateVisaCm(normalizeDate(initialData.DATE_VISA_CM));
             setCaution(initialData.CAUTION || '');
+            setCautionType(initialData.TYPE_CAUTION || 'BANK');
 
             isEditLoaded.current = true;
             isDirty.current = true; // Prevent auto-overwrite
@@ -956,6 +958,7 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
             N_VISA_CM: (natPiece === 'صفقة' || isAmendmentWithVisa) ? (nVisaCm || null) : null,
             DATE_VISA_CM: (natPiece === 'صفقة' || isAmendmentWithVisa) ? (dateVisaCm || null) : null,
             CAUTION: (natPiece === 'صفقة' || natPiece === 'اتفاقية') ? (caution || null) : null,
+            TYPE_CAUTION: (natPiece === 'صفقة' || natPiece === 'اتفاقية') ? (caution ? (cautionType || 'BANK') : null) : null,
             ID_SCATEGORIE: idScat,
             SAI_ENG: saiEng,
             SAI_PAI: saiPai
@@ -1004,7 +1007,21 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
                                         <option key={i + 1} value={`${i + 1}%`}>{i + 1}%</option>
                                     ))}
                                 </select>
-                            </div>                       
+                            </div>
+                            {caution && (
+                                <div>
+                                    <label htmlFor="cautionType" className="block text-xs font-medium text-gray-700 text-right">نوع الضمان</label>
+                                    <select
+                                        id="cautionType"
+                                        value={cautionType}
+                                        onChange={e => { setCautionType(e.target.value); markDirty(); }}
+                                        className="w-full h-9 px-3 py-1 mt-1 text-sm text-gray-700 text-center bg-white border border-gray-300 rounded-[20px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                        <option value="BANK">كفالة بنكية</option>
+                                        <option value="RETENTION">اقتطاع ضمان</option>
+                                    </select>
+                                </div>
+                            )}
                         </div>
                         {natPiece === 'صفقة' && (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

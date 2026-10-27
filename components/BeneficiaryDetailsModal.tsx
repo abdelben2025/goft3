@@ -84,7 +84,9 @@ const BeneficiaryDetailsModal: React.FC<BeneficiaryDetailsModalProps> = ({ isOpe
         const totalEngs = engs.reduce((s, e) => s + (e.MONTANT_ENG || 0), 0);
         const totalPais = pais.reduce((s, p) => s + (p.MONTANT_PAI || 0), 0);
         const penaltyTotal = pais.reduce((s, p) => s + (p.PENALITE_RETARD || 0), 0);
-        const advancesTotal = pais.reduce((s, p) => s + (p.AVANCE_FORFAITAIRE || 0) + (p.AVANCE_APPROVISIONNEMENT || 0), 0);
+        const advanceForfaitaire = pais.reduce((m, p) => Math.max(m, p.AVANCE_FORFAITAIRE || 0), 0);
+        const advanceAppro = pais.reduce((m, p) => Math.max(m, p.AVANCE_APPROVISIONNEMENT || 0), 0);
+        const advancesTotal = advanceForfaitaire + advanceAppro;
         const repaymentTotal = pais.reduce((s, p) => s + (p.REMBOURSEMENT_AVANCE_FORFAITAIRE || 0) + (p.REMBOURSEMENT_AVANCE_APPROVISIONNEMENT || 0), 0);
         const guaranteeRetention = pais.reduce((s, p) => s + (p.RETENUE_GARANTIE || 0), 0);
         const extraDeduction = pais.reduce((s, p) => s + (p.AUTRE_DEDUCTION || 0), 0);
@@ -258,7 +260,9 @@ const BeneficiaryDetailsModal: React.FC<BeneficiaryDetailsModalProps> = ({ isOpe
                         const tempTakeoverDate = contractOds.find(o => o.NATURE_ODS === 'ختام')?.DATE_ODS;
 
                         // ملخص مالي
-                        const advancesTotal = pais.reduce((s, p) => s + (p.AVANCE_FORFAITAIRE || 0) + (p.AVANCE_APPROVISIONNEMENT || 0), 0);
+                        const advanceForfaitaire = pais.reduce((m, p) => Math.max(m, p.AVANCE_FORFAITAIRE || 0), 0);
+                        const advanceAppro = pais.reduce((m, p) => Math.max(m, p.AVANCE_APPROVISIONNEMENT || 0), 0);
+                        const advancesTotal = advanceForfaitaire + advanceAppro;
                         const repaymentTotal = pais.reduce((s, p) => s + (p.REMBOURSEMENT_AVANCE_FORFAITAIRE || 0) + (p.REMBOURSEMENT_AVANCE_APPROVISIONNEMENT || 0), 0);
                         const guaranteeRetention = pais.reduce((s, p) => s + (p.RETENUE_GARANTIE || 0), 0);
                         const extraDeduction = pais.reduce((s, p) => s + (p.AUTRE_DEDUCTION || 0), 0);

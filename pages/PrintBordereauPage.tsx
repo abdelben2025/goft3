@@ -244,7 +244,7 @@ const PrintBordereauPage: React.FC<PrintBordereauPageProps> = ({ navigate, opera
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        setTimeout(() => URL.revokeObjectURL(url), 1500);
     };
 
     const getDocDetails = (eng: any) => {

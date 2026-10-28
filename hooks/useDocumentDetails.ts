@@ -69,39 +69,111 @@ export const useDocumentDetails = (piece: Piece | null, db: Database): UseDocume
         const startDate = parseDate(commencementOds.DATE_ODS);
         if (!startDate) return { baseDuration, startDate: null, isTerminated, isFullyTerminated, totalTerminatedAmount };
 
-        let totalSuspensionDays = 0;
-        let lastStopDate: Date | null = null;
-        let isSuspended = false;
-
-        sortedOds.forEach(ods => {
-            const odsDate = parseDate(ods.DATE_ODS);
-            if (!odsDate) return;
-
-            if (ods.NATURE_ODS === 'ايقاف') {
-                lastStopDate = odsDate;
-                isSuspended = true;
-            } else if (ods.NATURE_ODS === 'استئناف' && lastStopDate) {
-                totalSuspensionDays += calculateElapsedDays(lastStopDate, odsDate, useFinancialRule);
-                lastStopDate = null;
-                isSuspended = false;
-            } else if (ods.NATURE_ODS === 'ختام') {
-                isSuspended = false;
-            }
-        });
-
-        let currentSuspensionDays = 0;
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
+        // ── Walk the ODS timeline ──
+        // Consumed days = sum of ACTIVE periods (انطلاق/استئناف → ايقاف/ختام).
+        // Suspension days = closed periods (ايقاف → استئناف); open suspension tracked separately.
+        const closingOds = sortedOds.find(o => o.NATURE_ODS === 'ختام');
+        const closureDate = closingOds ? parseDate(closingOds.DATE_ODS) : null;
+        const isCompleted = !!closingOds;
+
+        // Active-work elapsed days. In months-mode each segment counts the number of whole
+        // months crossed × 30 (e.g. 08/07→09/08 = 1 month = 30; 14/11→14/07 = 8 months = 240),
+        // matching the business rule where 10 أشهر = 300 يوم. In days-mode actual calendar days
+        // are used.
+        const segElapsed = (a: Date, b: Date) => {
+            if (!useFinancialRule) return calculateElapsedDays(a, b, false);
+            const monthDiff =
+                (b.getFullYear() * 12 + (b.getMonth() + 1)) -
+                (a.getFullYear() * 12 + (a.getMonth() + 1));
+            return Math.max(0, monthDiff) * 30;
+        };
+
+        let closedConsumed = 0;
+        let totalSuspensionDays = 0;
+        let currentSuspensionDays = 0;
+        let lastActiveStartDate: Date | null = null;
+        let lastStopDate: Date | null = null;
+        let isSuspended = false;
+        let lastResumptionDate: Date | null = null;
+        let consumedBeforeLastResumption = 0;
+
+        for (const ods of sortedOds) {
+            const odsDate = parseDate(ods.DATE_ODS);
+            if (!odsDate) continue;
+            const nat = ods.NATURE_ODS;
+
+            if (nat === 'انطلاق' || nat === 'استئناف') {
+                if (isSuspended && lastStopDate) {
+                    totalSuspensionDays += calculateElapsedDays(lastStopDate, odsDate, useFinancialRule);
+                    lastStopDate = null;
+                }
+                isSuspended = false;
+                lastResumptionDate = odsDate;
+                consumedBeforeLastResumption = closedConsumed;
+                lastActiveStartDate = odsDate;
+            } else if (nat === 'ايقاف') {
+                if (lastActiveStartDate) {
+                    closedConsumed += segElapsed(lastActiveStartDate, odsDate);
+                    lastActiveStartDate = null;
+                }
+                lastStopDate = odsDate;
+                isSuspended = true;
+            } else if (nat === 'ختام') {
+                if (lastActiveStartDate) {
+                    closedConsumed += segElapsed(lastActiveStartDate, odsDate);
+                    lastActiveStartDate = null;
+                }
+                isSuspended = false;
+            }
+        }
+
+        const lastOrder = sortedOds.length > 0 ? sortedOds[sortedOds.length - 1].NATURE_ODS : null;
+
+        // ── Consumed days depends on the last order ──
+        let consumedDays: number;
+        if (isCompleted && lastResumptionDate) {
+            // Last order is ختام → consumed up to last resumption + actual days to closure
+            consumedDays = consumedBeforeLastResumption + calculateElapsedDays(lastResumptionDate, closureDate!, useFinancialRule);
+        } else if (!isCompleted && lastResumptionDate && lastOrder !== 'ايقاف') {
+            // Last order is استئناف/انطلاق (running) → consumed up to last resumption + actual days to today
+            consumedDays = consumedBeforeLastResumption + calculateElapsedDays(lastResumptionDate, today, useFinancialRule);
+        } else {
+            // Last order is ايقاف (suspended) → all closed active segments
+            consumedDays = closedConsumed;
+        }
+
+
+
+        // Open suspension still running up to today
         if (isSuspended && lastStopDate) {
             currentSuspensionDays = calculateElapsedDays(lastStopDate, today, useFinancialRule);
         }
 
-        const expectedEndDate = new Date(startDate);
-        expectedEndDate.setDate(startDate.getDate() + baseDuration + totalSuspensionDays);
+        // ── Expected end date (projection) ──
+        // Formula: last resumption date + (total allowed duration − consumed days up to that resumption).
+        // Example (10 أشهر): last resumption 14/11/2024, consumed up to it = 60,
+        //   remaining = 300 − 60 = 240 → 14/11/2024 + 8 months = 14/07/2025.
+        const durationStr = piece.DELAI_EX_JOURS;
+        const monthCount = isFinancialDuration(durationStr) ? parseInt(String(durationStr), 10) : 0;
+        const remainingAfterResumption = Math.max(0, baseDuration - consumedBeforeLastResumption);
 
-        const isCompleted = sortedOds.some(o => o.NATURE_ODS === 'ختام');
-        const remainingDays = isCompleted ? 0 : calculateElapsedDays(today, expectedEndDate, useFinancialRule);
+        const expectedEndDate = lastResumptionDate ? new Date(lastResumptionDate) : new Date(startDate);
+        if (monthCount > 0) {
+            // Months mode: 1 month = 30 days — split remaining into whole months + remainder days
+            const extraMonths = Math.floor(remainingAfterResumption / 30);
+            const extraDays = remainingAfterResumption % 30;
+            expectedEndDate.setMonth(expectedEndDate.getMonth() + extraMonths);
+            expectedEndDate.setDate(expectedEndDate.getDate() + extraDays);
+        } else {
+            // Days mode: add exact calendar days
+            expectedEndDate.setDate(expectedEndDate.getDate() + remainingAfterResumption);
+        }
+
+        // ── Remaining days = total allowed minus consumed ──
+        const remainingDays = Math.max(0, baseDuration - consumedDays);
 
         const isLate = !isCompleted && today > expectedEndDate;
         let delayDays = 0;
@@ -109,7 +181,6 @@ export const useDocumentDetails = (piece: Piece | null, db: Database): UseDocume
             delayDays = calculateElapsedDays(expectedEndDate, today, useFinancialRule);
         }
 
-        const closingOds = sortedOds.find(o => o.NATURE_ODS === 'ختام');
         const warrantyEndDate = closingOds ? new Date(parseDate(closingOds.DATE_ODS)!) : null;
         if (warrantyEndDate) {
             warrantyEndDate.setDate(warrantyEndDate.getDate() + 1);
@@ -124,6 +195,7 @@ export const useDocumentDetails = (piece: Piece | null, db: Database): UseDocume
             totalSuspensionDays,
             currentSuspensionDays,
             expectedEndDate,
+            consumedDays,
             remainingDays,
             delayDays,
             isLate,

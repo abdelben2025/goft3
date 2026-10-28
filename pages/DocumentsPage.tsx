@@ -112,12 +112,12 @@ const DocumentRow = React.memo<{
                 </button>
             </td>
             <td className="p-1 text-right">
-                <div className={`flex text-right items-right gap-2 justify-start ${isChild ? 'pr-5' : ''}`}>
+                <div className={`flex text-right items-right gap-2 justify-start w-64 flex-none ${isChild ? 'pr-5' : ''}`}>
                     {isChild && (
                         <i className="bi bi-arrow-return-left text-gray-400 text-[9px] ml-1 select-none"></i>
                     )}
                     <span className="opacity-70 group-hover:opacity-100 transition-opacity">{getIcon()}</span>
-                    <span className={`font-bold ${piece.isDuplicate ? 'text-red-800' : (isSelected ? 'text-blue-700' : 'text-gray-900')} truncate max-w-[150px] text-[10px] `} title={piece.PIECE}>
+                    <span className={`font-bold ${piece.isDuplicate ? 'text-red-800' : (isSelected ? 'text-blue-700' : 'text-gray-900')} w-64 text-[10px] `} title={piece.PIECE}>
                         {piece.PIECE}
                     </span>
                 </div>
@@ -201,7 +201,7 @@ const DocumentRow = React.memo<{
                 </div>
             </td>
             <td 
-                className="p-1 text-center text-blue-600/70 hover:text-blue-800 hover:underline cursor-pointer max-w-[120px] truncate text-[10px] transition-colors" 
+                className="p-1 text-center text-blue-600/70 hover:text-blue-800 hover:underline cursor-pointer max-w-[120px] text-[10px] transition-colors" 
                 title={piece.rubricName}
                 onClick={(e) => {
                     if (!isSelected) {
@@ -217,7 +217,7 @@ const DocumentRow = React.memo<{
                 {piece.rubricName}
             </td>
             <td 
-                className="p-1 text-center text-green-600/70 hover:text-green-800 hover:underline cursor-pointer max-w-[120px] truncate text-[9px] transition-colors" 
+                className="p-1 text-center text-green-600/70 hover:text-green-800 hover:underline cursor-pointer max-w-[120px] text-[9px] transition-colors" 
                 title={piece.beneficiaryName}
                 onClick={(e) => {
                     e.stopPropagation();
@@ -965,11 +965,11 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
         // Define columns
         worksheet.columns = [
             { header: '#', key: 'index', width: 6 },
-            { header: t('col.document'), key: 'document', width: 45 },
-            { header: 'الطبيعة', key: 'nature', width: 18 },
+            { header: t('col.document'), key: 'document', width: 40 },
+            { header: 'الطبيعة', key: 'nature', width: 25 },
             { header: 'الحالة', key: 'status', width: 15 },
-            { header: 'تفصيل الهيكلة', key: 'structure', width: 25 },
-            { header: t('col.beneficiary'), key: 'beneficiary', width: 35 },
+            { header: 'تفصيل الهيكلة', key: 'structure', width: 30 },
+            { header: t('col.beneficiary'), key: 'beneficiary', width: 30 },
             { header: t('col.amount'), key: 'amount', width: 22 }
         ];
 
@@ -1080,7 +1080,8 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                         cell.alignment = { horizontal: 'center', vertical: 'middle' };
                         cell.font = { name: 'Arial', size: 8, color: { argb: 'FF94A3B8' } };
                     } else if (colNumber === 2) { // Document
-                        cell.alignment = { horizontal: 'right', vertical: 'middle' };
+                        cell.alignment = { horizontal: 'justify', vertical: 'middle'};
+						
                         if (row.isChild) {
                             cell.font = { name: 'Arial', size: 9, italic: true, color: { argb: 'FF475569' } };
                         }
@@ -1119,7 +1120,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        setTimeout(() => URL.revokeObjectURL(url), 1500);
     };
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -1359,7 +1360,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        setTimeout(() => URL.revokeObjectURL(url), 1500);
     };
 
     const handleNavigateToDoc = useCallback((type: 'ENG' | 'PAI', p: any) => {
@@ -1711,10 +1712,10 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                                                 <tr key={row.key} className="bg-gradient-to-l from-blue-50 to-transparent text-right border-y border-blue-100/60 font-black">
                                                     <td colSpan={8} className="p-1.5 text-right">
                                                         <div className="flex items-center gap-2 justify-start leading-none pr-1">
-                                                            <span className="bg-sky-300 text-black text-[8px] px-1.5 py-0.5 rounded-[20px] shadow-sm select-none">
+                                                            <span className="bg-sky-300 text-black text-center text-[8px] px-1.5 py-0.5 rounded-[20px] shadow-sm select-none">
                                                              {opt?.N_OPERATION}
                                                             </span>
-                                                            <span className="text-[8px] font-black text-blue-900 truncate max-w-[600px]" title={opt?.INT_OPERATION}>
+                                                            <span className="text-[8px] font-black text-center text-blue-900 max-w-[600px]" title={opt?.INT_OPERATION}>
                                                                 {opt?.INT_OPERATION}
                                                             </span>
                                                         </div>

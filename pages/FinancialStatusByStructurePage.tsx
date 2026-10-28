@@ -378,8 +378,10 @@ const FinancialStatusByStructurePage: React.FC<FinancialStatusByStructurePagePro
         const anchor = document.createElement('a');
         anchor.href = url;
         anchor.download = `الوضعية_المالية_حسب_الهيكلة_${operation?.N_OPERATION || ''}.xlsx`;
+        document.body.appendChild(anchor);
         anchor.click();
-        window.URL.revokeObjectURL(url);
+        document.body.removeChild(anchor);
+        setTimeout(() => window.URL.revokeObjectURL(url), 1500);
     };
 
     if (loading) return <div>جار التحميل...</div>;

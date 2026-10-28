@@ -30,6 +30,24 @@ const FinancialStatusPage: React.FC<FinancialStatusPageProps> = ({ navigate, onG
     const [selectedYear, setSelectedYear] = useState(sessionStorage.getItem('goft3_selectedYear') || new Date().getFullYear().toString());
     const [selectedMonth, setSelectedMonth] = useState(sessionStorage.getItem('goft3_fs_month') || (new Date().getMonth() + 1).toString());
     const [selectedAction, setSelectedAction] = useState(sessionStorage.getItem('goft3_fs_action') || '');
+    const [selectedTypeOp, setSelectedTypeOp] = useState<string>(() => sessionStorage.getItem('goft3_fs_type') || 'all');
+
+    const uniqueTypeOps = useMemo(() => {
+        const types = new Set<string>();
+        db.T_OPERATION.forEach(op => {
+            if (op.TYPE_OP) types.add(op.TYPE_OP);
+        });
+        const stored = localStorage.getItem('goft3_operation_types');
+        if (stored) {
+            try {
+                const parsed = JSON.parse(stored) as string[];
+                parsed.forEach(t => types.add(t));
+            } catch {
+                // ignore
+            }
+        }
+        return Array.from(types).sort();
+    }, [db.T_OPERATION]);
 
     const years = useMemo(() => [...new Set(db.T_CP.map(cp => cp.ANNEE))].sort((a, b) => parseInt(b) - parseInt(a)), [db.T_CP]);
 
@@ -37,6 +55,7 @@ const FinancialStatusPage: React.FC<FinancialStatusPageProps> = ({ navigate, onG
         sessionStorage.setItem('goft3_selectedYear', selectedYear);
         sessionStorage.setItem('goft3_fs_month', selectedMonth);
         sessionStorage.setItem('goft3_fs_action', selectedAction);
+        sessionStorage.setItem('goft3_fs_type', selectedTypeOp);
         // Sync activity for Operations Table print page
         sessionStorage.setItem('goft3_selectedActivity', selectedAction);
 
@@ -44,10 +63,11 @@ const FinancialStatusPage: React.FC<FinancialStatusPageProps> = ({ navigate, onG
         sessionStorage.setItem('goft3_fs_filters', JSON.stringify({
             year: selectedYear,
             month: selectedMonth,
-            action: selectedAction
+            action: selectedAction,
+            type: selectedTypeOp
         }));
 
-    }, [selectedYear, selectedMonth, selectedAction]);
+    }, [selectedYear, selectedMonth, selectedAction, selectedTypeOp]);
 
     const activities = useMemo(() => {
         const actionCodesInUse = [...new Set(db.T_OPERATION.map(op => op.N_OPERATION.split('.')[5]).filter(Boolean))];
@@ -80,7 +100,10 @@ const FinancialStatusPage: React.FC<FinancialStatusPageProps> = ({ navigate, onG
 
             if (selectedAction) {
                 const opActionCode = op.N_OPERATION.split('.')[5];
-                return opActionCode === selectedAction;
+                if (opActionCode !== selectedAction) return false;
+            }
+            if (selectedTypeOp !== 'all' && op.TYPE_OP !== selectedTypeOp) {
+                return false;
             }
             return true;
         });
@@ -142,7 +165,7 @@ const FinancialStatusPage: React.FC<FinancialStatusPageProps> = ({ navigate, onG
         }, { cpFinale: 0, paiementsPrevious: 0, paiementsCurrentMonth: 0, totalPaiementsCurrentYear: 0, remainingBalance: 0 });
 
         return { data, totals };
-    }, [db, loading, selectedYear, selectedMonth, selectedAction]);
+    }, [db, loading, selectedYear, selectedMonth, selectedAction, selectedTypeOp]);
 
     const handleExport = () => {
         if (financialStatusData.length === 0) {
@@ -234,7 +257,7 @@ const FinancialStatusPage: React.FC<FinancialStatusPageProps> = ({ navigate, onG
             }
         >
             <div className="bg-blue-200 p-3 rounded-lg shadow-md mb-4">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4 items-end">
                     <div>
                        <label className="block text-xs font-medium text-gray-700 mb-1">{t('filter.year')}</label> 
                         <CustomDropdown
@@ -260,6 +283,18 @@ const FinancialStatusPage: React.FC<FinancialStatusPageProps> = ({ navigate, onG
                             value={selectedAction}
                             onChange={setSelectedAction}
                             placeholder={t('filter.select_activity')}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">نوع العملية</label>
+                        <CustomDropdown
+                            options={[
+                                { value: 'all', label: 'كل الأنواع' },
+                                ...uniqueTypeOps.map(t => ({ value: t, label: t }))
+                            ]}
+                            value={selectedTypeOp}
+                            onChange={setSelectedTypeOp}
+                            placeholder="اختر نوع العملية"
                         />
                     </div>
                     <div className="flex gap-2">

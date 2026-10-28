@@ -211,8 +211,10 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
         const link = document.createElement('a');
         link.download = fileName;
         link.href = url;
+        document.body.appendChild(link);
         link.click();
-        URL.revokeObjectURL(url);
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 1500);
         showToast("تم تصدير قاعدة البيانات بنجاح", 'success');
     };
 

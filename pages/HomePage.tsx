@@ -206,7 +206,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, currentUser }) => {
     };
 
     return (
-        <div className="flex flex-col items-center justify-start min-h-screen p-4 bg-gray-50 overflow-x-hidden" dir={dir}>
+        <div className="flex flex-col items-center justify-start min-h-screen p-4 bg-gray-50 overflow-x-hidden select-none" dir={dir}>
             <header className="w-full max-w-none flex flex-col md:flex-row justify-between items-center mb-8 pt-4 gap-4">
                 <motion.div 
                     initial={{ opacity: 0, x: dir === 'rtl' ? 20 : -20 }}
@@ -229,7 +229,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, currentUser }) => {
                     transition={{ duration: 0.3 }}
                     className="flex items-center gap-2 w-full md:w-auto justify-end"
                 >
-                    <div className="flex items-center gap-2 bg-white px-3 py-1.5 md:px-4 md:py-2 rounded-xl shadow-sm border border-gray-200">
+                    <div className="flex items-center gap-2 bg-white px-3 py-1.5 md:px-4 md:py-2 rounded-xl shadow-sm border border-gray-200 select-none">
                         <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
                             <i className="bi bi-person text-lg md:text-xl text-blue-600"></i>
                         </div>
@@ -380,7 +380,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, currentUser }) => {
                     transition={{ delay: 0.15 }}
                     className="w-full max-w-none mt-8 mb-8"
                 >
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center justify-between mb-4 select-none">
                         <div className="flex items-center gap-2">
                             <div className="p-1.5 bg-red-100 rounded-lg text-red-600">
                                 <i className="bi bi-bell-fill text-lg"></i>
@@ -470,7 +470,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, currentUser }) => {
                     transition={{ delay: 0.3, duration: 0.2 }}
                     className="w-full max-w-none mt-8"
                 >
-                    <div className="flex items-center gap-2 mb-3">
+                    <div className="flex items-center gap-2 mb-3 select-none">
                         <div className="p-1.5 bg-green-100 rounded-lg text-green-600">
                              <i className="bi bi-broadcast text-lg"></i>
                         </div>
@@ -480,7 +480,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, currentUser }) => {
                         <span className="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full font-bold">{onlineUsers.length}</span>
                     </div>
 
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3">
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 select-none">
                         {onlineUsers.length > 0 ? (
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2">
                                 {onlineUsers.map(user => (
@@ -509,24 +509,26 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, currentUser }) => {
                     </div>
                 </motion.div>
             )}
-
-            {/* Shortcuts hint */}
-            <div className="w-full max-w-none mt-8 text-center text-[10px] text-gray-400 font-medium leading-relaxed select-none">
-                <span className="inline-flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
-                    <span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+O</kbd> العمليات</span>
-                    <span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+D</kbd> الوثائق</span>
-                    <span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+B</kbd> المستفيدين</span>
-                    <span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+S</kbd> الإعدادات</span>
-                    <span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+H</kbd> الرئيسية</span>
-                    <span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+F</kbd> الوضعية المالية</span>
-                    <span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+P</kbd> البرامج</span>
-                    <span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+C</kbd> الأصناف</span>
-                    <span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+K</kbd> البحث</span>
-                    <span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Alt+←</kbd> رجوع</span>
-                </span>
-            </div>
+				{/* Shortcuts hint */}
+					<div className="w-full max-w-none mt-8  text-center text-[10px] text-gray-800 font-medium leading-relaxed select-none">
+						<span className="inline-flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+							<span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+O</kbd> العمليات</span>
+							<span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+D</kbd> الوثائق</span>
+							<span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+B</kbd> المستفيدين</span>
+							<span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+S</kbd> الإعدادات</span>
+							<span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+H</kbd> الرئيسية</span>
+							<span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+F</kbd> الوضعية المالية</span>
+							<span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+P</kbd> البرامج</span>
+							<span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Alt+C</kbd> الأصناف</span>
+							<span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+K</kbd> البحث</span>
+							<span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Alt+←</kbd> رجوع</span>
+						</span>
+					</div>
+            
         </div>
+		
     );
+	
 };
 
 export default HomePage;

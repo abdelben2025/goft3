@@ -242,7 +242,7 @@ const DocumentDetailsPage: React.FC<DocumentDetailsPageProps> = ({ navigate, cur
                             {piece.CAUTION != null && piece.CAUTION !== '' && (
                                 <span className="text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-bold border border-purple-200">
                                     <i className="bi bi-shield-lock-fill ml-1"></i>
-                                    {piece.TYPE_CAUTION === 'RETENTION' ? 'اقتطاع ضمان' : 'كفالة ضمان'}: {piece.CAUTION}%
+                                    {piece.TYPE_CAUTION === 'RETENTION' ? 'اقتطاع ضمان' : 'كفالة ضمان'}: {piece.CAUTION}
                                 </span>
                             )}
                         </div>
@@ -470,17 +470,26 @@ const DocumentDetailsPage: React.FC<DocumentDetailsPageProps> = ({ navigate, cur
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-2">
+                                    <span className="font-bold text-gray-600">الأيام المستهلكة:</span>
+                                    <span className="font-black text-indigo-700">{odsCalculations.consumedDays} يوم</span>
+                                </div>
+                                <div className="flex items-center gap-2">
                                     <span className="font-bold text-gray-600">
                                         {odsCalculations.isLate ? 'أيام التأخير:' : 'الأيام المتبقية:'}
                                     </span>
                                     <span className={`font-black ${odsCalculations.isLate ? 'text-red-700' : 'text-blue-800'}`}>
-                                        {odsCalculations.isCompleted ? 'مكتمل' : (odsCalculations.isLate ? `${odsCalculations.delayDays} يوم` : `${odsCalculations.remainingDays} يوم`)}
+                                        {odsCalculations.isLate ? `${odsCalculations.delayDays} يوم` : `${odsCalculations.remainingDays} يوم`}
                                     </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <i className="bi bi-pause-circle-fill text-amber-500"></i>
+                                    <span className="font-bold text-gray-600">أيام التوقف:</span>
+                                    <span className="font-black text-amber-700">{odsCalculations.totalSuspensionDays} يوم</span>
                                 </div>
                                 {odsCalculations.isSuspended && (
                                     <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-300">
                                         <i className="bi bi-pause-circle-fill ml-1"></i>
-                                        الأشغال موقوفة ({odsCalculations.currentSuspensionDays} يوم)
+                                        الأشغال موقوفة حالياً ({odsCalculations.currentSuspensionDays} يوم)
                                     </span>
                                 )}
                                 {odsCalculations.isCompleted && (

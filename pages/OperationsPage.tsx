@@ -808,7 +808,7 @@ const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onU
     return (
         <PageWrapper title={t('page.operations')} navigate={navigate} onGoBack={onGoBack} currentUser={currentUser} breadcrumb={[]}>
             <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".xlsx, .xls" />
-            <div className="sticky top-0 z-40 bg-[#f8fafc] pb-4">
+            <div className="sticky top-0 z-40 bg-[#f8fafc] pb-4 select-none">
                 <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-200 mb-4">
                     <div className="flex flex-col xl:flex-row gap-2 py-0">
                         <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -886,7 +886,7 @@ const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onU
 
             </div>
 
-            <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200 mt-2">
+            <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200 mt-2 select-none">
                 <div className="overflow-auto max-h-[calc(100vh-120px)] custom-scrollbar">
                     <table className="w-full text-center min-w-[1200px] border-collapse relative">
                         <thead className="bg-sky-100 text-gray-600 sticky top-0 z-20 shadow-sm">
@@ -948,7 +948,7 @@ const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onU
                                 <th className="p-3 text-[11px] font-bold uppercase tracking-wider sticky top-0 bg-sky-100 z-20">{t('col.cp_year', {year: selectedYear})}</th>
                                 <th className="p-3 text-[11px] font-bold uppercase tracking-wider sticky top-0 bg-sky-100 z-20">{t('col.payments_year', {year: selectedYear})}</th>
                                 <th className="p-3 text-[11px] font-bold uppercase tracking-wider sticky top-0 bg-sky-100 z-20">باقي اعتماد</th>
-                            </tr>
+                               </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                             {displayData.rows.slice(0, visibleCount).map(item => {

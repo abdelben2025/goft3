@@ -268,7 +268,7 @@ const AuthenticatedApp: React.FC<{
             if (ctrl && key === 'h') { e.preventDefault(); navigate('HOME'); return; }
             if (ctrl && key === 'f') { e.preventDefault(); navigate('FINANCIAL_STATUS'); return; }
             if (ctrl && key === 'p') { e.preventDefault(); navigate('PROGRAMME'); return; }
-            if (ctrl && key === 'c') { e.preventDefault(); navigate('CATEGORIE'); return; }
+            if (e.altKey && key === 'c') { e.preventDefault(); navigate('CATEGORIE'); return; }
             if (e.altKey && key === 'arrowleft') { e.preventDefault(); onGoBack?.(); return; }
         };
         window.addEventListener('keydown', handleKeyDown);

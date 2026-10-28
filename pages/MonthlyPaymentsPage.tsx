@@ -198,8 +198,10 @@ const MonthlyPaymentsPage: React.FC<MonthlyPaymentsPageProps> = ({ navigate, onG
         const anchor = document.createElement('a');
         anchor.href = url;
         anchor.download = `دفوعات_${months.find(m => m.value === selectedMonth)?.label}_${selectedYear}.xlsx`;
+        document.body.appendChild(anchor);
         anchor.click();
-        window.URL.revokeObjectURL(url);
+        document.body.removeChild(anchor);
+        setTimeout(() => window.URL.revokeObjectURL(url), 1500);
     };
 
     return (

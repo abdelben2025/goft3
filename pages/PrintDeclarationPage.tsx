@@ -154,7 +154,6 @@ const PrintDeclarationPage: React.FC<PrintDeclarationPageProps> = ({ navigate, p
     }, [db, loading, paiementId]);
 
     const printStyles = `
-        @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap');
         body { font-family: 'Amiri', serif; direction: rtl; }
         .print-area { direction: rtl; font-family: 'Amiri', serif; color: black; padding: 20px; background: white; }
         .text-center { text-align: center; }

@@ -6,8 +6,6 @@ import '@fontsource/cairo/400.css';
 import '@fontsource/cairo/700.css';
 import '@fontsource/amiri/400.css';
 import '@fontsource/amiri/700.css';
-import '@fontsource/tajawal/400.css';
-import '@fontsource/tajawal/700.css';
 import './index.css';
 
 // Global focus restoration intercepts to fix Electron/iframe focus freeze after synchronous native dialogs

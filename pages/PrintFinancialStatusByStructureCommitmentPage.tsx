@@ -79,7 +79,6 @@ const PrintFinancialStatusByStructureCommitmentPage: React.FC<PrintFinancialStat
     }, [db, loading, operationId]);
 
     const printStyles = `
-        @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap');
         body { font-family: 'Amiri', serif; direction: rtl; }
         .print-area { direction: rtl; font-family: 'Amiri', serif; color: black; padding: 20px; background: white; }
         table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 11px; }

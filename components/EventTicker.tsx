@@ -1,7 +1,7 @@
 import React from 'react';
 import { useData } from '../context/DataContext';
 
-const EventTicker: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
+const EventTicker: React.FC<{ onLogout?: () => void; onCloseApp?: () => void }> = ({ onLogout, onCloseApp }) => {
     const { isOnline, isDbConfigured, pendingActionsCount, isLocalDbConnected } = useData();
 
     return (
@@ -57,6 +57,19 @@ const EventTicker: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
                 <i className="bi bi-box-arrow-left text-xs"></i>
                 <span className="text-xs font-bold">خروج</span>
             </button>
+
+            {/* Close window button (native X is disabled during a session) */}
+            {onCloseApp && (
+                <button
+                    type="button"
+                    onClick={onCloseApp}
+                    className="flex items-center gap-1.5 bg-gray-700 hover:bg-gray-600 active:scale-95 transition-all px-3 py-0.5 rounded-full text-white shrink-0 shadow-sm"
+                    title="إغلاق التطبيق"
+                >
+                    <i className="bi bi-x-square text-xs"></i>
+                    <span className="text-xs font-bold">إغلاق</span>
+                </button>
+            )}
         </div>
     );
 };

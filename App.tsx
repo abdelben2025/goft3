@@ -156,6 +156,13 @@ const AuthenticatedApp: React.FC<{
         onLogout();
     }, [isOnline, refreshData, onLogout, showToast]);
 
+    const handleCloseApp = useCallback(() => {
+        if (!isTauri()) return;
+        invoke('close_window').catch((err) => {
+            console.warn('Failed to close window:', err);
+        });
+    }, []);
+
     // While logged in: disable the native close (X) button so the user must
     // use the logout button (Alt+F4 / taskbar close is also blocked).
     // NOTE: done through a native Rust command because core window APIs are
@@ -481,7 +488,7 @@ const AuthenticatedApp: React.FC<{
                     </Suspense>
                 </motion.div>
             </AnimatePresence>
-            <EventTicker onLogout={handleLogoutWithSync} />
+            <EventTicker onLogout={handleLogoutWithSync} onCloseApp={handleCloseApp} />
             <GlobalSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} navigate={navigate} />
 
             {/* Idle auto-lock overlay */}

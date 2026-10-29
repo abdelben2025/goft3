@@ -1,47 +1,50 @@
 
-import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import LoginPage from './pages/LoginPage';
-import HomePage from './pages/HomePage';
-import OperationsPage from './pages/OperationsPage';
-import OperationDetailsPage from './pages/OperationDetailsPage';
-import DocumentsPage from './pages/DocumentsPage';
-import DocumentDetailsPage from './pages/DocumentDetailsPage';
-import BeneficiairesPage from './pages/BeneficiairesPage';
-import FinancialStatusPage from './pages/FinancialStatusPage';
-import FinancialStatusByStructurePage from './pages/FinancialStatusByStructurePage';
-import ProjectTrackingPage from './pages/ProjectTrackingPage';
-import SettingsPage from './pages/SettingsPage';
-import ProgrammePage from './pages/ProgrammePage';
-import CategoriePage from './pages/CategoriePage';
-import DirectionPage from './pages/DirectionPage';
-import RubriquePage from './pages/RubriquePage';
-import UsersPage from './pages/UsersPage';
-import PrintEngagementPage from './pages/PrintEngagementPage';
-import PrintPaiementPage from './pages/PrintPaiementPage';
-import PrintCertificatPage from './pages/PrintCertificatPage';
-import PrintMandatPage from './pages/PrintMandatPage';
-import PrintDeclarationPage from './pages/PrintDeclarationPage';
-import PrintMandatTablePage from './pages/PrintMandatTablePage';
-import PrintFinancialStatusByStructurePage from './pages/PrintFinancialStatusByStructurePage';
-import PrintFinancialStatusByStructureCommitmentPage from './pages/PrintFinancialStatusByStructureCommitmentPage';
-import PrintOperationsTablePage from './pages/PrintOperationsTablePage';
-import PrintFinancialStatusPage from './pages/PrintFinancialStatusPage';
-import PrintProjectTrackingPage from './pages/PrintProjectTrackingPage';
-import PaymentClaimsPage from './pages/PaymentClaimsPage';
-import PrintPaymentClaimsPage from './pages/PrintPaymentClaimsPage';
-import AeInsufficiencyPage from './pages/AeInsufficiencyPage';
-import UnregisteredDocumentsPage from './pages/UnregisteredDocumentsPage';
-import LotsReportPage from './pages/LotsReportPage';
-import PrintAeInsufficiencyPage from './pages/PrintAeInsufficiencyPage';
-import PrintBordereauPage from './pages/PrintBordereauPage';
-import CustomReportPage from './pages/CustomReportPage';
-import VisaedEngagementsPage from './pages/VisaedEngagementsPage';
-import Appendix01Page from './pages/Appendix01Page';
-import MonthlyCommitmentsPage from './pages/MonthlyCommitmentsPage';
-import MonthlyPaymentsPage from './pages/MonthlyPaymentsPage';
-import PrintMonthlyCommitmentsPage from './pages/PrintMonthlyCommitmentsPage';
-import PrintMonthlyPaymentsPage from './pages/PrintMonthlyPaymentsPage';
+
+// Pages are code-split and loaded on demand (React.lazy) so the initial bundle
+// stays small. Only the page actually opened is fetched.
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const HomePage = lazy(() => import('./pages/HomePage'));
+const OperationsPage = lazy(() => import('./pages/OperationsPage'));
+const OperationDetailsPage = lazy(() => import('./pages/OperationDetailsPage'));
+const DocumentsPage = lazy(() => import('./pages/DocumentsPage'));
+const DocumentDetailsPage = lazy(() => import('./pages/DocumentDetailsPage'));
+const BeneficiairesPage = lazy(() => import('./pages/BeneficiairesPage'));
+const FinancialStatusPage = lazy(() => import('./pages/FinancialStatusPage'));
+const FinancialStatusByStructurePage = lazy(() => import('./pages/FinancialStatusByStructurePage'));
+const ProjectTrackingPage = lazy(() => import('./pages/ProjectTrackingPage'));
+const SettingsPage = lazy(() => import('./pages/SettingsPage'));
+const ProgrammePage = lazy(() => import('./pages/ProgrammePage'));
+const CategoriePage = lazy(() => import('./pages/CategoriePage'));
+const DirectionPage = lazy(() => import('./pages/DirectionPage'));
+const RubriquePage = lazy(() => import('./pages/RubriquePage'));
+const UsersPage = lazy(() => import('./pages/UsersPage'));
+const PrintEngagementPage = lazy(() => import('./pages/PrintEngagementPage'));
+const PrintPaiementPage = lazy(() => import('./pages/PrintPaiementPage'));
+const PrintCertificatPage = lazy(() => import('./pages/PrintCertificatPage'));
+const PrintMandatPage = lazy(() => import('./pages/PrintMandatPage'));
+const PrintDeclarationPage = lazy(() => import('./pages/PrintDeclarationPage'));
+const PrintMandatTablePage = lazy(() => import('./pages/PrintMandatTablePage'));
+const PrintFinancialStatusByStructurePage = lazy(() => import('./pages/PrintFinancialStatusByStructurePage'));
+const PrintFinancialStatusByStructureCommitmentPage = lazy(() => import('./pages/PrintFinancialStatusByStructureCommitmentPage'));
+const PrintOperationsTablePage = lazy(() => import('./pages/PrintOperationsTablePage'));
+const PrintFinancialStatusPage = lazy(() => import('./pages/PrintFinancialStatusPage'));
+const PrintProjectTrackingPage = lazy(() => import('./pages/PrintProjectTrackingPage'));
+const PaymentClaimsPage = lazy(() => import('./pages/PaymentClaimsPage'));
+const PrintPaymentClaimsPage = lazy(() => import('./pages/PrintPaymentClaimsPage'));
+const AeInsufficiencyPage = lazy(() => import('./pages/AeInsufficiencyPage'));
+const UnregisteredDocumentsPage = lazy(() => import('./pages/UnregisteredDocumentsPage'));
+const LotsReportPage = lazy(() => import('./pages/LotsReportPage'));
+const PrintAeInsufficiencyPage = lazy(() => import('./pages/PrintAeInsufficiencyPage'));
+const PrintBordereauPage = lazy(() => import('./pages/PrintBordereauPage'));
+const CustomReportPage = lazy(() => import('./pages/CustomReportPage'));
+const VisaedEngagementsPage = lazy(() => import('./pages/VisaedEngagementsPage'));
+const Appendix01Page = lazy(() => import('./pages/Appendix01Page'));
+const MonthlyCommitmentsPage = lazy(() => import('./pages/MonthlyCommitmentsPage'));
+const MonthlyPaymentsPage = lazy(() => import('./pages/MonthlyPaymentsPage'));
+const PrintMonthlyCommitmentsPage = lazy(() => import('./pages/PrintMonthlyCommitmentsPage'));
+const PrintMonthlyPaymentsPage = lazy(() => import('./pages/PrintMonthlyPaymentsPage'));
 import SplashScreen from './components/SplashScreen';
 import EventTicker from './components/EventTicker';
 import IdleLockScreen from './components/IdleLockScreen';
@@ -469,7 +472,13 @@ const AuthenticatedApp: React.FC<{
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.2, ease: "easeOut" }}
                 >
-                    {renderPage}
+                    <Suspense fallback={
+                        <div className="flex items-center justify-center py-24">
+                            <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+                        </div>
+                    }>
+                        {renderPage}
+                    </Suspense>
                 </motion.div>
             </AnimatePresence>
             <EventTicker onLogout={handleLogoutWithSync} />
@@ -755,7 +764,13 @@ const App: React.FC = () => {
                                     transition={{ duration: 0.3 }}
                                     className="w-full"
                                 >
-                                    <LoginPage onLogin={handleLogin} />
+                                    <Suspense fallback={
+                                        <div className="flex items-center justify-center min-h-screen bg-gray-100">
+                                            <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+                                        </div>
+                                    }>
+                                        <LoginPage onLogin={handleLogin} />
+                                    </Suspense>
                                 </motion.div>
                             ) : (
                                 <motion.div

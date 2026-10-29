@@ -14,6 +14,7 @@ import AddPaiementForm from '../components/forms/AddPaiementForm';
 import { formatCurrency } from '../utils/currencyUtils';
 import CustomDropdown from '../components/CustomDropdown';
 import ExcelJS from 'exceljs';
+import { saveBlobToFile } from '../utils/saveFile';
 import { Search, X } from 'lucide-react';
 
 interface DocumentsPageProps {
@@ -1113,14 +1114,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
 
         const buffer = await workbook.xlsx.writeBuffer();
         const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `جدول_الوثائق_${new Date().toISOString().split('T')[0]}.xlsx`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(url), 1500);
+        await saveBlobToFile(blob, `جدول_الوثائق_${new Date().toISOString().split('T')[0]}.xlsx`);
     };
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -1353,14 +1347,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
 
         const buffer = await workbook.xlsx.writeBuffer();
         const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = "نموذج_استيراد_الوثائق.xlsx";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(url), 1500);
+        await saveBlobToFile(blob, 'نموذج_استيراد_الوثائق.xlsx');
     };
 
     const handleNavigateToDoc = useCallback((type: 'ENG' | 'PAI', p: any) => {

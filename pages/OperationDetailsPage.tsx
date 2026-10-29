@@ -21,6 +21,7 @@ import { exportToFormattedExcel } from '../utils/exportToCsv';
 import CustomDropdown from '../components/CustomDropdown';
 
 import ExcelJS from 'exceljs';
+import { saveBlobToFile } from '../utils/saveFile';
 
 // Arabic normalization helper to handle flexible text matching
 const normalizeArabic = (text: string): string => {
@@ -710,10 +711,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
         worksheet.addRow(headers);
         const buffer = await workbook.xlsx.writeBuffer();
         const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = fileName;
-        a.click();
+        await saveBlobToFile(blob, fileName);
     };
 
     const handleLotsFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {

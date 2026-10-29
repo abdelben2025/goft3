@@ -419,6 +419,20 @@ pub fn set_window_close_enabled(window: tauri::WebviewWindow, enabled: bool) -> 
     window.set_closable(enabled).map_err(|e| e.to_string())
 }
 
+/// Write a binary file to the selected path. Used internally to save exported
+/// Excel/CSV files because the WebView routinely blocks programmatic anchor
+/// downloads (blob: URLs) inside the packaged desktop app.
+#[tauri::command]
+pub fn save_binary_file(path: String, contents: Vec<u8>) -> Result<(), String> {
+    let dest = std::path::Path::new(&path);
+    if let Some(parent) = dest.parent() {
+        if !parent.as_os_str().is_empty() && !parent.exists() {
+            std::fs::create_dir_all(parent).map_err(|e| format!("Failed to create directory: {}", e))?;
+        }
+    }
+    std::fs::write(dest, contents).map_err(|e| format!("Failed to write file: {}", e))
+}
+
 #[tauri::command]
 pub fn add_item(
     state: State<'_, DatabaseState>,

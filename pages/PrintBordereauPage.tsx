@@ -3,6 +3,7 @@ import React, { useMemo } from 'react';
 import { Page } from '../types';
 import { useData } from '../context/DataContext';
 import ExcelJS from 'exceljs';
+import { saveBlobToFile } from '../utils/saveFile';
 
 interface PrintBordereauPageProps {
     navigate: (page: Page, id?: number, tab?: string) => void;
@@ -234,17 +235,10 @@ const PrintBordereauPage: React.FC<PrintBordereauPageProps> = ({ navigate, opera
         worksheet.getColumn(4).width = 55;
         worksheet.getColumn(5).width = 18;
 
-        // Write and Save
+        // Write and save
         const buffer = await workbook.xlsx.writeBuffer();
         const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `bordereau_${printData.bordereau?.N_BORDEREAU || printData.operation.N_OPERATION}.xlsx`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(url), 1500);
+        await saveBlobToFile(blob, `bordereau_${printData.bordereau?.N_BORDEREAU || printData.operation.N_OPERATION}.xlsx`);
     };
 
     const getDocDetails = (eng: any) => {

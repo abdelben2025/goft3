@@ -7,6 +7,7 @@ import CustomDropdown from '../components/CustomDropdown';
 import { formatCurrency } from '../utils/currencyUtils';
 import { normalizeDate } from '../utils/dateUtils';
 import ExcelJS from 'exceljs';
+import { saveBlobToFile } from '../utils/saveFile';
 
 interface MonthlyPaymentsPageProps {
     navigate: (page: Page) => void;
@@ -194,14 +195,7 @@ const MonthlyPaymentsPage: React.FC<MonthlyPaymentsPageProps> = ({ navigate, onG
 
         const buf = await workbook.xlsx.writeBuffer();
         const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        const url = window.URL.createObjectURL(blob);
-        const anchor = document.createElement('a');
-        anchor.href = url;
-        anchor.download = `دفوعات_${months.find(m => m.value === selectedMonth)?.label}_${selectedYear}.xlsx`;
-        document.body.appendChild(anchor);
-        anchor.click();
-        document.body.removeChild(anchor);
-        setTimeout(() => window.URL.revokeObjectURL(url), 1500);
+        await saveBlobToFile(blob, `دفوعات_${months.find(m => m.value === selectedMonth)?.label}_${selectedYear}.xlsx`);
     };
 
     return (

@@ -27,6 +27,9 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "./"),
       "fs": path.resolve(__dirname, "./fs-stub.js"),
+      // Use the prebuilt browser bundle of ExcelJS (the Node entry pulls in fs/stream/buffer
+      // dependencies that fail at runtime inside the Tauri webview).
+      "exceljs": path.resolve(__dirname, "lib/exceljs.browser.js"),
     },
   },
   build: {

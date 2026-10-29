@@ -413,6 +413,13 @@ pub fn get_local_db_path(app: tauri::AppHandle) -> Result<String, String> {
 
 
 
+/// Close the main window programmatically (used after syncing the local DB when
+/// the user closes via the native X button).
+#[tauri::command]
+pub fn close_window(window: tauri::WebviewWindow) -> Result<(), String> {
+    window.close().map_err(|e| e.to_string())
+}
+
 /// Write a binary file to the selected path. Used internally to save exported
 /// Excel/CSV files because the WebView routinely blocks programmatic anchor
 /// downloads (blob: URLs) inside the packaged desktop app.

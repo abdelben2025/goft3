@@ -38,7 +38,8 @@ pub fn run() {
             commands::export_sqlite_db,
             commands::export_supabase_sqlite,
             commands::get_local_db_path,
-            commands::save_binary_file
+            commands::save_binary_file,
+            commands::close_window
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

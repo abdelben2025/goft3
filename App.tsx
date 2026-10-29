@@ -58,8 +58,6 @@ import { Page, User, APP_VERSION } from './types';
 import { checkForUpdates, performUpdate, UpdateInfo } from './utils/updateService';
 import { hashPassword, isDefaultPasswordHash } from './utils/authUtils';
 import { errorMessage } from './utils/errorMessage';
-import { isTauri } from './services/tauriService';
-import { invoke } from '@tauri-apps/api/core';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -155,67 +153,6 @@ const AuthenticatedApp: React.FC<{
         }
         onLogout();
     }, [isOnline, refreshData, onLogout, showToast]);
-
-    const handleCloseApp = useCallback(() => {
-        if (!isTauri()) return;
-        invoke('close_window').catch((err) => {
-            console.warn('Failed to close window:', err);
-        });
-    }, []);
-
-    // While logged in: disable the native close (X) button so the user must
-    // use the logout button (Alt+F4 / taskbar close is also blocked).
-    // NOTE: done through a native Rust command because core window APIs are
-    // blocked by Tauri capabilities when called from JS.
-    //
-    // FIX: Use a ref for showToast so we don't re-register the listener on every
-    // render (which caused memory leaks and the close button getting stuck).
-    const showToastRef = useRef(showToast);
-    useEffect(() => { showToastRef.current = showToast; }, [showToast]);
-
-    useEffect(() => {
-        if (!isTauri()) return;
-        let unlistenFn: (() => void) | undefined;
-        let isMounted = true;
-
-        const setup = async () => {
-            try {
-                await invoke('set_window_close_enabled', { enabled: false });
-            } catch (err) {
-                console.warn('Could not disable the window close button:', err);
-            }
-            if (!isMounted) {
-                // Unmounted while awaiting the invoke — restore immediately
-                invoke('set_window_close_enabled', { enabled: true }).catch(() => {});
-                return;
-            }
-            try {
-                const { getCurrentWindow } = await import('@tauri-apps/api/window');
-                const ul = await getCurrentWindow().onCloseRequested((event) => {
-                    event.preventDefault();
-                    showToastRef.current('لإغلاق التطبيق، يرجى تسجيل الخروج أولًا باستخدام زر الخروج.', 'info');
-                });
-                if (!isMounted) {
-                    // Unmounted while awaiting the listener — clean up immediately
-                    ul();
-                    invoke('set_window_close_enabled', { enabled: true }).catch(() => {});
-                } else {
-                    unlistenFn = ul;
-                }
-            } catch (err) {
-                console.warn('Could not listen to the window close event:', err);
-            }
-        };
-
-        setup();
-
-        return () => {
-            isMounted = false;
-            // Unregister close listener first, then re-enable the native close button
-            unlistenFn?.();
-            invoke('set_window_close_enabled', { enabled: true }).catch(() => { /* ignore */ });
-        };
-    }, []); // Empty deps — only runs on mount/unmount of the authenticated session
 
     // ── Idle auto-lock: lock the session after 10 minutes of inactivity ──
     const [isLocked, setIsLocked] = useState(false);
@@ -488,7 +425,7 @@ const AuthenticatedApp: React.FC<{
                     </Suspense>
                 </motion.div>
             </AnimatePresence>
-            <EventTicker onLogout={handleLogoutWithSync} onCloseApp={handleCloseApp} />
+            <EventTicker onLogout={handleLogoutWithSync} />
             <GlobalSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} navigate={navigate} />
 
             {/* Idle auto-lock overlay */}

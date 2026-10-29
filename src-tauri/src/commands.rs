@@ -411,20 +411,7 @@ pub fn get_local_db_path(app: tauri::AppHandle) -> Result<String, String> {
     Ok(path.to_string_lossy().to_string())
 }
 
-/// Enable/disable the native window close (X) button.
-/// Called from JS on login (false) / logout (true) so the user must use the
-/// in-app logout button while a session is open.
-#[tauri::command]
-pub fn set_window_close_enabled(window: tauri::WebviewWindow, enabled: bool) -> Result<(), String> {
-    window.set_closable(enabled).map_err(|e| e.to_string())
-}
 
-/// Close the main window from an in-app button (the native X is disabled while
-/// a session is active).
-#[tauri::command]
-pub fn close_window(window: tauri::WebviewWindow) -> Result<(), String> {
-    window.close().map_err(|e| e.to_string())
-}
 
 /// Write a binary file to the selected path. Used internally to save exported
 /// Excel/CSV files because the WebView routinely blocks programmatic anchor

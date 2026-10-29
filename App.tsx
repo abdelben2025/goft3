@@ -156,37 +156,6 @@ const AuthenticatedApp: React.FC<{
         onLogout();
     }, [isOnline, refreshData, onLogout, showToast]);
 
-    // Sync the local DB before the window is closed via the native X button,
-    // then close programmatically (a flag avoids an infinite close loop).
-    const isClosingRef = useRef(false);
-    useEffect(() => {
-        if (!isTauri()) return;
-        let unlisten: (() => void) | undefined;
-        const setup = async () => {
-            const { getCurrentWindow } = await import('@tauri-apps/api/window');
-            unlisten = await getCurrentWindow().onCloseRequested(async (event) => {
-                if (isClosingRef.current) return; // allow the actual close
-                event.preventDefault();
-                isClosingRef.current = true;
-                try {
-                    if (isOnline) {
-                        showToast('جاري تحديث قاعدة البيانات المحلية قبل الإغلاق...', 'loading');
-                        const status = await refreshData().catch(() => undefined);
-                        if (status?.ok && status.mirrored) {
-                            showToast('تم تحديث قاعدة البيانات المحلية قبل الإغلاق', 'success');
-                        } else {
-                            showToast('تعذر تحديث قاعدة البيانات المحلية — سيتم الإغلاق بالبيانات الحالية', 'error');
-                        }
-                    }
-                } finally {
-                    invoke('close_window').catch(() => window.close());
-                }
-            });
-        };
-        setup();
-        return () => { unlisten?.(); };
-    }, [isOnline, refreshData, showToast]);
-
     // ── Idle auto-lock: lock the session after 10 minutes of inactivity ──
     const [isLocked, setIsLocked] = useState(false);
     const lastActivityRef = useRef(Date.now());
@@ -654,6 +623,22 @@ const App: React.FC = () => {
     }, [currentPage, currentUser, selectedOperationId, selectedEngagementId, selectedPaiementId, selectedTab]);
 
 
+    // The native X close button is disabled to avoid the WebView hanging on close;
+    // closing is done through an explicit in-app button (login screen / logout).
+    useEffect(() => {
+        if (!isTauri()) return;
+        invoke('set_window_close_enabled', { enabled: false }).catch((err) => {
+            console.warn('Could not disable the window close button:', err);
+        });
+    }, []);
+
+    const handleCloseApp = useCallback(() => {
+        if (!isTauri()) return;
+        invoke('close_window').catch((err) => {
+            console.warn('Failed to close window:', err);
+        });
+    }, []);
+
     const handleLogin = useCallback((user: User) => {
         setCurrentUser(user);
         sessionStorage.setItem('goft3_user', JSON.stringify(user));
@@ -746,7 +731,7 @@ const App: React.FC = () => {
                                             <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
                                         </div>
                                     }>
-                                        <LoginPage onLogin={handleLogin} />
+                                        <LoginPage onLogin={handleLogin} onCloseApp={handleCloseApp} />
                                     </Suspense>
                                 </motion.div>
                             ) : (

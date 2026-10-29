@@ -413,8 +413,15 @@ pub fn get_local_db_path(app: tauri::AppHandle) -> Result<String, String> {
 
 
 
-/// Close the main window programmatically (used after syncing the local DB when
-/// the user closes via the native X button).
+/// Enable/disable the native window close (X) button, closing the WebView can
+/// hang in some environments, so the X is disabled and closing is done through
+/// an explicit in-app button instead.
+#[tauri::command]
+pub fn set_window_close_enabled(window: tauri::WebviewWindow, enabled: bool) -> Result<(), String> {
+    window.set_closable(enabled).map_err(|e| e.to_string())
+}
+
+/// Close the main window programmatically.
 #[tauri::command]
 pub fn close_window(window: tauri::WebviewWindow) -> Result<(), String> {
     window.close().map_err(|e| e.to_string())

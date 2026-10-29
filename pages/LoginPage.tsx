@@ -11,9 +11,10 @@ import { tauriDb } from '../services/tauriService';
 
 interface LoginPageProps {
     onLogin: (user: User) => void;
+    onCloseApp?: () => void;
 }
 
-const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
+const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCloseApp }) => {
     const { db, saveConfig, isDbConfigured, loading, isOnline, updateItem, refreshData, onlineUsers } = useData();
     const { t, dir } = useLanguage();
     const { showToast } = useToast();
@@ -159,7 +160,18 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 transition={{ duration: 0.4, ease: "easeOut" }}
                 className="relative w-full max-w-md p-6 sm:p-8 space-y-8 bg-sky-300 rounded-lg shadow-xl border-t-4 border-blue-600"
             >
-                
+                {onCloseApp && (
+                    <button
+                        type="button"
+                        onClick={onCloseApp}
+                        className="absolute top-3 right-3 flex items-center gap-1.5 bg-red-100 text-red-700 hover:bg-red-200 border border-red-200 px-3 py-1 rounded-full text-xs font-bold transition-colors"
+                        title="إغلاق البرنامج"
+                    >
+                        <i className="bi bi-x-square"></i>
+                        <span>إغلاق</span>
+                    </button>
+                )}
+
                 <div className="text-center">
                     <img src={logoDataUrl} alt="App Logo" className="w-24 h-24 mx-auto mb-4 drop-shadow-md" />
                     <h1 className="text-3xl font-bold text-gray-800">GOFT3</h1>

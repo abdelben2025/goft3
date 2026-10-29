@@ -81,7 +81,7 @@ const AddPaiementForm: React.FC<AddPaiementFormProps> = ({ onClose, onSave, oper
     const isDirty = useRef(false);
     const isEditLoaded = useRef(false);
 
-    const markDirty = () => { isDirty.current = true; };
+    const markDirty = useCallback(() => { isDirty.current = true; }, []);
 
     // 1. منطق الفلترة المحدث لمنع ظهور الوثائق المدفوعة أو التي تفوق رصيد CP
     const availablePieces = useMemo(() => {
@@ -258,7 +258,7 @@ const AddPaiementForm: React.FC<AddPaiementFormProps> = ({ onClose, onSave, oper
     }, [pieces, engagements, allPaiementsForOp, initialData]);
 
     // مراقبة تغيير الوثيقة المختارة لتشغيل التعبئة التلقائية
-    const handlePieceChange = (newPieceId: number) => {
+    const handlePieceChange = useCallback((newPieceId: number) => {
         setIdPiece(Number(newPieceId));
         // العثور على الالتزام المرتبط
         const piece = pieces.find(p => Number(p.ID_PIECE) === Number(newPieceId));
@@ -277,7 +277,7 @@ const AddPaiementForm: React.FC<AddPaiementFormProps> = ({ onClose, onSave, oper
 
         updateFieldsForPiece(Number(newPieceId));
         markDirty();
-    };
+    }, [pieces, engagements, updateFieldsForPiece, markDirty]);
 
     // إعداد البيانات الأولية عند التعديل
     useEffect(() => {

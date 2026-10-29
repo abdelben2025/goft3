@@ -49,7 +49,7 @@ const AddUserForm: React.FC<AddUserFormProps> = ({ onClose, onSave, initialData 
             if (initialData.ALLOWED_PAGES) {
                 try {
                     setSelectedPages(JSON.parse(initialData.ALLOWED_PAGES));
-                } catch (e) {
+                } catch {
                     setSelectedPages([]);
                 }
             }
@@ -57,7 +57,7 @@ const AddUserForm: React.FC<AddUserFormProps> = ({ onClose, onSave, initialData 
             if (initialData.ALLOWED_OPERATIONS) {
                 try {
                     setSelectedOperations(JSON.parse(initialData.ALLOWED_OPERATIONS));
-                } catch (e) {
+                } catch {
                     setSelectedOperations([]);
                 }
             }

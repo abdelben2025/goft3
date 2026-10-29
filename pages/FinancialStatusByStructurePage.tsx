@@ -6,7 +6,7 @@ import PageWrapper from '../components/PageWrapper';
 import { formatCurrency } from '../utils/currencyUtils';
 import CustomDropdown from '../components/CustomDropdown';
 import ExcelJS from 'exceljs';
-import { saveBlobToFile } from '../utils/saveFile';
+import { saveWorkbook } from '../utils/exportXlsx';
 
 interface FinancialStatusByStructurePageProps {
     navigate: (page: Page, id?: number, extra?: string) => void;
@@ -372,10 +372,8 @@ const FinancialStatusByStructurePage: React.FC<FinancialStatusByStructurePagePro
         sigRight.font = { name: 'Arial', bold: true, size: 11, underline: true };
         sigRight.alignment = { horizontal: 'center', vertical: 'middle' };
 
-        // Write buffer and save
-        const buf = await workbook.xlsx.writeBuffer();
-        const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        await saveBlobToFile(blob, `الوضعية_المالية_حسب_الهيكلة_${operation?.N_OPERATION || ''}.xlsx`);
+        // Write and save
+        await saveWorkbook(workbook, `الوضعية_المالية_حسب_الهيكلة_${operation?.N_OPERATION || ''}.xlsx`);
     };
 
     if (loading) return <div>جار التحميل...</div>;

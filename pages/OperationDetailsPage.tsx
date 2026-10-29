@@ -21,31 +21,10 @@ import { exportToFormattedExcel } from '../utils/exportToCsv';
 import CustomDropdown from '../components/CustomDropdown';
 
 import ExcelJS from 'exceljs';
-import { saveBlobToFile } from '../utils/saveFile';
+import { saveWorkbook } from '../utils/exportXlsx';
 
 // Arabic normalization helper to handle flexible text matching
-const normalizeArabic = (text: string): string => {
-    if (!text) return '';
-    return text
-        .trim()
-        .replace(/[\u064B-\u0652]/g, '') // remove diacritics
-        .replace(/[أإآٱ]/g, 'ا')
-        .replace(/ة/g, 'ه')
-        .replace(/\s+/g, ' ');
-};
-
-const isUnallocatedText = (text: string): boolean => {
-    const normalizedText = normalizeArabic(text);
-    const normalizedKeywords = [
-        'غير موزع',
-        'غير موزعة',
-        'مبالغ غير موزعة',
-        'مبلغ العملية غير الموزع',
-        'غير الموزع',
-        'مبلغ غير موزع'
-    ].map(normalizeArabic);
-    return normalizedKeywords.some(keyword => normalizedText.includes(keyword));
-};
+import { isUnallocatedText } from '../utils/textUtils';
 
 interface OperationDetailsPageProps {
     navigate: (page: Page, id?: number, tab?: string) => void;
@@ -709,9 +688,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Template');
         worksheet.addRow(headers);
-        const buffer = await workbook.xlsx.writeBuffer();
-        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        await saveBlobToFile(blob, fileName);
+        await saveWorkbook(workbook, fileName);
     };
 
     const handleLotsFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -768,7 +745,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                     showToast(`تم استيراد ${successCount} حصص`, 'success');
                     broadcastEvent('import', `عدد ${successCount} من الحصص للعملية`);
                 }
-            } catch (error) { alert("فشل قراءة الملف."); } finally { if(event.target) event.target.value = ''; }
+            } catch { alert("فشل قراءة الملف."); } finally { if(event.target) event.target.value = ''; }
         };
         reader.readAsArrayBuffer(file);
     };
@@ -883,7 +860,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                     }
                 });
                 showToast(`تم استيراد ${successCount} التزامات بنجاح`, 'success');
-            } catch (error) { alert("حدث خطأ أثناء الاستيراد."); } finally { if(event.target) event.target.value = ''; }
+            } catch { alert("حدث خطأ أثناء الاستيراد."); } finally { if(event.target) event.target.value = ''; }
         };
         reader.readAsArrayBuffer(file);
     };
@@ -1017,7 +994,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                     }
                 });
                 showToast(`تم استيراد ${successCount} دفعات بنجاح`, 'success');
-            } catch (error) { alert("حدث خطأ أثناء استيراد الدفعات."); } finally { if(event.target) event.target.value = ''; }
+            } catch { alert("حدث خطأ أثناء استيراد الدفعات."); } finally { if(event.target) event.target.value = ''; }
         };
         reader.readAsArrayBuffer(file);
     };

@@ -104,7 +104,7 @@ const CustomReportPage: React.FC<CustomReportPageProps> = ({ navigate, onGoBack,
             }
         });
         return rows;
-    }, [db, loading]);
+    }, [db, loading, currentUser.ALLOWED_OPERATIONS, currentUser.ROLE]);
 
     const handleExport = () => {
         if (reportData.length === 0) {

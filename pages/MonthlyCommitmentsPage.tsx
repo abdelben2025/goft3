@@ -7,7 +7,7 @@ import CustomDropdown from '../components/CustomDropdown';
 import { formatCurrency } from '../utils/currencyUtils';
 import { normalizeDate } from '../utils/dateUtils';
 import ExcelJS from 'exceljs';
-import { saveBlobToFile } from '../utils/saveFile';
+import { saveWorkbook } from '../utils/exportXlsx';
 
 interface MonthlyCommitmentsPageProps {
     navigate: (page: Page) => void;
@@ -192,9 +192,7 @@ const MonthlyCommitmentsPage: React.FC<MonthlyCommitmentsPageProps> = ({ navigat
         worksheet.getRow(1).alignment = { horizontal: 'center' };
         worksheet.getColumn('amount').numFmt = '#,##0.00';
 
-        const buf = await workbook.xlsx.writeBuffer();
-        const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        await saveBlobToFile(blob, `التزامات_${months.find(m => m.value === selectedMonth)?.label}_${selectedYear}.xlsx`);
+        await saveWorkbook(workbook, `التزامات_${months.find(m => m.value === selectedMonth)?.label}_${selectedYear}.xlsx`);
     };
 
     return (

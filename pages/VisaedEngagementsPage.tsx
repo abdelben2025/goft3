@@ -154,7 +154,7 @@ const VisaedEngagementsPage: React.FC<VisaedEngagementsPageProps> = ({ navigate,
         }, { finalAE: 0, monthsData: Array(12).fill(0), q1: 0, q2: 0, q3: 0, q4: 0 });
 
         return { data, totals };
-    }, [db, loading, selectedYear, selectedAction]);
+    }, [db, loading, selectedYear, selectedAction, currentUser.ALLOWED_OPERATIONS, currentUser.ROLE]);
 
     const handleExport = () => {
         if (reportData.length === 0) {

@@ -615,7 +615,6 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
                     const startOds = relevantOds.find(o => o.NATURE_ODS === 'انطلاق');
 
                     if (startOds) {
-                        let consumedWorkDays = 0;
                         let lastActiveStartDate: Date | null = null;
                         let isCurrentlyPaused = true;
                         const currentDate = current.date;
@@ -630,7 +629,6 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
                                 }
                             } else if (o.NATURE_ODS === 'ايقاف') {
                                 if (!isCurrentlyPaused && lastActiveStartDate) {
-                                    consumedWorkDays += calculateElapsedDays(lastActiveStartDate, eventDate, useFinancialRule);
                                     isCurrentlyPaused = true;
                                     lastActiveStartDate = null;
                                 }
@@ -933,13 +931,13 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
         setIsSubmitting(true);
         const {
             ID_PIECE,
-            beneficiaryName,
-            rubricName,
-            hasEngagement,
-            hasPaiement,
-            isConcernedEng,
-            isConcernedPai,
-            isDuplicate,
+            _beneficiaryName,
+            _rubricName,
+            _hasEngagement,
+            _hasPaiement,
+            _isConcernedEng,
+            _isConcernedPai,
+            _isDuplicate,
             ...validInitialData
         } = (initialData || {}) as any;
 

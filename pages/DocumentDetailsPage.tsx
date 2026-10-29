@@ -43,7 +43,7 @@ const DocumentDetailsPage: React.FC<DocumentDetailsPageProps> = ({ navigate, cur
         const operation = db.T_OPERATION.find(op => Number(op.ID_OPERATION) === Number(operationId));
         if (!operation) return false;
         return operation.CREATED_BY === currentUser.ID_USER || currentUser.ROLE === 'admin';
-    }, [isViewer, currentUser.ID_USER, db.T_OPERATION]);
+    }, [isViewer, currentUser.ID_USER, currentUser.ROLE, db.T_OPERATION]);
 
     const allLotsForOperation = useMemo(() => {
         if (!piece) return [];

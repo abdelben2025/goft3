@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useData } from '../../context/DataContext';
 import { useToast } from '../../context/ToastContext';
 import { Bordereau, Engagement } from '../../types';
@@ -28,7 +28,7 @@ const AddBordereauForm: React.FC<AddBordereauFormProps> = ({ operationId, onClos
     const [engDocumentation, setEngDocumentation] = useState<{ [key: number]: { subject: string; docs: string; copies: string } }>({});
 
     // Helper functions for initial generation
-    const getInitialDetails = (eng: Engagement) => {
+    const getInitialDetails = useCallback((eng: Engagement) => {
         const piece = db.T_PIECE.find(p => p.ID_PIECE === eng.ID_PIECE);
         const nature = piece?.NAT_PIECE || '';
         let subject = '';
@@ -66,7 +66,7 @@ const AddBordereauForm: React.FC<AddBordereauFormProps> = ({ operationId, onClos
         }
 
         return { subject, docs: docsArr.join('\n'), copies: copiesArr.join('\n') };
-    };
+    }, [db]);
 
     useEffect(() => {
         if (editItem) {
@@ -89,7 +89,7 @@ const AddBordereauForm: React.FC<AddBordereauFormProps> = ({ operationId, onClos
             });
             setEngDocumentation(documentation);
         }
-    }, [editItem, db.T_ENGAGEMENT]);
+    }, [editItem, db.T_ENGAGEMENT, getInitialDetails]);
 
     // Available engagements: those not linked to any bordereau AND not yet visaed by CB, OR those linked to THIS bordereau (if editing)
     const availableEngagements = db.T_ENGAGEMENT.filter(eng => 

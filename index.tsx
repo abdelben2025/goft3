@@ -84,7 +84,7 @@ if (typeof window !== 'undefined') {
       }
     });
     observer.observe(document.body, { childList: true, subtree: true });
-  } catch (e) {
+  } catch {
     // Ignore any mutation observer constraints
   }
 }

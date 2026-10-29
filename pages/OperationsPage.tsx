@@ -116,7 +116,7 @@ const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onU
             map.set(eng.ID_OPERATION, list);
         });
         return map;
-    }, [db.T_ENGAGEMENT]);
+    }, [db]);
 
     const paiGroups = useMemo(() => {
         const map = new Map<number, typeof db.T_PAIEMENT>();
@@ -126,7 +126,7 @@ const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onU
             map.set(pai.ID_OPERATION, list);
         });
         return map;
-    }, [db.T_PAIEMENT]);
+    }, [db]);
 
     const cpGroups = useMemo(() => {
         const map = new Map<number, typeof db.T_CP>();
@@ -136,7 +136,7 @@ const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onU
             map.set(cp.ID_OPERATION, list);
         });
         return map;
-    }, [db.T_CP]);
+    }, [db]);
 
     const rubOpGroups = useMemo(() => {
         const map = new Map<number, typeof db.T_RUBRIQUE_OP>();
@@ -146,7 +146,7 @@ const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onU
             map.set(rop.ID_OPERATION, list);
         });
         return map;
-    }, [db.T_RUBRIQUE_OP]);
+    }, [db]);
 
     const scatOpGroups = useMemo(() => {
         const map = new Map<number, typeof db.T_SCATEGORIE_OP>();
@@ -156,7 +156,7 @@ const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onU
             map.set(sop.ID_OPERATION, list);
         });
         return map;
-    }, [db.T_SCATEGORIE_OP]);
+    }, [db]);
 
     const operationStartYears = useMemo(() => {
         const map = new Map<number, number>();
@@ -277,7 +277,7 @@ const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onU
             }
             return 0;
         });
-    }, [db, selectedYear, debouncedSearchQuery, selectedStatus, selectedTypeOp, currentUser.ROLE, currentUser.ALLOWED_OPERATIONS]);
+    }, [db, selectedYear, debouncedSearchQuery, selectedStatus, selectedTypeOp, currentUser.ROLE, currentUser.ALLOWED_OPERATIONS, cpGroups, engGroups, operationStartYears, paiGroups, rubOpGroups, scatOpGroups]);
 
 
     const displayData = useMemo(() => {
@@ -794,7 +794,7 @@ const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onU
                 
                 alert(summaryMessage);
 
-            } catch (error) {
+            } catch {
                 alert('فشل استيراد البيانات. يرجى التحقق من أن الملف بصيغة Excel صحيحة وأن الأعمدة مطابقة للنموذج المطلوب.');
             } finally {
                 if (event.target) event.target.value = '';

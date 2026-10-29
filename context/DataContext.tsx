@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef, useMemo } from 'react';
 import { Database, User, OnlineUser, AppEvent, Operation, Engagement, Paiement } from '../types';
 import { supabase, saveConfiguration, resetConfiguration, isConfigured } from '../services/supabaseClient';
@@ -686,7 +687,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             setIsInitialLoad(false);
         }
         return { ok: false, source: 'backup' as const, mirrored: false };
-    }, [isInitialLoad, saveToBackup, loadFromBackup, applyDbToState, mirrorDbToSqlite, isOnline]);
+    }, [isInitialLoad, saveToBackup, loadFromBackup, applyDbToState, mirrorDbToSqlite, isOnline, validateDatabaseIntegrity]);
 
 
     const syncData = useCallback(async () => {
@@ -779,7 +780,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         } finally {
             syncInProgress.current = false;
         }
-    }, [supabase, pendingActions, refreshData]);
+    }, [pendingActions, refreshData]);
 
     // Initial Load: hydrate from local/cache first, then refresh cloud in background
     useEffect(() => {
@@ -984,7 +985,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 dbChangesChannelRef.current = null;
             }
         };
-    }, [isOnline]);
+    }, [isOnline, mirrorDeleteFromSqlite, mirrorUpsertToSqlite]);
 
     const broadcastEvent = useCallback((actionType: AppEvent['actionType'], description: string, detail?: string) => {
         if (!currentUserRef.current) return;
@@ -1655,6 +1656,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     };
 
+    // deleteItem is a large, state-heavy closure intentionally left unmemoized.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     const deleteItem = async (tableName: keyof Database, id: number) => {
         const idField = TABLE_ID_FIELDS[tableName];
 
@@ -1856,7 +1859,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 }
             }
         }
-    }, [db, validateDatabaseIntegrity, deleteItem, loading, isInitialLoad]);
+    }, [db, validateDatabaseIntegrity, deleteItem, loading, isInitialLoad, operations.length, engagements.length, paiements.length, dbMetadata]);
     
     const deleteOperationViaSqlite = async (id: number) => {
         try {

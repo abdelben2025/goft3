@@ -118,7 +118,7 @@ const AeInsufficiencyPage: React.FC<AeInsufficiencyPageProps> = ({ navigate, onG
             };
         });
 
-    }, [db, loading, selectedOperationId]);
+    }, [db, loading, selectedOperationId, currentUser.ALLOWED_OPERATIONS, currentUser.ROLE]);
 
     const totalAmount = useMemo(() => insufficientData.reduce((sum, item) => sum + item.amount, 0), [insufficientData]);
 

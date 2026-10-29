@@ -191,7 +191,7 @@ const Appendix01Page: React.FC<Appendix01PageProps> = ({ navigate, onGoBack, cur
             }
         };
 
-    }, [db, loading, selectedYear, selectedAction, selectedProgramme]);
+    }, [db, loading, selectedYear, selectedAction, selectedProgramme, currentUser.ALLOWED_OPERATIONS, currentUser.ROLE]);
 
     const handleExport = () => {
         if (!aggregatedData || operationsData.length === 0) {

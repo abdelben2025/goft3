@@ -31,7 +31,7 @@ const AddOperationForm: React.FC<AddOperationFormProps> = ({ onClose, onSave, ca
         if (stored) {
             try {
                 return JSON.parse(stored);
-            } catch (e) {
+            } catch {
                 return ['LOLF', 'PSC', 'PSD'];
             }
         }

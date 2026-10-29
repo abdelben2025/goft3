@@ -165,7 +165,7 @@ const FinancialStatusPage: React.FC<FinancialStatusPageProps> = ({ navigate, onG
         }, { cpFinale: 0, paiementsPrevious: 0, paiementsCurrentMonth: 0, totalPaiementsCurrentYear: 0, remainingBalance: 0 });
 
         return { data, totals };
-    }, [db, loading, selectedYear, selectedMonth, selectedAction, selectedTypeOp]);
+    }, [db, loading, selectedYear, selectedMonth, selectedAction, selectedTypeOp, currentUser.ALLOWED_OPERATIONS, currentUser.ROLE]);
 
     const handleExport = () => {
         if (financialStatusData.length === 0) {

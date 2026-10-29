@@ -449,7 +449,7 @@ const AuthenticatedApp: React.FC<{
             default:
                 return <HomePage navigate={navigate} currentUser={currentUser} />;
         }
-    }, [currentUser, currentPage, navigate, onLogout, handleLogoutWithSync, selectedEngagementId, selectedOperationId, selectedPaiementId, selectedTab, onGoBack, onUpdateUser]);
+    }, [currentUser, currentPage, navigate, selectedEngagementId, selectedOperationId, selectedPaiementId, selectedTab, onGoBack, onUpdateUser]);
 
     if (isInitialLoad) {
         return (
@@ -596,7 +596,7 @@ const App: React.FC = () => {
         if (storedUser) {
             try {
                 return JSON.parse(storedUser);
-            } catch (e) {
+            } catch {
                 sessionStorage.removeItem('goft3_user');
                 return null;
             }

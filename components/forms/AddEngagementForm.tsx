@@ -224,7 +224,7 @@ const AddEngagementForm: React.FC<AddEngagementFormProps> = ({ onClose, onSave, 
             return true;
         });
 
-    }, [pieces, operationId, allEngagementsForOp, initialData, natureEng, defaultPieceId]);
+    }, [pieces, operationId, allEngagementsForOp, initialData, natureEng, defaultPieceId, rubriqueOps]);
 
     const getNatureFromPiece = useCallback((p: Piece): string => {
         if (p.NAT_PIECE === 'قرار فسخ') return 'فسخ';
@@ -298,7 +298,7 @@ const AddEngagementForm: React.FC<AddEngagementFormProps> = ({ onClose, onSave, 
                 setMontantEngStr('0');
             }
         }
-    }, [pieces, allEngagementsForOp, natureEng, getNatureFromPiece]);
+    }, [pieces, allEngagementsForOp, getNatureFromPiece]);
 
     // Effect to reset selected piece if it's no longer valid for the new nature
     useEffect(() => {

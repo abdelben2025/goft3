@@ -39,15 +39,16 @@ const AddLotPieceForm: React.FC<AddLotPieceFormProps> = ({ onClose, onSave, piec
         }
     }, [initialData]);
 
-    // Auto-select first available lot only if nothing is selected and in Add Mode
-    // We do NOT add availableLots to dependency array to avoid reset on refresh
+    // Auto-select first available lot only if nothing is selected and in Add Mode.
+    // The `selectedLotId === 0` guard means this never overrides a user's choice,
+    // so including both reactive values is safe.
     useEffect(() => {
         if (!initialData && selectedLotId === 0 && availableLots.length > 0) {
             setSelectedLotId(availableLots[0].ID_LOT);
             setDelaiExVal('');
             setDelaiExUnit('days');
         }
-    }, [initialData]); // Only re-run if initialData prop changes reference (e.g. modal opens)
+    }, [initialData, availableLots, selectedLotId]);
 
 
     const [isSubmitting, setIsSubmitting] = useState(false);

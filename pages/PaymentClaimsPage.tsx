@@ -109,7 +109,7 @@ const PaymentClaimsPage: React.FC<PaymentClaimsPageProps> = ({ navigate, onGoBac
             };
         });
 
-    }, [db, loading, selectedOperationId, selectedYear]);
+    }, [db, loading, selectedOperationId, selectedYear, currentUser.ALLOWED_OPERATIONS, currentUser.ROLE]);
 
     const totalAmount = useMemo(() => claimsData.reduce((sum, item) => sum + item.amount, 0), [claimsData]);
 

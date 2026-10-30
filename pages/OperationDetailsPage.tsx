@@ -1857,6 +1857,15 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                     <button onClick={() => handlePrintNavigate('PRINT_MANDAT_TABLE', printMenu.id, 'جدول حوالة')} className="block w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors">
                         <i className="bi bi-table ml-2"></i> جدول الحوالة
                     </button>
+                    <button onClick={() => handlePrintNavigate('PRINT_REVENUE_ORDER', printMenu.id, 'أمر بالإيراد')} className="block w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors border-t border-gray-100">
+                        <i className="bi bi-file-earmark-plus ml-2"></i> أمر بالإيراد (ملحق 01)
+                    </button>
+                    <button onClick={() => handlePrintNavigate('PRINT_REVENUE_NOTICE', printMenu.id, 'إشعار إصدار أمر بالإيراد')} className="block w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors">
+                        <i className="bi bi-bell ml-2"></i> إشعار أمر بالإيراد (ملحق 02)
+                    </button>
+                    <button onClick={() => handlePrintNavigate('PRINT_REVENUE_TABLE', printMenu.id, 'جدول إرسال أوامر الإيرادات')} className="block w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors">
+                        <i className="bi bi-table ml-2"></i> جدول أوامر الإيرادات (ملحق 05)
+                    </button>
                 </div>
             )}
 

@@ -45,6 +45,9 @@ const MonthlyCommitmentsPage = lazy(() => import('./pages/MonthlyCommitmentsPage
 const MonthlyPaymentsPage = lazy(() => import('./pages/MonthlyPaymentsPage'));
 const PrintMonthlyCommitmentsPage = lazy(() => import('./pages/PrintMonthlyCommitmentsPage'));
 const PrintMonthlyPaymentsPage = lazy(() => import('./pages/PrintMonthlyPaymentsPage'));
+const PrintRevenueNoticePage = lazy(() => import('./pages/PrintRevenueNoticePage'));
+const PrintRevenueOrderPage = lazy(() => import('./pages/PrintRevenueOrderPage'));
+const PrintRevenueTablePage = lazy(() => import('./pages/PrintRevenueTablePage'));
 import SplashScreen from './components/SplashScreen';
 import EventTicker from './components/EventTicker';
 import IdleLockScreen from './components/IdleLockScreen';
@@ -265,7 +268,10 @@ const AuthenticatedApp: React.FC<{
             'MONTHLY_COMMITMENTS_REPORT',
             'MONTHLY_PAYMENTS_REPORT',
             'PRINT_MONTHLY_COMMITMENTS',
-            'PRINT_MONTHLY_PAYMENTS'
+            'PRINT_MONTHLY_PAYMENTS',
+            'PRINT_REVENUE_NOTICE',
+            'PRINT_REVENUE_ORDER',
+            'PRINT_REVENUE_TABLE'
         ];
 
         // Custom restrictions based on ALLOWED_PAGES
@@ -392,6 +398,12 @@ const AuthenticatedApp: React.FC<{
                 return <PrintMonthlyCommitmentsPage navigate={navigate} />;
             case 'PRINT_MONTHLY_PAYMENTS':
                 return <PrintMonthlyPaymentsPage navigate={navigate} />;
+            case 'PRINT_REVENUE_NOTICE':
+                return <PrintRevenueNoticePage navigate={navigate} paiementId={selectedPaiementId!} />;
+            case 'PRINT_REVENUE_ORDER':
+                return <PrintRevenueOrderPage navigate={navigate} paiementId={selectedPaiementId!} />;
+            case 'PRINT_REVENUE_TABLE':
+                return <PrintRevenueTablePage navigate={navigate} paiementId={selectedPaiementId!} />;
             default:
                 return <HomePage navigate={navigate} currentUser={currentUser} />;
         }
@@ -682,7 +694,7 @@ const App: React.FC = () => {
             setSelectedOperationId(opId);
         } else if (page === 'PRINT_ENGAGEMENT') {
             setSelectedEngagementId(opId);
-        } else if (page === 'PRINT_PAIEMENT' || page === 'PRINT_CERTIFICAT' || page === 'PRINT_MANDAT' || page === 'PRINT_DECLARATION' || page === 'PRINT_MANDAT_TABLE') {
+        } else if (page === 'PRINT_PAIEMENT' || page === 'PRINT_CERTIFICAT' || page === 'PRINT_MANDAT' || page === 'PRINT_DECLARATION' || page === 'PRINT_MANDAT_TABLE' || page === 'PRINT_REVENUE_NOTICE' || page === 'PRINT_REVENUE_ORDER' || page === 'PRINT_REVENUE_TABLE') {
             setSelectedPaiementId(opId);
         }
     }, [currentPage, selectedOperationId, selectedTab, selectedEngagementId, selectedPaiementId]);

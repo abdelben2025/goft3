@@ -116,7 +116,7 @@ const PrintRevenueOrderPage: React.FC<PrintRevenueOrderPageProps> = ({ navigate,
                     <tbody>
                         <tr>
                             <td className="w-1 p-1.5 border border-black">
-                                <div className="flex justify-between"><span>السنة المالية : {paiement.ANNEE}</span><span>حساب القيد :.....................................</span></div>
+                                <div className="flex justify-between"><span>السنة المالية : {paiement.ANNEE}</span><div className="text-right ml-10"><span> حساب القيد :</span></div></div>
                                 <div className="flex justify-between"><span>محفظة البرنامج : {direction?.PORTEFEUILLE || ''}</span></div>
                                 <div className="flex justify-between"><span>البرنامج : {programme?.PROGRAMME || ''}</span></div>
                                 <div className="flex justify-between"><span>البرنامج الفرعي :{sprogramme?.SPROGRAMME || ''}</span></div>

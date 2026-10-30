@@ -2,7 +2,6 @@ import React, { useMemo } from 'react';
 import { Page } from '../types';
 import { useData } from '../context/DataContext';
 import { formatCurrency, numberToArabicWords } from '../utils/currencyUtils';
-import { normalizeDate } from '../utils/dateUtils';
 
 interface PrintRevenueTablePageProps {
     navigate: (page: Page, id?: number, tab?: string) => void;
@@ -103,14 +102,19 @@ const PrintRevenueTablePage: React.FC<PrintRevenueTablePageProps> = ({ navigate,
                 <table className="mb-3">
                     <tbody>
                         <tr>
-                            <td className="w-1 p-1.5 border border-black">
-                                <div className="flex justify-between"><span>السنة المالية : {paiement.ANNEE}</span><span>رقم جدول الإرسال : {paiement.N_PAI}</span></div>
-                                <div className="flex justify-between"><span>محفظة البرنامج : {direction?.PORTEFEUILLE || ''}</span><span>رقم الحساب : 201.007</span></div>
+						   
+                            <td className="w-1/2 p-1.5 border border-black">
+                                <div className="flex justify-between"><span>السنة المالية : {paiement.ANNEE}</span></div>
+                                <div className="flex justify-between"><span>محفظة البرنامج : {direction?.PORTEFEUILLE || ''}</span></div>
                                 <div className="flex justify-between"><span>البرنامج : {programme?.PROGRAMME || ''}</span></div>
                                 <div className="flex justify-between"><span>البرنامج الفرعي :{sprogramme?.SPROGRAMME || ''}</span></div>
                                 <div className="flex justify-between"><span>النشاط :{direction?.ACTION || ''}</span></div>
                                 <div className="flex justify-between"><span>النشاط الفرعي :{direction?.SACTION || ''}</span></div>
                             </td>
+							<div className="text-right mr-10">
+								<p>رقم جدول الإرسال : </p>
+								<p>رقم الحساب : </p>
+                            </div> 
                         </tr>
                     </tbody>
                 </table>
@@ -118,41 +122,49 @@ const PrintRevenueTablePage: React.FC<PrintRevenueTablePageProps> = ({ navigate,
                 <table>
                     <thead>
                         <tr>
-                            <th colSpan={2} className="w-1/4">رقم و تاريخ الأمر بالإيراد</th>
-                            <th className="w-1/3">اسم المدينين</th>
-                            <th className="w-1/5">المبلغ المراد تحصيله</th>
-                            <th className="w-1/5">ملاحظات</th>
+                            <th colSpan={2} className="w-1/4 ">رقم و تاريخ الأمر بالإيراد</th>
+                            <th rowSpan={2} className="w-1/3">اسم المدينين</th>
+                            <th rowSpan={2} className="w-1/5 ">المبلغ المراد تحصيله</th>
+                            <th rowSpan={2} className="w-1/5">ملاحظات</th>
                         </tr>
                         <tr>
-                            <th>الرقم</th>
-                            <th>التاريخ</th>
-                            <th></th>
-                            <th></th>
-                            <th></th>
+                            <th>الـــرقـم</th>
+                            <th className="w-1/5">التــــاريخ</th>
+							
+							
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td className="text-center font-bold">{paiement.N_PAI}</td>
-                            <td className="text-center" dir="ltr">{normalizeDate(paiement.DATE_PAI)}</td>
+                            <td className="text-center size-20"></td>
+                            <td className="text-center"></td>
                             <td className="text-center font-medium">{beneficiary?.BENEFICIAIRE || ''}</td>
                             <td className="text-center font-bold">{formatCurrency(amountToCollect)}</td>
                             <td></td>
+							
                         </tr>
+						
+						
                         <tr>
-                            <td colSpan={3} className="font-bold text-left px-4">اجمالي أوامر الإيرادات</td>
+						    <td className=" border border-none"></td>
+							<td className=" border border-none"></td>
+                            <td className="font-bold text-left px-4">اجمالي أوامر الإيرادات</td>
                             <td className="text-center font-bold">{formatCurrency(amountToCollect)}</td>
-                            <td></td>
+                           
                         </tr>
                         <tr>
-                            <td colSpan={3} className="font-bold text-left px-4">مجموع المبلغ السابق</td>
+						    <td className=" border border-none"></td>
+							<td className=" border border-none"></td>
+                            <td className="font-bold text-left px-4">مجموع المبلغ السابق</td>
                             <td className="text-center"></td>
-                            <td></td>
+                            
                         </tr>
                         <tr>
-                            <td colSpan={3} className="font-bold text-left px-4">المبلغ الإجمالي</td>
+						    <td className=" border border-none"></td>
+							<td className=" border border-none"></td>
+                            <td className="font-bold text-left px-4">المبلغ الإجمالي</td>
                             <td className="text-center font-black text-emerald-800">{formatCurrency(amountToCollect)}</td>
-                            <td></td>
+                            
                         </tr>
                     </tbody>
                 </table>
@@ -164,7 +176,7 @@ const PrintRevenueTablePage: React.FC<PrintRevenueTablePageProps> = ({ navigate,
                 </div>
 
                 <div className="text-left font-bold mt-4 ml-10">
-                    <p>غليزان في: <span dir="ltr">{normalizeDate(paiement.DATE_PAI)}</span></p>
+                    <p>غليــــــزان في: </p>
                     <p className="mt-4">الآمر بالصرف</p>
                 </div>
             </div>

@@ -26,6 +26,7 @@ export interface AppEvent {
 export interface Beneficiaire {
     ID_BENEFICIAIRE: number;
     BENEFICIAIRE: string;
+    ACTIVITE?: string | null;
     ADRESSE: string;
     RC: string | null;
     CODE_FISCALE: string | null;

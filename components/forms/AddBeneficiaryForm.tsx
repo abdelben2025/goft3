@@ -10,6 +10,7 @@ interface AddBeneficiaryFormProps {
 
 const AddBeneficiaryForm: React.FC<AddBeneficiaryFormProps> = ({ onClose, onSave, initialData }) => {
     const [beneficiaire, setBeneficiaire] = useState('');
+    const [activite, setActivite] = useState('');
     const [adresse, setAdresse] = useState('');
     const [rc, setRc] = useState('');
     const [codeFiscale, setCodeFiscale] = useState('');
@@ -22,6 +23,7 @@ const AddBeneficiaryForm: React.FC<AddBeneficiaryFormProps> = ({ onClose, onSave
     useEffect(() => {
         if (initialData && !isEditLoaded.current) {
             setBeneficiaire(initialData.beneficiary.BENEFICIAIRE);
+            setActivite(initialData.beneficiary.ACTIVITE || '');
             setAdresse(initialData.beneficiary.ADRESSE);
             setRc(initialData.beneficiary.RC || '');
             setCodeFiscale(initialData.beneficiary.CODE_FISCALE || '');
@@ -35,6 +37,7 @@ const AddBeneficiaryForm: React.FC<AddBeneficiaryFormProps> = ({ onClose, onSave
         } else if (!initialData && !isDirty.current) {
             // New Entry Default - ensure clean state
             setBeneficiaire('');
+            setActivite('');
             setAdresse('');
             setRc('');
             setCodeFiscale('');
@@ -107,6 +110,7 @@ const AddBeneficiaryForm: React.FC<AddBeneficiaryFormProps> = ({ onClose, onSave
         const beneficiaryData = {
             ...(initialData?.beneficiary || {}),
             BENEFICIAIRE: beneficiaire,
+            ACTIVITE: activite || null,
             ADRESSE: adresse,
             RC: rc || null,
             CODE_FISCALE: codeFiscale || null,
@@ -131,6 +135,10 @@ const AddBeneficiaryForm: React.FC<AddBeneficiaryFormProps> = ({ onClose, onSave
             <div>
                 <label htmlFor="beneficiaire" className="block text-sm font-medium text-gray-700 text-right">الإسم المستفيد</label>
                 <input id="beneficiaire" type="text" value={beneficiaire} onChange={e => { setBeneficiaire(e.target.value.toUpperCase()); markDirty(); }} required className="w-full px-3 py-2 mt-1 text-gray-700 bg-gray-100 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase" />
+            </div>
+            <div>
+                <label htmlFor="activite" className="block text-sm font-medium text-gray-700 text-right">النشاط التجاري</label>
+                <input id="activite" type="text" value={activite} onChange={e => { setActivite(e.target.value.toUpperCase()); markDirty(); }} className="w-full px-3 py-2 mt-1 text-gray-700 bg-gray-100 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase" />
             </div>
             <div>
                 <label htmlFor="adresse" className="block text-sm font-medium text-gray-700 text-right">العنوان</label>

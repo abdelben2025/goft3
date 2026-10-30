@@ -193,7 +193,7 @@ const PrintRevenueTablePage: React.FC<PrintRevenueTablePageProps> = ({ navigate,
                     </div>
                     <div className="border border-black p-2 text-center text-xs w-[260px]">
                         <p className="font-bold">{direction?.DIRECTION || 'الآمر بالصرف مديرية الأشغال العمومية ولاية غليزان'}</p>
-                        <p className="mt-1">رمز الآمر بالصرف: 214.048.01</p>
+                        <p className="mt-1">رمز الآمر بالصرف 214.048.01</p>
                     </div>
                 </div>
 
@@ -204,13 +204,13 @@ const PrintRevenueTablePage: React.FC<PrintRevenueTablePageProps> = ({ navigate,
                 <table className="border border-black mb-4">
                     <tbody>
                         <tr>
-                            <td className="w-1/2 border-none">
+                            <td className="w-1/2 p-2 border border-black">
                                 <div className="space-y-1 text-xs">
-                                    <div className="flex items-center gap-2"><span className="font-bold">رقم جدول الإرسال :</span> <span>{paiement.N_PAI}</span></div>
-                                    <div className="flex items-center gap-2"><span className="font-bold">رقم الحساب :</span> <span className="font-bold">201.007</span></div>
+                                    <div className="flex items-center justify-between"><span className="font-bold">رقم جدول الإرسال :</span> <span>{paiement.N_PAI}</span></div>
+                                    <div className="flex items-center justify-between"><span className="font-bold">رقم الحساب :</span> <span className="font-bold">201.007</span></div>
                                 </div>
                             </td>
-                            <td className="w-1/2 p-1.5 border border-black">
+                            <td className="w-1/2 p-2 border border-black">
                                 <div className="flex justify-between"><span>السنة المالية :</span><span className="font-bold">{paiement.ANNEE || '2026'}</span></div>
                                 <div className="flex justify-between"><span>محفظة البرنامج :</span><span className="font-bold">024</span></div>
                                 <div className="flex justify-between"><span>البرنامج :</span><span className="font-bold">090</span></div>
@@ -253,7 +253,7 @@ const PrintRevenueTablePage: React.FC<PrintRevenueTablePageProps> = ({ navigate,
                         </tr>
                         <tr>
                             <td colSpan={3} className="font-bold text-left px-4">مجموع المبلغ السابق</td>
-                            <td className="text-center font-bold">0,00</td>
+                            <td className="text-center"></td>
                             <td></td>
                         </tr>
                         <tr>
@@ -268,7 +268,8 @@ const PrintRevenueTablePage: React.FC<PrintRevenueTablePageProps> = ({ navigate,
                     <p className="font-bold">
                         يوقف الأمر بالإيراد على المبلغ : <span className="font-normal">{numberToArabicWords(amountToCollect)}</span>
                     </p>
-                    <div className="flex justify-end items-start mt-6">
+                    <div className="flex justify-between items-start mt-6">
+                        <div></div>
                         <div className="text-center font-bold">
                             <p>غليزان في: <span dir="ltr">{normalizeDate(paiement.DATE_PAI)}</span></p>
                             <p className="mt-8">الآمر بالصرف</p>

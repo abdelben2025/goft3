@@ -38,6 +38,7 @@ pub fn init_database(db_path: &PathBuf) -> Result<Connection> {
             ID_BENEFICIAIRE INTEGER PRIMARY KEY AUTOINCREMENT,
             BENEFICIAIRE TEXT NOT NULL,
             ADRESSE TEXT NOT NULL,
+            ACTIVITE TEXT,
             RC TEXT,
             CODE_FISCALE TEXT
         );
@@ -260,6 +261,18 @@ pub fn init_database(db_path: &PathBuf) -> Result<Connection> {
             FOREIGN KEY (ID_PROGRAMME) REFERENCES T_PROGRAMME(ID_PROGRAMME) ON DELETE CASCADE
         );
     "#)?;
+
+    // Migrations: add columns introduced after the initial schema was shipped.
+    // (idempotent — safe to run on every startup)
+    {
+        let mut stmt = conn.prepare("PRAGMA table_info(T_BENEFICIAIRE)")?;
+        let cols: Vec<String> = stmt
+            .query_map([], |row| row.get::<_, String>(1))?
+            .collect::<Result<_, _>>()?;
+        if !cols.iter().any(|c| c.eq_ignore_ascii_case("ACTIVITE")) {
+            conn.execute_batch("ALTER TABLE T_BENEFICIAIRE ADD COLUMN ACTIVITE TEXT")?;
+        }
+    }
 
     // Ensure at least one admin user exists
     let count: i64 = conn

@@ -96,19 +96,19 @@ const PrintRevenueNoticePage: React.FC<PrintRevenueNoticePageProps> = ({ navigat
             </div>
 
             <div id="print-content" className="print-area bg-white mx-auto max-w-[210mm] text-black">
-                <div className="flex justify items-start mb-3">
+                
                     <div>
-                        <span className="font-bold text-sm">الملحق رقم: 02</span>
+                        <span className="font-bold text-sm ">الملحق رقم: 02</span>
                     </div>
                     <div className="text-center">
                         <p className="font-bold text-base">الجمهورية الجزائرية الديمقراطية الشعبية</p>
                         <p className="text-sm underline font-bold">REPUBLIQUE ALGERIENNE DEMOCRATIQUE ET POPULAIRE</p>
                     </div>
-                    <div className="border border-black p-2 text-center text-xs w-[260px]">
+                    <div className="border border-black p-2 text-center text-xs w-[260px] mt-3">
                         <p className="font-bold">{direction?.DIRECTION}</p>
                         <p className="mt-1">رمز الآمر بالصرف : {direction?.ORDONATEUR}</p>
                     </div>
-                </div>
+                
 
                 <div className="text-center my-3">
                     <h2 className="text-xl font-bold">إشعار إصدار أمر بالإيراد</h2>
@@ -117,15 +117,15 @@ const PrintRevenueNoticePage: React.FC<PrintRevenueNoticePageProps> = ({ navigat
                 <table className="mb-3">
                     <tbody>
                         <tr>
-                            <td className="w-1 border-none"></td>
+                            
                             <td className="w-1 p-1.5 border border-black">
-                                <div className="flex justify-between"><span>السنة المالية : {paiement.ANNEE}</span><span>حساب القيد :</span></div>
+                                <div className="flex justify-between"><span>السنة المالية : {paiement.ANNEE}</span><span>حساب القيد :.....................................</span></div>
                                 <div className="flex justify-between"><span>محفظة البرنامج : {direction?.PORTEFEUILLE || ''}</span></div>
                                 <div className="flex justify-between"><span>البرنامج : {programme?.PROGRAMME || ''}</span></div>
                                 <div className="flex justify-between"><span>البرنامج الفرعي :{sprogramme?.SPROGRAMME || ''}</span></div>
                                 <div className="flex justify-between"><span>النشاط :{direction?.ACTION || ''}</span></div>
                                 <div className="flex justify-between"><span>النشاط الفرعي :{direction?.SACTION || ''}</span></div>
-                                <div className="flex justify-between"><span>العنوان :</span><span className="font-bold">3 نفقات الإستثمار</span></div>
+                                <div className="flex justify-between"><span>العنوان : 3 نفقات الإستثمار</span></div>
                                 <div className="flex justify-between"><span>الصنف : {categorie?.C_CATEGORIE || ''} {categorie?.INT_CATEGORIE || ''}</span><span>الصنف الفرعي : {scategorie?.C_SCATEGORIE || ''} {scategorie?.INT_SCATEGORIE || ''}</span></div>
                                 <div className="flex justify-between"><span>رقم الأمر :</span></div>
                             </td>
@@ -179,15 +179,16 @@ const PrintRevenueNoticePage: React.FC<PrintRevenueNoticePageProps> = ({ navigat
                     <p className="font-bold">
                         يوقف الأمر بالإيراد على المبلغ : <span className="font-normal">{numberToArabicWords(amountToCollect)}</span>
                     </p>
-                    <div className="flex justify-between items-start mt-4">
-                        <div>
-                            <p className="text-[10px] text-gray-600">1/ 2 في حالة عملية استرداد لإعتمادات</p>
-                        </div>
-                        <div className="text-center font-bold">
+                               
+				</div>
+				                       
+                        <div className="text-left font-bold mt-4 ml-10">
                             <p>حرر في: غليزان بتاريخ: <span dir="ltr">{normalizeDate(paiement.DATE_PAI)}</span></p>
-                            <p className="mt-6">الآمر بالصرف</p>
+                            <p className="mt-4">الآمر بالصرف</p>
                         </div>
-                    </div>
+                
+				<div>
+                       <p className="text-[10px] text-right text-gray-600 mt-11">1/ 2 في حالة عملية استرداد لإعتمادات</p>
                 </div>
             </div>
         </div>

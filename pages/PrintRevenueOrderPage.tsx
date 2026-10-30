@@ -24,7 +24,19 @@ const PrintRevenueOrderPage: React.FC<PrintRevenueOrderPageProps> = ({ navigate,
         const piece = db.T_PIECE.find(p => p.ID_PIECE === paiement.ID_PIECE);
         const beneficiary = piece?.ID_BENEFICIAIRE ? db.T_BENEFICIAIRE.find(b => b.ID_BENEFICIAIRE === piece.ID_BENEFICIAIRE) : null;
         const bankAccount = beneficiary ? db.T_COMPTE_BANCAIRE.find(acc => acc.ID_BENEFICIAIRE === beneficiary.ID_BENEFICIAIRE) : null;
-        const direction = db.T_DIRECTION[0];
+
+        const opCodeParts = operation.N_OPERATION.split('.');
+        const actionCode = opCodeParts.length > 5 ? opCodeParts[5] : '';
+        const actionEntry = db.T_DIRECTION.find(d => d.ACTION === actionCode);
+        const direction = actionEntry || db.T_DIRECTION[0];
+
+        const programmeCode = opCodeParts.length > 3 ? opCodeParts[3] : '';
+        const sprogrammeCode = opCodeParts.length > 4 ? opCodeParts[4] : '';
+        const programme = db.T_PROGRAMME.find(p => p.PROGRAMME === programmeCode);
+        const sprogramme = programme ? db.T_SPROGRAMME.find(sp => sp.ID_PROGRAMME === programme.ID_PROGRAMME && sp.SPROGRAMME === sprogrammeCode) : null;
+
+        const scategorie = piece ? db.T_SCATEGORIE.find(sc => sc.ID_SCATEGORIE === piece.ID_SCATEGORIE) : null;
+        const categorie = scategorie ? db.T_CATEGORIE.find(c => c.ID_CATEGORIE === scategorie.ID_CATEGORIE) : null;
 
         return {
             paiement,
@@ -32,7 +44,11 @@ const PrintRevenueOrderPage: React.FC<PrintRevenueOrderPageProps> = ({ navigate,
             piece,
             beneficiary,
             bankAccount,
-            direction
+            direction,
+            programme,
+            sprogramme,
+            categorie,
+            scategorie
         };
     }, [db, loading, paiementId]);
 
@@ -50,8 +66,13 @@ const PrintRevenueOrderPage: React.FC<PrintRevenueOrderPageProps> = ({ navigate,
     if (loading) return <div className="p-8 text-center">جار تحميل البيانات...</div>;
     if (!printData) return <div className="p-8 text-center text-red-500">لم يتم العثور على البيانات.</div>;
 
-    const { paiement, operation, beneficiary, bankAccount, direction } = printData;
+    const { paiement, operation, beneficiary, bankAccount, direction, programme, sprogramme, categorie, scategorie } = printData;
     const amountToCollect = paiement.PENALITE_RETARD || paiement.MONTANT_PAI || 0;
+
+    const deductionReason =
+        (paiement.PENALITE_RETARD && paiement.PENALITE_RETARD > 0)
+            ? 'لتحصيل مبلغ عقوبة التأخير'
+            : 'لتحصيل مبلغ الدفع الزائد (trop-perçu)';
 
     return (
         <div className="bg-white min-h-screen">
@@ -65,7 +86,7 @@ const PrintRevenueOrderPage: React.FC<PrintRevenueOrderPageProps> = ({ navigate,
                     .no-print { display: none !important; }
                 }
             `}</style>
-            
+
             <div className="no-print mb-4 flex justify-between items-center bg-gray-100 p-3 rounded shadow max-w-[210mm] mx-auto">
                 <h2 className="text-xl font-bold">طباعة أمر بالإيراد (ملحق 01)</h2>
                 <div className="flex gap-2">
@@ -75,40 +96,35 @@ const PrintRevenueOrderPage: React.FC<PrintRevenueOrderPageProps> = ({ navigate,
             </div>
 
             <div id="print-content" className="print-area bg-white mx-auto max-w-[210mm] text-black">
-                <div className="flex justify-between items-start mb-3">
-                    <div>
-                        <span className="font-bold text-sm">الملحق رقم: 01</span>
-                    </div>
-                    <div className="text-center">
-                        <p className="font-bold text-base">الجمهورية الجزائرية الديمقراطية الشعبية</p>
-                        <p className="text-sm underline font-bold">REPUBLIQUE ALGERIENNE DEMOCRATIQUE ET POPULAIRE</p>
-                    </div>
-                    <div className="border border-black p-2 text-center text-xs w-[260px]">
-                        <p className="font-bold">{direction?.DIRECTION || 'الآمر بالصرف مديرية الأشغال العمومية ولاية غليزان'}</p>
-                        <p className="mt-1">رمز الآمر بالصرف 214.048.01</p>
-                    </div>
+                <div>
+                    <span className="font-bold text-sm">الملحق رقم: 01</span>
+                </div>
+                <div className="text-center">
+                    <p className="font-bold text-base">الجمهورية الجزائرية الديمقراطية الشعبية</p>
+                    <p className="text-sm underline font-bold">REPUBLIQUE ALGERIENNE DEMOCRATIQUE ET POPULAIRE</p>
+                </div>
+                <div className="border border-black p-2 text-center text-xs w-[260px] mt-3">
+                    <p className="font-bold">{direction?.DIRECTION}</p>
+                    <p className="mt-1">رمز الآمر بالصرف : {direction?.ORDONATEUR}</p>
                 </div>
 
                 <div className="text-center my-3">
                     <h2 className="text-xl font-bold">أمر بالإيراد</h2>
                 </div>
 
-                <table className="border border-black mb-3">
+                <table className="mb-3">
                     <tbody>
                         <tr>
-                            <td className="w-1/2 border-none"></td>
-                            <td className="w-1/2 p-1.5 border border-black">
-                                <div className="flex justify-between"><span>السنة المالية :</span><span className="font-bold">{paiement.ANNEE || '2026'}</span></div>
-                                <div className="flex justify-between"><span>محفظة البرنامج :</span><span className="font-bold">024</span></div>
-                                <div className="flex justify-between"><span>البرنامج :</span><span className="font-bold">090</span></div>
-                                <div className="flex justify-between"><span>البرنامج الفرعي :</span><span className="font-bold">02</span></div>
-                                <div className="flex justify-between"><span>النشاط :</span><span className="font-bold">2048</span></div>
-                                <div className="flex justify-between"><span>النشاط الفرعي :</span><span className="font-bold">000</span></div>
-                                <div className="flex justify-between"><span>العنوان :</span><span className="font-bold">3 نفقات الإستثمار</span></div>
-                                <div className="flex justify-between"><span>الصنف :</span><span className="font-bold">31000 تثبيتات عينية</span></div>
-                                <div className="flex justify-between"><span>الصنف الفرعي :</span><span className="font-bold">31412 المنشآت القاعدية للطرقات</span></div>
-                                <div className="flex justify-between"><span>حساب القيد :</span><span className="font-bold">201.007</span></div>
-                                <div className="flex justify-between"><span>رقم الأمر :</span><span className="font-bold">{paiement.N_PAI}</span></div>
+                            <td className="w-1 p-1.5 border border-black">
+                                <div className="flex justify-between"><span>السنة المالية : {paiement.ANNEE}</span><span>حساب القيد :.....................................</span></div>
+                                <div className="flex justify-between"><span>محفظة البرنامج : {direction?.PORTEFEUILLE || ''}</span></div>
+                                <div className="flex justify-between"><span>البرنامج : {programme?.PROGRAMME || ''}</span></div>
+                                <div className="flex justify-between"><span>البرنامج الفرعي :{sprogramme?.SPROGRAMME || ''}</span></div>
+                                <div className="flex justify-between"><span>النشاط :{direction?.ACTION || ''}</span></div>
+                                <div className="flex justify-between"><span>النشاط الفرعي :{direction?.SACTION || ''}</span></div>
+                                <div className="flex justify-between"><span>العنوان : 3 نفقات الإستثمار</span></div>
+                                <div className="flex justify-between"><span>الصنف : {categorie?.C_CATEGORIE || ''} {categorie?.INT_CATEGORIE || ''}</span><span>الصنف الفرعي : {scategorie?.C_SCATEGORIE || ''} {scategorie?.INT_SCATEGORIE || ''}</span></div>
+                                <div className="flex justify-between"><span>رقم الأمر :</span></div>
                             </td>
                         </tr>
                     </tbody>
@@ -116,7 +132,7 @@ const PrintRevenueOrderPage: React.FC<PrintRevenueOrderPageProps> = ({ navigate,
 
                 <div className="mb-3 leading-relaxed text-justify text-xs">
                     <p>
-                        يطلب من السيد <span className="font-bold">{beneficiary?.BENEFICIAIRE || 'دندن عبد الله'}</span> ان يدفع لصندوق امين الخزينة ولاية غليزان وهو مؤهل وفقا لأحكام المرسوم التنفيذي رقم 46.93 المؤرخ في 1993.02.06 لتحصيل إيرادات في حساب رقم <span className="font-bold">201.007</span> ............... السطر ( ) ، المعنون ..............................................................
+                        يطلب من السيد <span className="font-bold">{beneficiary?.BENEFICIAIRE || ''}</span> ان يدفع لصندوق امين الخزينة ولاية غليزان وهو مؤهل وفقا لأحكام المرسوم التنفيذي رقم 46.93 المؤرخ في 1993.02.06 لتحصيل إيرادات في حساب رقم <span className="font-bold">201.007</span> ............... السطر ( ) ، المعنون ..............................................................
                     </p>
                     <p className="font-bold mt-1.5">المبلغ المشار اليه للأسباب المذكورة ادناه :</p>
                 </div>
@@ -133,16 +149,16 @@ const PrintRevenueOrderPage: React.FC<PrintRevenueOrderPageProps> = ({ navigate,
                         <tr>
                             <td>
                                 <div className="space-y-1 text-xs">
-                                    <p><span className="font-bold">الإسم واللقب:</span> <span className="uppercase">{beneficiary?.BENEFICIAIRE || 'ETPH DENDEN ABDELLAH'}</span></p>
-                                    <p><span className="font-bold">النشاط/ الإسم التجاري للمدين:</span> مؤسسة الأشغال العمومية و الري {beneficiary?.BENEFICIAIRE || 'دندن عبد الله'}</p>
-                                    <p><span className="font-bold">عنوان المدين:</span> {beneficiary?.ADRESSE || 'محل رقم: 25 قطعة بلدية عين النويسي ولاية مستغانم'}</p>
-                                    <p><span className="font-bold">الحساب الجاري:</span> {bankAccount ? `${bankAccount.RIB} ${bankAccount.BANQUE}` : '02900311220049526704 TRUST BANK ALGERIA'}</p>
-                                    <p><span className="font-bold">السجل التجاري:</span> {beneficiary?.RC || '27/00 3923944 A 03 DU 02/12/2015'}</p>
-                                    <p><span className="font-bold">رقم التعريف الجبائي:</span> {beneficiary?.CODE_FISCALE || '177270500272151'}</p>
+                                    <p><span className="font-bold">الإسم واللقب:</span> <span className="uppercase">{beneficiary?.BENEFICIAIRE || ''}</span></p>
+                                    <p><span className="font-bold">النشاط/ الإسم التجاري للمدين:</span> {beneficiary?.ACTIVITE || ''}</p>
+                                    <p><span className="font-bold">عنوان المدين:</span> {beneficiary?.ADRESSE || ''}</p>
+                                    <p><span className="font-bold">الحساب الجاري:</span> {bankAccount ? `${bankAccount.RIB} ${bankAccount.BANQUE}` : ''}</p>
+                                    <p><span className="font-bold">السجل التجاري:</span> {beneficiary?.RC || ''}</p>
+                                    <p><span className="font-bold">رقم التعريف الجبائي:</span> {beneficiary?.CODE_FISCALE || ''}</p>
                                 </div>
                             </td>
                             <td className="text-center align-middle">
-                                <p className="font-medium">{paiement.OBJET_PAI || 'لتحصيل مبلغ عقوبة التأخير'}</p>
+                                <p className="font-medium">{deductionReason}</p>
                             </td>
                             <td className="text-center align-middle">
                                 <p className="text-[11px]">مبلغ الحوالة الخام</p>
@@ -160,15 +176,15 @@ const PrintRevenueOrderPage: React.FC<PrintRevenueOrderPageProps> = ({ navigate,
                     <p className="font-bold">
                         يوقف الأمر بالإيراد على المبلغ : <span className="font-normal">{numberToArabicWords(amountToCollect)}</span>
                     </p>
-                    <div className="flex justify-between items-start mt-4">
-                        <div>
-                            <p className="text-[10px] text-gray-600">1/ 2 في حالة عملية استرداد لإعتمادات</p>
-                        </div>
-                        <div className="text-center font-bold">
-                            <p>حرر في: غليزان بتاريخ: <span dir="ltr">{normalizeDate(paiement.DATE_PAI)}</span></p>
-                            <p className="mt-6">الآمر بالصرف</p>
-                        </div>
-                    </div>
+                </div>
+
+                <div className="text-left font-bold mt-4 ml-10">
+                    <p>حرر في: غليزان بتاريخ: <span dir="ltr">{normalizeDate(paiement.DATE_PAI)}</span></p>
+                    <p className="mt-4">الآمر بالصرف</p>
+                </div>
+
+                <div>
+                    <p className="text-[10px] text-right text-gray-600 mt-11">1/ 2 في حالة عملية استرداد لإعتمادات</p>
                 </div>
             </div>
         </div>

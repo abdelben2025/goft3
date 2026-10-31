@@ -60,6 +60,7 @@ import GlobalSearch from './components/GlobalSearch';
 import { Page, User, APP_VERSION } from './types';
 import { checkForUpdates, performUpdate, UpdateInfo } from './utils/updateService';
 import { hashPassword, isDefaultPasswordHash } from './utils/authUtils';
+import { setUserPassword } from './services/authService';
 import { errorMessage } from './utils/errorMessage';
 import { isTauri } from './services/tauriService';
 import { invoke } from '@tauri-apps/api/core';
@@ -91,13 +92,15 @@ const AuthenticatedApp: React.FC<{
     selectedPaiementId: number | null;
     selectedTab?: string;
 }> = ({ currentPage, navigate, onLogout, onGoBack, onUpdateUser, currentUser, selectedOperationId, selectedEngagementId, selectedPaiementId, selectedTab }) => {
-    const { isInitialLoad, isOnline, joinPresence, leavePresence, updateItem, refreshData } = useData();
+    const { isInitialLoad, isOnline, isDbConfigured, joinPresence, leavePresence, updateItem, refreshData } = useData();
     const { showToast } = useToast();
     const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
     const [updateBusy, setUpdateBusy] = useState(false);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [mustChangePassword, setMustChangePassword] = useState(() =>
-        isDefaultPasswordHash(currentUser.PASSWORD)
+        // Cloud logins learn this from public.verify_login; offline logins still
+        // hold the hash and can compare it locally.
+        currentUser.NEEDS_PASSWORD_CHANGE === true || isDefaultPasswordHash(currentUser.PASSWORD)
     );
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -123,9 +126,21 @@ const AuthenticatedApp: React.FC<{
 
         setIsSavingPassword(true);
         try {
-            const hashed = await hashPassword(newPassword);
-            const updated: User = { ...currentUser, PASSWORD: hashed };
-            await updateItem('T_USER', currentUser.ID_USER, updated);
+            let nextPassword: string | undefined;
+
+            if (isDbConfigured && isOnline) {
+                // Postgres hashes it; the client never sees the result.
+                await setUserPassword(currentUser, newPassword);
+            } else {
+                nextPassword = await hashPassword(newPassword);
+                await updateItem('T_USER', currentUser.ID_USER, { PASSWORD: nextPassword });
+            }
+
+            const updated: User = {
+                ...currentUser,
+                PASSWORD: nextPassword,
+                NEEDS_PASSWORD_CHANGE: false,
+            };
             onUpdateUser(updated);
             sessionStorage.setItem('goft3_user', JSON.stringify(updated));
             setMustChangePassword(false);

@@ -1,0 +1,5 @@
+- Each form follows a uniform shape: props `{ onClose, onSave, initialData? }`, local `useState` fields per entity attribute, an `isSubmitting` flag guarding `handleSubmit`, and a sticky header bar with Cancel/Save buttons.
+- Forms are rendered inside the shared `Modal` component rather than implementing their own overlay, keeping z-index, focus trapping, and drag behavior centralized.
+- UI text is localized through `useLanguage()`'s `t()` function and `dir` value drives RTL/LTR layout decisions (e.g., arrow icons, search input positioning).
+- Entity data comes from the global store via `const { db } = useData()` instead of prop drilling, giving forms direct read access to tables like `db.T_OPERATION`, `db.T_USER`, etc.
+- User-facing strings in forms are written in Arabic, while code identifiers remain English, reflecting the app's bilingual audience.

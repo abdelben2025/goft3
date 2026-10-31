@@ -2,11 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { User, Page } from '../../types';
 import { useData } from '../../context/DataContext';
-import { hashPassword } from '../../utils/authUtils';
 
 interface AddUserFormProps {
     onClose: () => void;
-    onSave: (user: Omit<User, 'ID_USER'> | User) => void;
+    /** The plaintext password (when one was typed) is handed up so the caller
+     *  can decide where it goes: Postgres RPC in cloud mode, a local hash
+     *  otherwise. This form never sees or handles a hash. */
+    onSave: (user: Omit<User, 'ID_USER' | 'PASSWORD'> | User, plainPassword?: string) => void;
     initialData?: User;
 }
 
@@ -43,7 +45,9 @@ const AddUserForm: React.FC<AddUserFormProps> = ({ onClose, onSave, initialData 
     useEffect(() => {
         if (initialData) {
             setUsername(initialData.USERNAME);
-            setPassword(initialData.PASSWORD);
+            // Never seed the field with the stored hash: leave it empty so it
+            // reads as "unchanged".
+            setPassword('');
             setRole(initialData.ROLE);
             
             if (initialData.ALLOWED_PAGES) {
@@ -70,30 +74,37 @@ const AddUserForm: React.FC<AddUserFormProps> = ({ onClose, onSave, initialData 
         e.preventDefault();
         if (isSubmitting) return;
 
-        if (!username.trim() || !password.trim()) {
-            alert('يرجى ملء جميع حقول.');
+        const trimmedPassword = password.trim();
+
+        if (!username.trim()) {
+            alert('يرجى إدخال اسم المستخدم.');
+            return;
+        }
+        // Existing users keep their password when the field is left blank.
+        if (!initialData && !trimmedPassword) {
+            alert('يرجى إدخال كلمة المرور.');
+            return;
+        }
+        if (trimmedPassword && trimmedPassword.length < 8) {
+            alert('كلمة المرور يجب أن تكون 8 أحرف على الأقل.');
             return;
         }
 
         setIsSubmitting(true);
         try {
-            let finalPassword = password;
-            // Only hash if new user or password was changed manually
-            if (!initialData || password !== initialData.PASSWORD) {
-                finalPassword = await hashPassword(password);
-            }
-
-            onSave({
-                ...(initialData || {}),
-                USERNAME: username,
-                PASSWORD: finalPassword,
-                ROLE: role,
-                ALLOWED_PAGES: role === 'admin' ? undefined : JSON.stringify(selectedPages),
-                ALLOWED_OPERATIONS: role === 'admin' ? undefined : JSON.stringify(selectedOperations),
-            });
+            onSave(
+                {
+                    ...(initialData || {}),
+                    USERNAME: username,
+                    ROLE: role,
+                    ALLOWED_PAGES: role === 'admin' ? undefined : JSON.stringify(selectedPages),
+                    ALLOWED_OPERATIONS: role === 'admin' ? undefined : JSON.stringify(selectedOperations),
+                },
+                trimmedPassword || undefined
+            );
         } catch (err) {
-            console.error("Hashing error:", err);
-            alert("خطأ في تشفير كلمة المرور");
+            console.error("User save error:", err);
+            alert("خطأ في حفظ المستخدم");
             setIsSubmitting(false);
         }
     };
@@ -126,7 +137,7 @@ const AddUserForm: React.FC<AddUserFormProps> = ({ onClose, onSave, initialData 
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 text-right">كلمة المرور</label>
-                        <input type="password" value={password} onChange={e => setPassword(e.target.value)} required className="w-full px-3 py-2 mt-1 text-gray-700 bg-white border border-gray-300 rounded-[20px] focus:ring-blue-500 focus:border-blue-500 normal-case" />
+                        <input type="password" value={password} onChange={e => setPassword(e.target.value)} required={!initialData} placeholder={initialData ? 'اتركها فارغة للإبقاء على الحالية' : ''} className="w-full px-3 py-2 mt-1 text-gray-700 bg-white border border-gray-300 rounded-[20px] focus:ring-blue-500 focus:border-blue-500 normal-case" />
                     </div>
                 </div>
                 <div>

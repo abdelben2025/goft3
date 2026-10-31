@@ -1,0 +1,1 @@
+Reusable React UI primitives (modals, cards, toasts, search, page shell) and per-entity Add* forms that compose the application's data-entry surface.

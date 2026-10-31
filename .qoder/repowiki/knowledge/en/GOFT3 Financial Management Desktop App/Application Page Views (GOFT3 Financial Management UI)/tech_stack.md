@@ -1,0 +1,1 @@
+React + TypeScript components styled with Tailwind CSS; animations via `framer-motion`; Excel import/export via `exceljs`; iconography via Bootstrap Icons (`bi-*`); Tauri desktop integration accessed through `../services/tauriService` for local SQLite backup/restore and auto-updates.

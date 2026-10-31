@@ -1,0 +1,8 @@
+schema_version: 1
+module_path: components
+title: Shared UI Components & Entity Forms
+scope:
+    - components/
+source_files: []
+depends_on: []
+related_to: []

@@ -1,0 +1,1 @@
+@supabase/supabase-js for cloud Postgres access; @tauri-apps/api/core for Rust bridge calls; localStorage for persisting Supabase credentials; raw PostgreSQL DDL embedded as a TypeScript template literal.

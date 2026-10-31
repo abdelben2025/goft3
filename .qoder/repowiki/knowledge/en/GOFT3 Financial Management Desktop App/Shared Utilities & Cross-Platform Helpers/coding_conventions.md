@@ -1,0 +1,5 @@
+- Public APIs are exported as named functions/constants rather than classes, keeping each utility file a flat namespace of pure functions.
+- Optional string inputs are typed as `string | null | undefined` and early-return empty/default values instead of throwing, applied consistently across `normalizeDate`, `parseCurrency`, `formatDurationArabic`, etc.
+- Tauri-specific code is gated through `isTauri()` from `../services/tauriService` and uses dynamic `import('@tauri-apps/*')` calls so the bundle remains usable in a plain browser dev server.
+- Arabic-facing strings use the local Arabic script directly (e.g. 'انطلاق', 'ايقاف', 'ختام', 'شهر واحد') rather than transliteration, including enum-like labels in interfaces and UI messages.
+- Financial duration logic centralizes the month=30-days rule via `isFinancialDuration` + `getEffectiveDurationDays` + `calculateElapsedDays`, with callers passing a boolean flag instead of duplicating the 30/360 math.

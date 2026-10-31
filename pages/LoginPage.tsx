@@ -6,8 +6,39 @@ import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
 import Modal from '../components/Modal';
 
-import { hashPassword, verifyPassword } from '../utils/authUtils';
+import { signIn, authErrorMessage, SignInResult } from '../services/authService';
+import { configuredHost } from '../services/supabaseClient';
 import { tauriDb } from '../services/tauriService';
+
+/**
+ * Turns the server's diagnostic into one sentence a human can act on.
+ * verify_login deliberately answers "no" for a missing user, a missing hash and
+ * a wrong password alike, so without public.diag_login the screen can only say
+ * "wrong username or password" — which is exactly what left this account stuck.
+ */
+const explainRejection = (result: SignInResult): string => {
+    const d = result.diagnostic;
+    if (result.source !== 'cloud' || !d) return '';
+
+    if (!d.userFound) {
+        return `لا يوجد مستخدم بهذا الاسم في السحابة (عدد صفوف T_USER: ${d.totalUsers}).`;
+    }
+    if (d.secretState === 'MISSING' || d.secretState === 'EMPTY') {
+        // Which repair applies depends on whether T_USER.PASSWORD still exists:
+        // while it does, 07 can copy every hash across in one statement.
+        const fix = d.hasPasswordColumn
+            ? 'الحل: نفّذ supabase/07_repair_login.sql — ينسخ التجزئات من T_USER.PASSWORD إلى T_USER_SECRET.'
+            : 'العمود T_USER.PASSWORD محذوف، فلا شيء يُنسخ منه. عيّن كلمة مرور بملف supabase/08_reset_admin_password.sql.';
+        return `المستخدم موجود، لكن لا توجد له تجزئة صالحة في T_USER_SECRET (الحالة: ${d.secretState}، الصفوف: ${d.secretRows}). ${fix}`;
+    }
+    if (d.secretState === 'CORRUPT') {
+        return 'التجزئة المخزّنة غير صالحة. الحل: نفّذ supabase/08_reset_admin_password.sql.';
+    }
+    if (d.secretState === 'OK') {
+        return 'المستخدم وتجزئته سليمان في القاعدة ⇒ كلمة المرور نفسها غير مطابقة.';
+    }
+    return '';
+};
 
 interface LoginPageProps {
     onLogin: (user: User) => void;
@@ -15,7 +46,7 @@ interface LoginPageProps {
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCloseApp }) => {
-    const { db, saveConfig, isDbConfigured, loading, isOnline, updateItem, refreshData, onlineUsers } = useData();
+    const { db, saveConfig, isDbConfigured, loading, isOnline, refreshData, onlineUsers } = useData();
     const { t, dir } = useLanguage();
     const { showToast } = useToast();
     const [username, setUsername] = useState('');
@@ -45,101 +76,52 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCloseApp }) => {
 
         setIsLoggingIn(true);
         try {
-            const targetUsername = username.trim().toLowerCase();
-            let user: User | undefined;
-
             // Block a second concurrent session: if this username is currently
             // online on another machine, refuse the login with a clear notice.
+            const targetUsername = username.trim().toLowerCase();
             if (isOnline && (onlineUsers || []).some(u => (u.username || '').trim().toLowerCase() === targetUsername)) {
                 setError(`اسم المستخدم «${username.trim()}» متصل الآن على جهاز آخر. يجب أن يخرج أولًا قبل تسجيل الدخول هنا.`);
                 showToast(`تم منع تسجيل الدخول: المستخدم «${username.trim()}» متصل الآن`, 'error');
                 return;
             }
 
-            // Offline: local SQLite is the authoritative source for credentials.
-            // Always prefer its hash over in-memory state (which may be stale/backup).
-            if (isDesktop && !isOnline) {
-                try {
-                    const localDb = await tauriDb.getDatabase();
-                    const localUser = (localDb.T_USER || []).find(
-                        (u: User) => u.USERNAME.trim().toLowerCase() === targetUsername
-                    );
-                    if (localUser) {
-                        user = localUser;
-                    }
-                } catch (localErr) {
-                    console.error('Failed to reload users from local SQLite:', localErr);
+            const result = await signIn(username, password, { isOnline, isDesktop }, db.T_USER);
+
+            if (result.user) {
+                const user = result.user;
+                if (result.needsPasswordChange) {
+                    user.NEEDS_PASSWORD_CHANGE = true;
                 }
-            }
 
-            // Fallback: in-memory users
-            if (!user) {
-                user = db.T_USER.find(u => u.USERNAME.trim().toLowerCase() === targetUsername);
-            }
-
-            // Last resort: full refresh then search again
-            if (!user && isDesktop) {
-                try {
-                    await refreshData();
-                    // db in this closure is stale; re-read via tauri
-                    const localDb = await tauriDb.getDatabase();
-                    user = (localDb.T_USER || []).find(
-                        (u: User) => u.USERNAME.trim().toLowerCase() === targetUsername
-                    );
-                } catch {
-                    // ignore
+                // After a successful ONLINE login: pull the full cloud DB and
+                // immediately mirror it into the local SQLite (goft3_local.db).
+                // No toasts: they raced with logout/unmount and the full fetch can
+                // take a while, so we keep login instantaneous and silent.
+                if (isOnline) {
+                    refreshData().catch((syncErr) => {
+                        console.warn('Post-login local DB sync failed:', syncErr);
+                    });
                 }
-            }
 
-            if (user) {
-                // PASSWORD is a bcrypt hash (or legacy SHA-256 / seed hash) stored in the DB.
-                // verifyPassword compares the entered password against the stored hash (no decryption needed).
-                const { valid, needsRehash } = await verifyPassword(password, user.PASSWORD);
-                
-                if (valid) {
-                    if (needsRehash) {
-                        try {
-                            const newBcryptHash = await hashPassword(password);
-                            // Auto-migrate legacy password to Bcrypt seamlessly in DB & cache
-                            // (updateItem also mirrors to local SQLite when online)
-                            updateItem('T_USER', user.ID_USER, {
-                                ...user,
-                                PASSWORD: newBcryptHash
-                            }).catch(err => {
-                                console.warn("Background auto-migration to Bcrypt deferred:", err);
-                            });
-                            user.PASSWORD = newBcryptHash;
-                        } catch (rehashErr) {
-                            console.warn("Could not rehash password on login:", rehashErr);
-                        }
-                    }
-
-                    // After a successful ONLINE login: pull the full cloud DB and
-                    // immediately mirror it into the local SQLite (goft3_local.db),
-                    // reporting the result to the user via toast.
-                    if (isOnline) {
-                        // Refresh/mirror the local DB in the background after login. No toasts
-                        // are shown here: they raced with logout/unmount and the full fetch can
-                        // take a while, so we keep login instantaneous and silent.
-                        refreshData().catch((syncErr) => {
-                            console.warn('Post-login local DB sync failed:', syncErr);
-                        });
-                    }
-
-                    onLogin(user);
-                } else {
-                    setError(t('login.error'));
-                }
+                onLogin(user);
+            } else if (result.offlineCredentialMissing) {
+                // The account exists locally, but this workstation never cached a
+                // verifiable hash for it (passwords no longer leave the server).
+                setError('لا توجد بيانات دخول محفوظة لهذا الحساب على هذا الجهاز. اتصل بالإنترنت وسجّل الدخول مرة واحدة قبل استعمال الوضع المحلي.');
+            } else if (!isOnline && db.T_USER.length === 0) {
+                setError('لا توجد بيانات محلية محفوظة. يجب الاتصال بالإنترنت لتسجيل الدخول لأول مرة.');
             } else {
-                if (!isOnline && db.T_USER.length === 0) {
-                    setError('لا توجد بيانات محلية محفوظة. يجب الاتصال بالإنترنت لتسجيل الدخول لأول مرة.');
-                } else {
-                    setError(t('login.error'));
-                }
+                // The same wording covers a server rejection and a local one, which
+                // is exactly what makes "the user exists but cannot log in" opaque.
+                const where = result.source === 'cloud'
+                    ? `تحقق عبر السحابة (${configuredHost || 'غير مهيأ'})`
+                    : 'تحقق محلي — البيانات من نسخة الجهاز، لا من السحابة';
+                const why = explainRejection(result);
+                setError(why ? `${t('login.error')} — ${where}\n${why}` : `${t('login.error')} — ${where}`);
             }
         } catch (err) {
             console.error("Login verification error:", err);
-            setError("خطأ في التحقق من كلمة المرور.");
+            setError(authErrorMessage(err));
         } finally {
             setIsLoggingIn(false);
         }
@@ -229,7 +211,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCloseApp }) => {
 
                     {error && (
                         <div className="text-center p-2 bg-red-100 border border-red-200 rounded-md">
-                            <p className="text-sm text-red-600 mb-1 font-bold">{error}</p>
+                            <p className="text-sm text-red-600 mb-1 font-bold whitespace-pre-line">{error}</p>
                         </div>
                     )}
                     <div>

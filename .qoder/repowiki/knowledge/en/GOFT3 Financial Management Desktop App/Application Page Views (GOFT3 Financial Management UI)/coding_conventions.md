@@ -1,0 +1,6 @@
+- Each page is a named `React.FC<Props>` component declared at file root and `export default`ed, with props typed against the shared `Page` enum and `User` model from `../types`.
+- Navigation between pages goes through a `navigate(page: Page, id?: number, tab?: string)` prop rather than any routing library, keeping navigation stateless inside the page.
+- Business data is read from `useData().db` tables (`T_OPERATION`, `T_ENGAGEMENT`, `T_PAIEMENT`, `T_CP`, `T_RUBRIQUE_OP`, `T_SCATEGORIE_OP`, …) and mutations go through `addItem`/`updateItem`/`deleteItem`/`runInTransaction` from the same context instead of direct API calls.
+- User-facing strings use the `t(...)` key function from `useLanguage()`, while Arabic labels embedded directly in JSX remain untranslated.
+- List-heavy pages compute derived views with `useMemo` over `db` slices (year/activity/status/type filters) and persist filter state to `sessionStorage` under the `goft3_*` prefix so it survives navigation.
+- Print-only variants mirror the calculation logic of their interactive counterpart but render a stripped-down table layout without edit buttons, modals, or client-side interactivity.

@@ -13,6 +13,8 @@ import { checkForUpdates, performUpdate } from '../utils/updateService';
 import { motion, AnimatePresence } from 'framer-motion';
 import { tauriDb, isTauri } from '../services/tauriService';
 import { supabase } from '../services/supabaseClient';
+import { hashPassword } from '../utils/authUtils';
+import { insertUserRow, insertCloudUser, setUserPassword, CLOUD_USER_MISSING } from '../services/authService';
 
 const EXPORT_TABLES = [
     'T_USER', 'T_BENEFICIAIRE', 'T_CATEGORIE', 'T_DIRECTION', 'T_PROGRAMME',
@@ -30,7 +32,7 @@ interface SettingsPageProps {
 type SettingsTab = 'general' | 'users' | 'tables';
 
 const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, currentUser }) => {
-    const { db, loading, addItem, updateItem, deleteItem, resetDatabase, importDatabase, saveConfig, resetConfig, isOnline, isDbConfigured } = useData();
+    const { db, loading, addItem, updateItem, deleteItem, resetDatabase, importDatabase, saveConfig, resetConfig, isOnline, isDbConfigured, refreshData } = useData();
     const { showToast } = useToast();
     const { t } = useLanguage();
     
@@ -54,14 +56,40 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
     const isAdmin = currentUser.ROLE === 'admin';
 
     // User Actions
-    const handleSaveUser = async (userData: Omit<User, 'ID_USER'> | User) => {
+    const handleSaveUser = async (userData: Omit<User, 'ID_USER' | 'PASSWORD'> | User, plainPassword?: string) => {
         showToast('جاري حفظ البيانات...', 'loading');
         try {
+            // Same split as UsersPage: Postgres hashes in cloud mode, the local
+            // SQLite row carries its own hash otherwise.
+            const cloud = isDbConfigured && isOnline;
+            const payload: Record<string, any> = { ...userData };
+
+            if (!cloud && plainPassword) {
+                payload.PASSWORD = await hashPassword(plainPassword);
+            }
+
             if ('ID_USER' in userData) {
-                await updateItem('T_USER', userData.ID_USER, userData);
+                await updateItem('T_USER', userData.ID_USER, payload);
+                if (cloud && plainPassword) {
+                    await setUserPassword(userData, plainPassword);
+                }
                 showToast('تم تعديل المستخدم بنجاح', 'success');
             } else {
-                await addItem('T_USER', userData);
+                // Cloud rows must go straight to Supabase: addItem falls back to the
+                // local SQLite on any error, returning a workstation-only ID_USER
+                // that makes set_user_password fail on the secret's foreign key.
+                const saved = cloud
+                    ? await insertCloudUser(payload)
+                    : await insertUserRow(
+                        (rowPayload) => addItem('T_USER', rowPayload as any),
+                        payload
+                    );
+                if (cloud && plainPassword) {
+                    await setUserPassword(saved, plainPassword);
+                }
+                if (cloud) {
+                    refreshData({ silent: true }).catch(() => { /* list refreshes on next tick */ });
+                }
                 showToast('تمت إضافة المستخدم بنجاح', 'success');
             }
             setIsUserModalOpen(false);
@@ -72,6 +100,9 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
             if (error && typeof error === 'object') {
                 if (error.code === '23505') errorMessage = "اسم المستخدم موجود بالفعل.";
                 else if (error.code === '23514') errorMessage = "تنبيه: قاعدة البيانات ترفض إضافة دور 'ملاحظ'. يرجى تحديث SQL.";
+                else if (error.code === CLOUD_USER_MISSING || error.message === CLOUD_USER_MISSING) {
+                    errorMessage = 'هذا المستخدم موجود في نسخة هذا الجهاز وليس في السحابة، لذلك لا يمكن حفظ كلمة مروره هناك. احذفه من القائمة ثم أضفه من جديد ليُسجّل في السحابة.';
+                }
                 else if (error.message) errorMessage += ` التفاصيل: ${error.message}`;
             }
             showToast(errorMessage, 'error');

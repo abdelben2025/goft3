@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef, useMemo } from 'react';
 import { Database, User, OnlineUser, AppEvent, Operation, Engagement, Paiement } from '../types';
 import { supabase, saveConfiguration, resetConfiguration, isConfigured } from '../services/supabaseClient';
-import { hashPassword } from '../utils/authUtils';
+import { insertUserRow, insertCloudUser } from '../services/authService';
 import { tauriDb } from '../services/tauriService';
 
 // Key for local storage backup
@@ -35,7 +35,7 @@ interface DataContextType {
     isOnline: boolean; // New: Connection status
     isLocalDbConnected: boolean; // Local SQLite (goft3_local.db) reachable?
     pendingActionsCount: number; // New: Number of unsynced actions
-    refreshData: () => Promise<RefreshStatus>;
+    refreshData: (opts?: { silent?: boolean }) => Promise<RefreshStatus>;
     addItem: <T extends { [key: string]: any }>(tableName: keyof Database, item: Omit<T, keyof T & `ID_${string}`>) => Promise<any>;
     updateItem: <T extends { [key: string]: any }>(tableName: keyof Database, id: number, item: T) => Promise<any>;
     deleteItem: (tableName: keyof Database, id: number) => Promise<any>;
@@ -88,7 +88,8 @@ const TABLE_AR_NAMES: { [key: string]: string } = {
 // to reduce payload size. Every field below exists in the corresponding type,
 // so no accessed property will be missing.
 const TABLE_COLUMNS: { [key: string]: string } = {
-    T_USER: 'ID_USER, USERNAME, PASSWORD, ROLE, ALLOWED_PAGES, ALLOWED_OPERATIONS',
+    // No PASSWORD: hashes live only in T_USER_SECRET, which the anon key cannot read.
+    T_USER: 'ID_USER, USERNAME, ROLE, ALLOWED_PAGES, ALLOWED_OPERATIONS',
     T_BENEFICIAIRE: 'ID_BENEFICIAIRE, BENEFICIAIRE, ACTIVITE, ADRESSE, RC, CODE_FISCALE',
     T_CATEGORIE: 'ID_CATEGORIE, C_CATEGORIE, INT_CATEGORIE',
     T_CP: 'ID_CP, ID_OPERATION, ANNEE, MONTANT_INITIALE_CP, MONTANT_FINALE_CP',
@@ -108,6 +109,61 @@ const TABLE_COLUMNS: { [key: string]: string } = {
     T_SPROGRAMME: 'ID_SPROGRAMME, ID_PROGRAMME, SPROGRAMME, INT_SPROGRAMME',
     T_COMPTE_BANCAIRE: 'ID_COMPTE, ID_BENEFICIAIRE, RIB, BANQUE',
     T_BORDEREAU: 'ID_BORDEREAU, ID_PIECE, N_BORDEREAU, ANNEE, DATE_BORDEREAU, DESTINATAIRE, DOCUMENTS_JOINTS, COPIES_NOTE',
+};
+
+/**
+ * Reconciles T_USER against an imported backup instead of replacing it.
+ * T_USER_SECRET is keyed by ID_USER with ON DELETE CASCADE, so the old
+ * "delete every user, then insert the backup" wiped every password on the
+ * system. Rows are matched by ID_USER first and by USERNAME second, so the
+ * secret stays attached and only the password-less fields are overwritten.
+ */
+const reconcileCloudUsers = async (sb: any, imported: User[] | undefined): Promise<void> => {
+    if (!imported || imported.length === 0) return;
+
+    const { data: current, error } = await sb.from('T_USER').select('ID_USER, USERNAME');
+    if (error) throw error;
+
+    const existingIds = new Set<number>();
+    const idByName = new Map<string, number>();
+    for (const row of (current || []) as { ID_USER: number; USERNAME: string | null }[]) {
+        const id = Number(row.ID_USER);
+        existingIds.add(id);
+        idByName.set(String(row.USERNAME || '').trim().toLowerCase(), id);
+    }
+
+    const kept = new Set<number>();
+    for (const user of imported) {
+        const name = String(user.USERNAME || '').trim();
+        if (!name) continue;
+
+        const fields: Record<string, any> = {
+            USERNAME: name,
+            ROLE: user.ROLE,
+            ALLOWED_PAGES: user.ALLOWED_PAGES ?? null,
+            ALLOWED_OPERATIONS: user.ALLOWED_OPERATIONS ?? null,
+        };
+
+        const matchId = existingIds.has(Number(user.ID_USER))
+            ? Number(user.ID_USER)
+            : idByName.get(name.toLowerCase());
+
+        if (matchId !== undefined) {
+            const { error: updateError } = await sb.from('T_USER').update(fields).eq('ID_USER', matchId);
+            if (updateError) throw updateError;
+            kept.add(matchId);
+        } else {
+            const created = await insertCloudUser(fields);
+            kept.add(Number(created.ID_USER));
+        }
+    }
+
+    // Accounts absent from the backup are dropped (their secrets cascade away).
+    for (const id of existingIds) {
+        if (kept.has(id)) continue;
+        const { error: deleteError } = await sb.from('T_USER').delete().eq('ID_USER', id);
+        if (deleteError) throw deleteError;
+    }
 };
 
 const isNetworkError = (error: any): boolean => {
@@ -1955,6 +2011,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         // ── Priority 1: Supabase cloud reset when online ──
         if (supabase && isOnline) {
             if (!window.confirm('تحذير: هذا الإجراء سيحذف جميع البيانات من قاعدة البيانات السحابية. هل أنت متأكد؟')) return;
+            // Capture the narrowed client: the closure below loses the narrowing.
+            const sb = supabase;
             isBatchMode.current = true;
             setLoading(true);
             try {
@@ -1969,8 +2027,20 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                     await supabase.from(table as string).delete().neq(TABLE_ID_FIELDS[table], 0); 
                 }
                 
-                const hashedAdmin = await hashPassword('admin');
-                await supabase.from('T_USER').insert({ USERNAME: 'admin', PASSWORD: hashedAdmin, ROLE: 'admin' });
+                // The password is set through the RPC: Postgres hashes it, so no
+                // hash is ever created client-side for the cloud copy.
+                const createdAdmin = await insertUserRow(
+                    async (payload) => {
+                        const { data, error } = await sb.from('T_USER').insert(payload).select().single();
+                        if (error) throw error;
+                        return data as { ID_USER: number };
+                    },
+                    { USERNAME: 'admin', ROLE: 'admin' }
+                );
+                await sb.rpc('set_user_password', {
+                    p_id_user: createdAdmin.ID_USER,
+                    p_password: 'admin123',
+                });
                 broadcastEvent('reset', 'قاعدة البيانات بالكامل');
 
             } catch (e) {
@@ -2005,35 +2075,75 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             isBatchMode.current = true;
             setLoading(true);
             try {
-                 const tablesToDelete: (keyof Database)[] = [
-                    'T_COMPTE_BANCAIRE', 'T_PAIEMENT', 'T_ENGAGEMENT', 'T_ODS', 'T_LOT_PIECE', 
-                    'T_PIECE', 'T_RUBRIQUE_OP', 'T_SCATEGORIE_OP', 'T_LOT_OPERATION', 
-                    'T_CP', 'T_OPERATION', 'T_SPROGRAMME', 'T_PROGRAMME', 'T_SCATEGORIE', 
-                    'T_CATEGORIE', 'T_RUBRIQUE', 'T_BENEFICIAIRE', 'T_DIRECTION', 'T_USER', 'T_BORDEREAU'
+                const sb = supabase;
+
+                // Children before parents. The old list deleted T_COMPTE_BANCAIRE
+                // while T_PIECE still referenced it, which fails on
+                // T_PIECE_ID_COMPTE_fkey; T_USER was deleted too, and its secrets
+                // cascade away with it (see reconcileCloudUsers).
+                const deleteOrder: (keyof Database)[] = [
+                    'T_PAIEMENT', 'T_ENGAGEMENT', 'T_ODS', 'T_LOT_PIECE', 'T_PIECE',
+                    'T_COMPTE_BANCAIRE', 'T_RUBRIQUE_OP', 'T_SCATEGORIE_OP', 'T_LOT_OPERATION',
+                    'T_CP', 'T_OPERATION', 'T_SPROGRAMME', 'T_PROGRAMME', 'T_SCATEGORIE',
+                    'T_CATEGORIE', 'T_RUBRIQUE', 'T_BENEFICIAIRE', 'T_DIRECTION', 'T_BORDEREAU'
                 ];
-                for (const table of tablesToDelete) {
-                    await supabase.from(table as string).delete().neq(TABLE_ID_FIELDS[table], 0); 
+                for (const table of deleteOrder) {
+                    const { error } = await sb.from(table as string).delete().neq(TABLE_ID_FIELDS[table], 0);
+                    if (error) throw new Error(`حذف ${table}: ${error.message}`);
                 }
 
+                // Parents before children again: T_COMPTE_BANCAIRE must precede
+                // T_PIECE, and T_BORDEREAU must precede T_ENGAGEMENT.
                 const tableOrder: (keyof Database)[] = [
-                    'T_USER', 'T_BENEFICIAIRE', 'T_CATEGORIE', 'T_DIRECTION', 'T_PROGRAMME', 'T_RUBRIQUE',
-                    'T_SCATEGORIE', 'T_SPROGRAMME', 'T_OPERATION', 'T_CP', 'T_LOT_OPERATION', 
-                    'T_RUBRIQUE_OP', 'T_SCATEGORIE_OP', 'T_PIECE', 'T_ENGAGEMENT', 'T_ODS', 
-                    'T_LOT_PIECE', 'T_PAIEMENT', 'T_COMPTE_BANCAIRE', 'T_BORDEREAU'
+                    'T_BENEFICIAIRE', 'T_COMPTE_BANCAIRE', 'T_CATEGORIE', 'T_SCATEGORIE',
+                    'T_DIRECTION', 'T_PROGRAMME', 'T_SPROGRAMME', 'T_RUBRIQUE',
+                    'T_OPERATION', 'T_CP', 'T_LOT_OPERATION', 'T_RUBRIQUE_OP',
+                    'T_SCATEGORIE_OP', 'T_BORDEREAU', 'T_PIECE', 'T_ENGAGEMENT',
+                    'T_ODS', 'T_LOT_PIECE', 'T_PAIEMENT'
                 ];
+
+                // Users are reconciled, never replaced: their credentials live in
+                // T_USER_SECRET, which a delete would take with it.
+                await reconcileCloudUsers(sb, importedDb.T_USER);
 
                 for (const tableName of tableOrder) {
                     const rows = importedDb[tableName];
-                    if (rows && rows.length > 0) {
-                        const { error } = await (supabase as any).from(tableName as string).insert(rows as any);
-                        if (error) throw error;
+                    if (!rows || rows.length === 0) continue;
+
+                    // Keep only columns this build knows about. A backup taken
+                    // before a schema change can carry columns the live table no
+                    // longer has, and PostgREST rejects the whole batch (PGRST204)
+                    // instead of ignoring the extras.
+                    const allowed = (TABLE_COLUMNS[tableName] || '')
+                        .split(',')
+                        .map(column => column.trim())
+                        .filter(Boolean);
+                    const payload = allowed.length
+                        ? (rows as any[]).map(row => {
+                            const projected: Record<string, any> = {};
+                            for (const column of allowed) {
+                                if (column in row) projected[column] = row[column];
+                            }
+                            return projected;
+                        })
+                        : rows;
+
+                    const { error } = await (sb as any).from(tableName as string).insert(payload as any);
+                    // Name the table: a bare "import failed" says nothing about
+                    // which constraint rejected the data.
+                    if (error) {
+                        const hint = error.code === '428C9'
+                            ? ' — عمود المعرّف GENERATED ALWAYS يرفض القيمة الصريحة: نفّذ supabase/10_import_compat.sql'
+                            : '';
+                        throw new Error(`إدراج ${tableName}: ${error.message}${hint}`);
                     }
                 }
                 broadcastEvent('import', 'قاعدة بيانات كاملة من ملف');
                 alert('تم استيراد البيانات بنجاح إلى السحابة!');
             } catch (e) {
                 console.error("Import failed:", e);
-                alert('فشل استيراد البيانات. راجع وحدة التحكم للتفاصيل.');
+                const detail = e instanceof Error ? e.message : String(e);
+                alert(`فشل استيراد البيانات.\n${detail}`);
             } finally {
                 isBatchMode.current = false;
                 await refreshData();

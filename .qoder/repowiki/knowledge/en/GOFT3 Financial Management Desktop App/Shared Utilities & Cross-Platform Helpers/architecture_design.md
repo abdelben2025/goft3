@@ -1,0 +1,7 @@
+Flat collection of pure-function modules with no shared base class — each file is an independent feature slice:
+- `authUtils.ts` exposes bcrypt-based password hashing plus a legacy SHA-256 migration path (hash stored in `DEFAULT_ADMIN_PASSWORD_HASH`).
+- `currencyUtils.ts`, `dateUtils.ts`, `textUtils.ts` are stateless formatters/parsers targeting Arabic/DZ locale conventions (`de-DE` number format, DD/MM/YYYY dates, diacritic-stripped Arabic normalization).
+- `odsCalculations.ts` builds on `dateUtils` to compute contract deadline states (consumed/suspension days, expected end, warranty expiry) from ordered ODS entries.
+- `exportToCsv.ts` and `exportXlsx.ts` produce downloadable spreadsheets; both delegate the actual disk write to `saveFile.ts`'s `saveBlobToFile`, which branches on `isTauri()` to call the Rust `save_binary_file` command or fall back to a Blob anchor download.
+- `updateService.ts` wraps `@tauri-apps/plugin-updater` for GitHub Releases checks and signed install + relaunch, falling back to the bundled `APP_VERSION` constant when not running under Tauri.
+Dependency direction is one-way: business calculation (`odsCalculations`) depends on domain formatters (`dateUtils`); export/update modules depend only on `saveFile` and Tauri runtime detection. No module imports another sibling except `odsCalculations → dateUtils` and the two exporters → `saveFile`.

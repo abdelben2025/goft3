@@ -8,9 +8,11 @@ import PageWrapper from '../components/PageWrapper';
 import Modal from '../components/Modal';
 import ConfirmActionModal from '../components/ConfirmActionModal';
 import AddUserForm from '../components/forms/AddUserForm';
+import { hashPassword } from '../utils/authUtils';
+import { insertUserRow, insertCloudUser, setUserPassword, CLOUD_USER_MISSING } from '../services/authService';
 
 const UsersPage: React.FC<{ navigate: (page: Page) => void, onGoBack?: () => void, currentUser: User }> = ({ navigate, onGoBack, currentUser }) => {
-    const { db, loading, addItem, updateItem, deleteItem } = useData();
+    const { db, loading, addItem, updateItem, deleteItem, isDbConfigured, isOnline, refreshData } = useData();
     const { showToast } = useToast();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<User | undefined>(undefined);
@@ -18,14 +20,41 @@ const UsersPage: React.FC<{ navigate: (page: Page) => void, onGoBack?: () => voi
     const [formKey, setFormKey] = useState(0);
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
-    const handleSaveUser = async (userData: Omit<User, 'ID_USER'> | User) => {
+    const handleSaveUser = async (userData: Omit<User, 'ID_USER' | 'PASSWORD'> | User, plainPassword?: string) => {
         showToast('جاري حفظ البيانات...', 'loading');
         try {
+            // Cloud: the password is hashed inside Postgres, so the row is
+            // written first and the password set afterwards through the RPC.
+            // Local: the SQLite row needs its own hash before it is written.
+            const cloud = isDbConfigured && isOnline;
+            const payload: Record<string, any> = { ...userData };
+
+            if (!cloud && plainPassword) {
+                payload.PASSWORD = await hashPassword(plainPassword);
+            }
+
             if ('ID_USER' in userData) {
-                await updateItem('T_USER', userData.ID_USER, userData);
+                await updateItem('T_USER', userData.ID_USER, payload);
+                if (cloud && plainPassword) {
+                    await setUserPassword(userData, plainPassword);
+                }
                 showToast('تم تعديل المستخدم بنجاح', 'success');
             } else {
-                await addItem('T_USER', userData);
+                // Cloud rows must be inserted through Supabase directly: addItem
+                // falls back to the local SQLite on any error, which would hand us
+                // a workstation-only ID_USER and break set_user_password.
+                const saved = cloud
+                    ? await insertCloudUser(payload)
+                    : await insertUserRow(
+                        (rowPayload) => addItem('T_USER', rowPayload as any),
+                        payload
+                    );
+                if (cloud && plainPassword) {
+                    await setUserPassword(saved, plainPassword);
+                }
+                if (cloud) {
+                    refreshData({ silent: true }).catch(() => { /* list refreshes on next tick */ });
+                }
                 showToast('تمت إضافة المستخدم بنجاح', 'success');
             }
             setIsModalOpen(false);
@@ -39,6 +68,8 @@ const UsersPage: React.FC<{ navigate: (page: Page) => void, onGoBack?: () => voi
                     errorMessage = "اسم المستخدم موجود بالفعل.";
                 } else if (error.code === '23514') { // Check constraint violation
                     errorMessage = "تنبيه: قاعدة البيانات ترفض إضافة دور 'ملاحظ'.\nيرجى الذهاب إلى صفحة الإعدادات -> عرض كود SQL ونسخ الكود لتحديث قاعدة البيانات.";
+                } else if (error.code === CLOUD_USER_MISSING || error.message === CLOUD_USER_MISSING) {
+                    errorMessage = 'هذا المستخدم موجود في نسخة هذا الجهاز وليس في السحابة، لذلك لا يمكن حفظ كلمة مروره هناك. احذفه من القائمة ثم أضفه من جديد ليُسجّل في السحابة.';
                 } else if (error.message) {
                     errorMessage += ` التفاصيل: ${error.message}`;
                 }

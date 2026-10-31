@@ -17,6 +17,11 @@ const storedKey = localStorage.getItem(STORED_KEY_KEY);
 
 export const isConfigured = storedUrl && isValidUrl(storedUrl) && storedKey;
 
+// Host only: shown on the login screen when a cloud sign-in is rejected, so an
+// app pointed at the wrong project is visible instead of looking like a wrong
+// password. Never exposes the key.
+export const configuredHost = isConfigured ? new URL(storedUrl!).host : '';
+
 // Export the client if configured, otherwise null. 
 // This prevents the "Invalid URL" error during module initialization.
 export const supabase = isConfigured 

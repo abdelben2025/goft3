@@ -9,10 +9,14 @@ export const logoDataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAA
 export interface User {
     ID_USER: number;
     USERNAME: string;
-    PASSWORD: string;
+    // Only present on the local (SQLite) copy. Once T_USER.PASSWORD is dropped
+    // in the cloud, online users never carry a hash at all.
+    PASSWORD?: string;
     ROLE: 'admin' | 'user' | 'viewer';
     ALLOWED_PAGES?: string; // JSON string of Page[]
     ALLOWED_OPERATIONS?: string; // JSON string of number[]
+    // Session-only: returned by public.verify_login, never stored.
+    NEEDS_PASSWORD_CHANGE?: boolean;
 }
 
 export interface AppEvent {

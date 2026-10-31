@@ -1,0 +1,8 @@
+schema_version: 1
+module_path: pages
+title: Application Page Views (GOFT3 Financial Management UI)
+scope:
+    - pages/
+source_files: []
+depends_on: []
+related_to: []

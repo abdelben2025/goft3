@@ -172,16 +172,16 @@ const PrintCertificatPage: React.FC<PrintCertificatPageProps> = ({ navigate, pai
                 </header>
 
                 <h1 className="text-center font-bold text-2xl my-5">{t('print.title.payment_certificate')}</h1>
-                <h1 className="text-center text-base my-5 ">{t('print.label.operation_title')} : {operation.INT_OPERATION}</h1>
-                <div className="space-y-2 text-base">
+                <h1 className="text-center text-[12px] my-5 ">{t('print.label.operation_title')} : {operation.INT_OPERATION}</h1>
+                <div className="space-y-2 ">
                     <div className="grid grid-cols-2 gap-x-8">
 					     <p><span className="font-bold">{t('col.ordonnateur')} :</span> {direction.ORDONATEUR}</p>
 						 <p><span className="font-bold">{t('print.label.activity_portfolio')} :</span> {direction.PORTEFEUILLE}</p>
 						 <p><span className="font-bold">{t('print.label.program')} :</span> {programme?.PROGRAMME || ''}</p>
 						 <p><span className="font-bold">{t('col.sub_program')} :</span> {sprogramme?.SPROGRAMME || ''}</p>
 						 
-                        <p><span className="font-bold text-sm">{t('col.beneficiary')} :</span> {beneficiary.BENEFICIAIRE}</p>
-                        <p><span className="font-bold text-sm">{t('print.label.contractor_address')} :</span> {beneficiary.ADRESSE}</p>
+                        <p><span className="font-bold text-[14px]">{t('col.beneficiary')} :</span><span className="font-bold text-[12px]">{beneficiary.BENEFICIAIRE}</span></p>
+                        <p><span className="font-bold text-[14px]">{t('print.label.contractor_address')} :</span><span className="font-bold text-[13px]">{beneficiary.ADRESSE}</span></p>
                         <p><span className="font-bold"></span> {contractPiece.PIECE}</p>
                         <p><span className="font-bold">{t('print.label.contract_amount')} =</span> {formatCurrency(contractAmount)}</p>
                         
@@ -190,9 +190,9 @@ const PrintCertificatPage: React.FC<PrintCertificatPageProps> = ({ navigate, pai
                     {lots && lots.length > 0 && lots.map((l) => (
                         <p key={l.ID_LOT}>
                             {/^\d+$/.test(l.N_LOT.trim()) ? (
-                                <><span className="text-sm">الحصة رقم: {l.N_LOT}</span> {l.INTITULE_LOT}</>
+                                <><span className="text-[12px]">الحصة رقم: {l.N_LOT}</span><span className="text-[12px]">{l.INTITULE_LOT}</span></>
                             ) : (
-                                <span className="text-sm">{l.INTITULE_LOT}</span>
+                                <span className="text-[12px]">{l.INTITULE_LOT}</span>
                             )}
                         </p>
                     ))}
@@ -202,7 +202,7 @@ const PrintCertificatPage: React.FC<PrintCertificatPageProps> = ({ navigate, pai
                                                 
                 <div className="flex justify-between items-start mt-0">
                     <div className="w-[45%]">
-                        <table className="w-full border-collapse border  border-black text-sm mt-5">
+                        <table className="w-full border-collapse text-sm mt-5">
                             <thead>
 							      <tr><td colSpan={3} className="border border-black p-1 font-bold text-center mt-4">شهادة صادرة عن الصناديق بجميع أنواعها للسنوات السابقة والحالية</td></tr>
 							     <tr>
@@ -214,13 +214,13 @@ const PrintCertificatPage: React.FC<PrintCertificatPageProps> = ({ navigate, pai
                             <tbody>
                                 {previousPayments.map(p => (
                                     <tr key={p.ID_PAIEMENT}>
-                                        <td className="border  w-[10%]  text-center">{p.ANNEE}</td>
-                                        <td className="border  w-[20%]  text-center">{t('print.label.treasury')}</td>
-                                        <td className="border  w-[15%]  text-center">{formatCurrency(p.MONTANT_PAI)}</td>
+                                        <td className="w-10%]  text-center">{p.ANNEE}</td>
+                                        <td className="w-[20%]  text-center">{t('print.label.treasury')}</td>
+                                        <td className="w-[15%]  text-center">{formatCurrency(p.MONTANT_PAI)}</td>
                                     </tr>
                                 ))}
                                 {Array.from({ length: Math.max(0, 5 - previousPayments.length) }).map((_, i) => (
-                                    <tr key={`dummy-${i}`}><td className="p-1 border-r border-l border-black">&nbsp;</td><td className="p-1 border-r border-l border-black"></td><td className="p-1 border-r border-l border-black"></td></tr>
+                                    <tr key={`dummy-${i}`}><td className="p-1 border-0 border-r border-l border-black">&nbsp;</td><td className="p-1 border-0 border-r border-l border-black"></td><td className="p-1 border-0 border-r border-l border-black"></td></tr>
                                 ))}
                             </tbody>
                             <tfoot className="font-bold">

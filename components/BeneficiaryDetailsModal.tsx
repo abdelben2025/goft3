@@ -160,6 +160,7 @@ const BeneficiaryDetailsModal: React.FC<BeneficiaryDetailsModalProps> = ({ isOpe
                 <div style="background:#1f2937;color:#fff;padding:5px 10px;font-weight:bold;font-size:12px">المعلومات الشخصية</div>
                 <table style="width:100%;border-collapse:collapse;font-size:12px">
                     ${pRow('الاسم', ben.BENEFICIAIRE)}
+					${pRow('النشاط التجاري', ben.ACTIVITE || '—')}
                     ${pRow('العنوان', ben.ADRESSE || '—')}
                     ${pRow('رقم السجل التجاري (RC)', ben.RC || '—')}
                     ${pRow('رقم التعريف الجبائي', ben.CODE_FISCALE || '—')}
@@ -214,6 +215,7 @@ const BeneficiaryDetailsModal: React.FC<BeneficiaryDetailsModalProps> = ({ isOpe
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
                         <div><span className="text-gray-500 font-bold">الاسم:</span> <span className="font-bold">{ben.BENEFICIAIRE}</span></div>
+                        <div><span className="text-gray-500 font-bold">النشاط التجاري:</span> {ben.ACTIVITE || '—'}</div>
                         <div><span className="text-gray-500 font-bold">العنوان:</span> {ben.ADRESSE || '—'}</div>
                         <div><span className="text-gray-500 font-bold">رقم السجل التجاري (RC):</span> {ben.RC || '—'}</div>
                         <div><span className="text-gray-500 font-bold">رقم التعريف الجبائي:</span> {ben.CODE_FISCALE || '—'}</div>

@@ -1,0 +1,1 @@
+Rust backend for the GOFT3 desktop application, exposing a Tauri command API over a local SQLite database with encrypted backups and Windows EFS file protection.

@@ -652,6 +652,19 @@ pub fn import_database(
 
     let tx = conn.transaction().map_err(|e| e.to_string())?;
 
+    // Snapshot the local credentials before the wipe below. The cloud copy no
+    // longer carries password hashes (they live in T_USER_SECRET, unreadable
+    // with the anon key), so without this every mirror would leave local
+    // accounts without a hash and lock the app out while offline.
+    tx.execute_batch(
+        r#"
+        DROP TABLE IF EXISTS temp._goft3_user_pw;
+        CREATE TEMP TABLE _goft3_user_pw AS
+            SELECT ID_USER, USERNAME, PASSWORD FROM T_USER;
+        "#,
+    )
+    .map_err(|e| e.to_string())?;
+
     let tables_to_delete = [
         "T_COMPTE_BANCAIRE",
         "T_PAIEMENT",
@@ -751,6 +764,14 @@ pub fn import_database(
                     vals.push(json_to_sql(v));
                 }
 
+                // T_USER.PASSWORD is NOT NULL locally and is owned by this
+                // machine, not by the payload: fill it when the row omits it.
+                if tbl == "T_USER" && !cols.iter().any(|c| c == "PASSWORD") {
+                    cols.push("PASSWORD".to_string());
+                    placeholders.push("?");
+                    vals.push(rusqlite::types::Value::Text(String::new()));
+                }
+
                 if cols.is_empty() {
                     skipped += 1;
                     continue;
@@ -775,6 +796,25 @@ pub fn import_database(
             }
         }
     }
+
+    // Locally cached credentials always win over the empty placeholder that
+    // rows mirrored from the cloud carry (see the T_USER branch above).
+    tx.execute(
+        r#"
+        UPDATE T_USER
+           SET PASSWORD = COALESCE(
+                (SELECT p.PASSWORD FROM _goft3_user_pw p
+                  WHERE p.ID_USER = T_USER.ID_USER AND p.PASSWORD <> ''),
+                (SELECT p.PASSWORD FROM _goft3_user_pw p
+                  WHERE p.USERNAME = T_USER.USERNAME AND p.PASSWORD <> ''),
+                T_USER.PASSWORD)
+         WHERE PASSWORD = '';
+        "#,
+        [],
+    )
+    .map_err(|e| e.to_string())?;
+    tx.execute_batch("DROP TABLE IF EXISTS temp._goft3_user_pw;")
+        .map_err(|e| e.to_string())?;
 
     tx.commit().map_err(|e| e.to_string())?;
     conn.execute_batch("PRAGMA foreign_keys = ON;").ok();

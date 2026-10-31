@@ -1,0 +1,1 @@
+bcrypt-ts/browser for browser-side password hashing; ExcelJS for .xlsx generation; @tauri-apps/plugin-dialog / plugin-updater / plugin-process for native save dialogs, GitHub Releases updates, and app relaunch; Intl.NumberFormat('de-DE') for currency formatting.

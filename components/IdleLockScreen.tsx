@@ -2,6 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import { User, logoDataUrl } from '../types';
 import { verifyPassword } from '../utils/authUtils';
 import { errorMessage } from '../utils/errorMessage';
+import { useData } from '../context/DataContext';
+import { tauriDb } from '../services/tauriService';
+import { signIn } from '../services/authService';
 
 interface IdleLockScreenProps {
     user: User;
@@ -9,6 +12,7 @@ interface IdleLockScreenProps {
 }
 
 const IdleLockScreen: React.FC<IdleLockScreenProps> = ({ user, onUnlock }) => {
+    const { isOnline } = useData();
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [busy, setBusy] = useState(false);
@@ -24,14 +28,37 @@ const IdleLockScreen: React.FC<IdleLockScreenProps> = ({ user, onUnlock }) => {
         setBusy(true);
         setError('');
         try {
-            const { valid } = await verifyPassword(password, user.PASSWORD);
-            if (valid) {
+            // The cloud copy holds no hash any more, so unlocking re-verifies
+            // through public.verify_login when a connection is available.
+            const result = await signIn(user.USERNAME, password, {
+                isOnline,
+                isDesktop: tauriDb.isAvailable(),
+            });
+
+            if (result.user) {
                 setPassword('');
                 onUnlock();
+            } else if (result.offlineCredentialMissing) {
+                setError('لا توجد بيانات دخول محفوظة لهذا الحساب على هذا الجهاز. اتصل بالإنترنت للمتابعة.');
             } else {
                 setError('كلمة المرور غير صحيحة');
             }
         } catch (err) {
+            // Cloud unreachable: fall back to the hash cached on this workstation.
+            if (user.PASSWORD) {
+                try {
+                    const { valid } = await verifyPassword(password, user.PASSWORD);
+                    if (valid) {
+                        setPassword('');
+                        onUnlock();
+                        return;
+                    }
+                    setError('كلمة المرور غير صحيحة');
+                    return;
+                } catch {
+                    // fall through to the transport error below
+                }
+            }
             setError(errorMessage(err));
         } finally {
             setBusy(false);

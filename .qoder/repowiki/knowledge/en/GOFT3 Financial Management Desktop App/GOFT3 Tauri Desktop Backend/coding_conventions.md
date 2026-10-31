@@ -1,0 +1,6 @@
+- Every table name passed into SQL is validated against the `ALLOWED_TABLES` constant before use, preventing arbitrary table access.
+- Column identifiers are validated through `validate_identifier` (ASCII alphanumeric + underscore check) before being interpolated into generated SQL.
+- JSON values from the frontend are converted to SQLite bindings via the shared `json_to_sql` helper rather than direct type mapping.
+- All mutable state is accessed through `State<'_, DatabaseState>` wrapping a `Mutex<Connection>`, with lock errors mapped to string error responses.
+- Bulk import/export operations wrap their work in a single `conn.transaction()` and explicitly toggle `PRAGMA foreign_keys = OFF` outside the transaction when needed.
+- Errors returned to the frontend are plain `String`s (not typed enums), propagated through `Result<T, String>` on every `#[tauri::command]`.

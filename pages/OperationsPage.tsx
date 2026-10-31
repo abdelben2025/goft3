@@ -11,6 +11,7 @@ import ConfirmActionModal from '../components/ConfirmActionModal';
 import AddOperationForm from '../components/forms/AddOperationForm';
 import { exportToFormattedExcel } from '../utils/exportToCsv';
 import { formatCurrency } from '../utils/currencyUtils';
+import { labelOperationStatus } from '../utils/dataLabels';
 import CustomDropdown from '../components/CustomDropdown';
 import ExcelJS from 'exceljs';
 import { Search, X } from 'lucide-react';
@@ -622,7 +623,7 @@ const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onU
             } else {
                 const op = item;
                 tableHtml += `<tr>
-                    <td>${op.status || t('op.status_ongoing')}</td>
+                    <td>${labelOperationStatus(op.status || 'جارية', t)}</td>
                     <td style="text-align:right; text-xs;"><b>${op.N_OPERATION}</b><br/>${op.INT_OPERATION}</td>
                     <td>${formatCurrency(op.aeFinale)}</td>
                     <td>${formatCurrency(op.totalEngagements)}</td>

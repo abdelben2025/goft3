@@ -10,6 +10,7 @@ import AddLotPieceForm from '../components/forms/AddLotPieceForm';
 import AddOdsForm from '../components/forms/AddOdsForm';
 import { useDocumentDetails } from '../hooks/useDocumentDetails';
 import { formatCurrency } from '../utils/currencyUtils';
+import { labelNaturePiece, labelNatureOds } from '../utils/dataLabels';
 import { formatDurationArabic, normalizeDate } from '../utils/dateUtils';
 import { errorMessage } from '../utils/errorMessage';
 
@@ -221,7 +222,7 @@ const DocumentDetailsPage: React.FC<DocumentDetailsPageProps> = ({ navigate, cur
                         <h2 className="text-base font-extrabold text-gray-900 leading-tight truncate">{piece.PIECE}</h2>
                         <div className="flex flex-wrap items-center gap-2 mt-1">
                             <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold border border-blue-200">
-                                {piece.NAT_PIECE}
+                                {labelNaturePiece(piece.NAT_PIECE, t)}
                             </span>
                             {linkedOperation && (
                                 <span className="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-bold border border-gray-200">
@@ -410,7 +411,7 @@ const DocumentDetailsPage: React.FC<DocumentDetailsPageProps> = ({ navigate, cur
                                                             ods.NATURE_ODS === 'ايقاف' ? 'bg-amber-100 text-amber-700 border-amber-200' :
                                                             'bg-gray-100 text-gray-600 border-gray-200'
                                                         }`}>
-                                                            {ods.NATURE_ODS}
+                                                            {labelNatureOds(ods.NATURE_ODS, t)}
                                                         </span>
                                                     </td>
                                                     <td className="p-2 text-gray-700" dir="ltr">{normalizeDate(ods.DATE_ODS)}</td>

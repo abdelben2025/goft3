@@ -18,6 +18,7 @@ import AddBordereauForm from '../components/forms/AddBordereauForm';
 import { formatCurrency, parseCurrency } from '../utils/currencyUtils';
 import { normalizeDate } from '../utils/dateUtils';
 import { exportToFormattedExcel } from '../utils/exportToCsv';
+import { labelNatureEng } from '../utils/dataLabels';
 import CustomDropdown from '../components/CustomDropdown';
 
 import ExcelJS from 'exceljs';
@@ -1526,7 +1527,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                                                     {eng.NATURE_ENG === 'التزام' && <i className="bi bi-check-circle-fill text-emerald-500"></i>}
                                                     {(eng.NATURE_ENG === 'سحب' || eng.NATURE_ENG === 'إلغاء') && <i className="bi bi-x-circle-fill text-rose-500"></i>}
                                                     {(eng.NATURE_ENG === 'إعادة التقييم' || eng.NATURE_ENG === 'إنخفاض التقييم') && <i className="bi bi-exclamation-triangle-fill text-amber-500"></i>}
-                                                    {eng.NATURE_ENG}
+                                                    {labelNatureEng(eng.NATURE_ENG, t)}
                                                 </span>
                                             </td>
                                             <td className="px-4 py-3 text-[11px] font-medium text-gray-700 leading-snug">

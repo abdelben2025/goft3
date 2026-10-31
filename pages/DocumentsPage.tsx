@@ -12,6 +12,7 @@ import AddDocumentForm from '../components/forms/AddDocumentForm';
 import AddEngagementForm from '../components/forms/AddEngagementForm';
 import AddPaiementForm from '../components/forms/AddPaiementForm';
 import { formatCurrency } from '../utils/currencyUtils';
+import { labelNaturePiece } from '../utils/dataLabels';
 import CustomDropdown from '../components/CustomDropdown';
 import ExcelJS from 'exceljs';
 import { saveWorkbook } from '../utils/exportXlsx';
@@ -1410,7 +1411,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                                                     >
                                                         <option value="">{t('doc.all')}</option>
                                                         {uniquePieceTypes.map(type => (
-                                                            <option key={type} value={type}>{type}</option>
+                                                            <option key={type} value={type}>{labelNaturePiece(type, t)}</option>
                                                         ))}
                                                     </select>
                                                 </div>

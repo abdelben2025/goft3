@@ -1605,6 +1605,24 @@ export const translations: Record<Language, { [key: string]: string }> = {
         "ctxevent.resetDbFull": "قاعدة البيانات بالكامل",
         "ctxevent.importDbFromFile": "قاعدة بيانات كاملة من ملف",
         "borxl.subject": "موضوع الالتزام",
+
+        // Data-label additions
+        "common.unknown": "غير معروف",
+        "common.no_category": "بدون صنف",
+        "common.unallocated": "غير موزع",
+        "common.unallocated_amounts": "مبالغ غير موزعة",
+        "nature.engagement": "التزام",
+        "nature.withdrawal": "سحب",
+        "nature.market": "صفقة",
+        "nature.agreement": "اتفاقية",
+        "nature.amendment": "ملحق",
+        "nature.invoice": "فاتورة",
+        "nature.decision": "مقرر",
+        "nature.work_statement": "وضعية الأشغال",
+        "natureods.start": "انطلاق",
+        "natureods.resume": "استئناف",
+        "natureods.stop": "ايقاف",
+        "natureods.closure": "ختام",
     },
     fr: {
         // General
@@ -3209,5 +3227,23 @@ export const translations: Record<Language, { [key: string]: string }> = {
         "ctxevent.resetDbFull": "Base de données complète",
         "ctxevent.importDbFromFile": "Base de données complète à partir d'un fichier",
         "borxl.subject": "Objet de l'engagement",
+
+        // Data-label additions
+        "common.unknown": "Inconnu",
+        "common.no_category": "Sans catégorie",
+        "common.unallocated": "Non attribué",
+        "common.unallocated_amounts": "Montants non attribués",
+        "nature.engagement": "Engagement",
+        "nature.withdrawal": "Retrait",
+        "nature.market": "Marché",
+        "nature.agreement": "Convention",
+        "nature.amendment": "Avenant",
+        "nature.invoice": "Facture",
+        "nature.decision": "Décision",
+        "nature.work_statement": "Situation des travaux",
+        "natureods.start": "Lancement",
+        "natureods.resume": "Reprise",
+        "natureods.stop": "Arrêt",
+        "natureods.closure": "Clôture",
     },
 };

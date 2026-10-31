@@ -15,7 +15,7 @@ interface HomePageProps {
 
 const HomePage: React.FC<HomePageProps> = ({ navigate, currentUser }) => {
     const { onlineUsers } = useData();
-    const { t, dir } = useLanguage();
+    const { t, dir, language, setLanguage } = useLanguage();
     
     const baseNavButtons = [
         { page: 'OPERATIONS', label: t('menu.operations'), icon: 'bi-kanban', color: 'bg-blue-500' },
@@ -240,6 +240,14 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, currentUser }) => {
                             </span>
                         </div>
                     </div>
+                    <button
+                        type="button"
+                        onClick={() => setLanguage(language === 'ar' ? 'fr' : 'ar')}
+                        className="bg-white text-gray-600 border border-gray-200 px-3 md:px-4 py-2 md:py-3 rounded-xl shadow-sm hover:bg-blue-50 hover:text-blue-600 transition-all duration-100 font-bold text-xs md:text-sm flex-shrink-0 cursor-pointer"
+                        title={t('home.shortcut_search')}
+                    >
+                        {language === 'ar' ? 'Français' : 'العربية'}
+                    </button>
                     <button 
                         onClick={() => window.dispatchEvent(new CustomEvent('open-global-search'))}
                         className="bg-white text-gray-400 border border-gray-200 p-2 md:p-3 rounded-xl shadow-sm hover:bg-blue-50 hover:text-blue-600 transition-all duration-100 flex items-center justify-center group flex-shrink-0"

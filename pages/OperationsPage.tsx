@@ -11,7 +11,7 @@ import ConfirmActionModal from '../components/ConfirmActionModal';
 import AddOperationForm from '../components/forms/AddOperationForm';
 import { exportToFormattedExcel } from '../utils/exportToCsv';
 import { formatCurrency } from '../utils/currencyUtils';
-import { labelOperationStatus, labelCommonFallback } from '../utils/dataLabels';
+import { labelOperationStatus, labelCommonFallback, pickLocalLabel } from '../utils/dataLabels';
 import CustomDropdown from '../components/CustomDropdown';
 import ExcelJS from 'exceljs';
 import { Search, X } from 'lucide-react';
@@ -27,7 +27,7 @@ interface OperationsPageProps {
 const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onUpdateUser, currentUser }) => {
     const { db, loading, addItem, updateItem, deleteOperation, runInTransaction } = useData();
     const { showToast } = useToast();
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingOperation, setEditingOperation] = useState<Operation | undefined>(undefined);
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -251,8 +251,8 @@ const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onU
                 aeFinale, totalEngagements, totalEngagementsCurrentYear, remainingAE, 
                 totalPaiements, cpFinaleCurrentYear, paiementsCurrentYear, remainingCP, 
                 opStartYear, 
-                catCode: cat?.C_CATEGORIE || 'NO_CAT', catInt: cat?.INT_CATEGORIE || 'بدون صنف',
-                scatCode: scat?.C_SCATEGORIE || 'NO_SCAT', scatInt: scat?.INT_SCATEGORIE || 'غير موزع'
+                catCode: cat?.C_CATEGORIE || 'NO_CAT', catInt: pickLocalLabel(cat, 'INT_CATEGORIE', 'INT_CATEGORIE_FR', 'بدون صنف', language),
+                scatCode: scat?.C_SCATEGORIE || 'NO_SCAT', scatInt: pickLocalLabel(scat, 'INT_SCATEGORIE', 'INT_SCATEGORIE_FR', 'غير موزع', language)
             };
         }).sort((a, b) => {
             const partsA = a.N_OPERATION.split('.');
@@ -278,7 +278,7 @@ const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onU
             }
             return 0;
         });
-    }, [db, selectedYear, debouncedSearchQuery, selectedStatus, selectedTypeOp, currentUser.ROLE, currentUser.ALLOWED_OPERATIONS, cpGroups, engGroups, operationStartYears, paiGroups, rubOpGroups, scatOpGroups]);
+    }, [db, selectedYear, debouncedSearchQuery, selectedStatus, selectedTypeOp, currentUser.ROLE, currentUser.ALLOWED_OPERATIONS, cpGroups, engGroups, operationStartYears, paiGroups, rubOpGroups, scatOpGroups, language]);
 
 
     const displayData = useMemo(() => {

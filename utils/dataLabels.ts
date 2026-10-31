@@ -65,3 +65,14 @@ export const labelLotStatus = (raw: string, t: TFunc): string => localize(raw, l
 export const labelPaymentAccepted = (raw: string, t: TFunc): string => localize(raw, paymentAcceptedKeys, t);
 export const labelVisaed = (raw: string, t: TFunc): string => localize(raw, visaedKeys, t);
 export const labelCommonFallback = (raw: string, t: TFunc): string => localize(raw, commonFallbackKeys, t);
+
+export const pickLocalLabel = (
+    obj: any,
+    arField: string,
+    frField: string,
+    fallback: string,
+    language: 'ar' | 'fr',
+): string => {
+    if (language === 'fr') return obj?.[frField] || obj?.[arField] || fallback;
+    return obj?.[arField] || fallback;
+};

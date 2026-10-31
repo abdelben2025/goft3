@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Page } from '../types';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
-import { labelCommonFallback } from '../utils/dataLabels';
+import { labelCommonFallback, pickLocalLabel } from '../utils/dataLabels';
 
 interface PrintOperationsTablePageProps {
     navigate: (page: Page) => void;
@@ -19,7 +19,7 @@ const formatCurrency = (amount: number | null | undefined) => {
 
 const PrintOperationsTablePage: React.FC<PrintOperationsTablePageProps> = ({ navigate }) => {
     const { db, loading } = useData();
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     
     const selectedYear = sessionStorage.getItem('goft3_selectedYear') || new Date().getFullYear().toString();
     const selectedActivity = sessionStorage.getItem('goft3_selectedActivity') || '';
@@ -72,12 +72,12 @@ const PrintOperationsTablePage: React.FC<PrintOperationsTablePageProps> = ({ nav
 
             const cat = db.T_CATEGORIE.find(c => c.ID_CATEGORIE === op.ID_CATEGORIE);
             const catCode = cat?.C_CATEGORIE || 'NO_CAT';
-            const catInt = cat?.INT_CATEGORIE || 'بدون صنف';
+            const catInt = pickLocalLabel(cat, 'INT_CATEGORIE', 'INT_CATEGORIE_FR', 'بدون صنف', language);
 
             const scatId = op.ID_SCATEGORIE || db.T_SCATEGORIE_OP.find(sop => sop.ID_OPERATION === op.ID_OPERATION)?.ID_SCATEGORIE;
             const scat = scatId ? db.T_SCATEGORIE.find(sc => sc.ID_SCATEGORIE === scatId) : null;
             const scatCode = scat?.C_SCATEGORIE || 'NO_SCAT';
-            const scatInt = scat?.INT_SCATEGORIE || 'غير موزع';
+            const scatInt = pickLocalLabel(scat, 'INT_SCATEGORIE', 'INT_SCATEGORIE_FR', 'غير موزع', language);
 
             return { ...op, aeFinale, totalEngagements, totalEngagementsCurrentYear, remainingAE, totalPaiements, cpFinaleCurrentYear, paiementsCurrentYear, remainingCP, opStartYear, catCode, catInt, scatCode, scatInt };
         }).sort((a, b) => {
@@ -121,7 +121,7 @@ const PrintOperationsTablePage: React.FC<PrintOperationsTablePageProps> = ({ nav
             const numB = partsB[9] || '';
             return numA.localeCompare(numB, undefined, { numeric: true });
         });
-    }, [db, selectedYear]);
+    }, [db, selectedYear, language]);
 
     const displayData = useMemo(() => {
         let filteredOps = calculatedOperations;

@@ -4,6 +4,7 @@ import { Page } from '../types';
 import { useData } from '../context/DataContext';
 import ExcelJS from 'exceljs';
 import { saveWorkbook } from '../utils/exportXlsx';
+import { useLanguage } from '../context/LanguageContext';
 
 interface PrintBordereauPageProps {
     navigate: (page: Page, id?: number, tab?: string) => void;
@@ -12,6 +13,7 @@ interface PrintBordereauPageProps {
 
 const PrintBordereauPage: React.FC<PrintBordereauPageProps> = ({ navigate, operationId: passedId }) => {
     const { db, loading } = useData();
+    const { t } = useLanguage();
 
     const printData = useMemo(() => {
         if (loading || !passedId) return null;
@@ -310,8 +312,8 @@ const PrintBordereauPage: React.FC<PrintBordereauPageProps> = ({ navigate, opera
         return Object.keys(groupedEngagements).map(Number).sort((a, b) => a - b);
     }, [groupedEngagements]);
 
-    if (loading) return <div className="p-8 text-center">جار تحميل البيانات...</div>;
-    if (!printData) return <div className="p-8 text-center text-red-500">لم يتم العثور على البيانات.</div>;
+    if (loading) return <div className="p-8 text-center">{t('loading')}</div>;
+    if (!printData) return <div className="p-8 text-center text-red-500">{t('no_data')}</div>;
 
     const { bordereau, operation, engagements } = printData;
 
@@ -329,51 +331,51 @@ const PrintBordereauPage: React.FC<PrintBordereauPageProps> = ({ navigate, opera
             `}</style>
 
             <div className="no-print mb-4 flex justify-between items-center bg-gray-100 p-3 rounded shadow">
-                <h2 className="text-xl font-bold">معاينة طباعة جدول إرسال</h2>
+                <h2 className="text-xl font-bold">{t('print.bordereau_preview')}</h2>
                 <div className="flex gap-2">
-                    <button onClick={() => navigate('OPERATION_DETAILS', operation.ID_OPERATION, 'BORDEREAUX')} className="bg-gray-600 text-white px-4 py-2 rounded">رجوع</button>
+                    <button onClick={() => navigate('OPERATION_DETAILS', operation.ID_OPERATION, 'BORDEREAUX')} className="bg-gray-600 text-white px-4 py-2 rounded">{t('btn.back')}</button>
                     <button onClick={handleExportXLS} className="bg-green-700 text-white px-4 py-2 rounded font-bold hover:bg-green-800 transition-colors">
-                        <i className="bi bi-file-earmark-spreadsheet mr-2"></i> تصدير XLS
+                        <i className="bi bi-file-earmark-spreadsheet mr-2"></i> {t('print.export_xls')}
                     </button>
                     <button onClick={handlePrintJS} className="bg-blue-700 text-white px-6 py-2 rounded font-bold hover:bg-blue-800 transition-colors">
-                        <i className="bi bi-printer mr-2"></i> طباعة 
+                        <i className="bi bi-printer mr-2"></i> {t('btn.print')} 
                     </button>
                 </div>
             </div>
 
             <div id="print-content" className="print-area bg-white mx-auto max-w-[210mm] text-black" dir="rtl">
-                <div className="text-center font-bold text-xl mb-4">الجمهورية الجزائرية الديمقراطية الشعبية</div>
+                <div className="text-center font-bold text-xl mb-4">{t('print.header.republic')}</div>
                 
                 <div className="flex justify-between mb-2">
                     <div className="text-right font-bold text-xs space-y-0.5" style={{ minWidth: '250px' }}>
-                        <p>وزارة الأشغال العمومية</p>
-                        <p>و المنشآت القاعدية</p>
-                        <p>مديرية الأشغال العمومية</p>
-                        <p>لولاية غليزان</p>
-                        <p>رقم: ................... / م أ ع / {bordereau?.ANNEE || new Date().getFullYear()}</p>
+                        <p>{t('print.bordereau.ministry_1')}</p>
+                        <p>{t('print.bordereau.ministry_2')}</p>
+                        <p>{t('print.bordereau.ministry_3')}</p>
+                        <p>{t('print.bordereau.ministry_4')}</p>
+                        <p>{t('print.bordereau.ref_num', { year: bordereau?.ANNEE || new Date().getFullYear() })}</p>
                     </div>
                     <div className="text-left font-bold text-sm">
-                        <p>غليزان في: .........................</p>
+                        <p>{t('print.relizane_in')}</p>
                     </div>
                 </div>
 
                 <div className="text-center mb-6">
-                    <h1 className="text-xl font-bold mb-4">إلى السيد(ة): المراقب الميزانياتي لدى ولاية غليزان</h1>
+                    <h1 className="text-xl font-bold mb-4">{t('print.bordereau.to_controller')}</h1>
                     <div className="bg-gray-200 border-2 border-green-800 p-2 inline-block min-w-[300px]">
-                        <h2 className="text-3xl font-bold">جدول إرسال</h2>
+                        <h2 className="text-3xl font-bold">{t('print.bordereau_title')}</h2>
                     </div>
                 </div>
 
-                <p className="mb-2 font-bold text-sm">تجدون طي هذا الجدول بطاقات الالتزام و الوثائق المرفقة التالية:</p>
+                <p className="mb-2 font-bold text-sm">{t('print.bordereau.intro')}</p>
 
                 <table className="w-full border-collapse border border-black text-xs">
                     <thead>
                         <tr className="bg-white">
-                            <th className="border border-black p-1 w-20">رقم بطاقة الالتزام</th>
-                            <th className="border border-black p-1 w-12">الصنف</th>
-                            <th className="border border-black p-1">موضوع الالتزام</th>
-                            <th className="border border-black p-1 w-[45%]">الوثائق الثبوتية المرفقة بكل بطاقة</th>
-                            <th className="border border-black p-1 w-20">ملاحظة</th>
+                            <th className="border border-black p-1 w-20">{t('col.eng_no')}</th>
+                            <th className="border border-black p-1 w-12">{t('col.categorie')}</th>
+                            <th className="border border-black p-1">{t('print.label.engagement_subject')}</th>
+                            <th className="border border-black p-1 w-[45%]">{t('print.bordereau.supporting_docs')}</th>
+                            <th className="border border-black p-1 w-20">{t('col.observation')}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -385,7 +387,7 @@ const PrintBordereauPage: React.FC<PrintBordereauPageProps> = ({ navigate, opera
                                 <React.Fragment key={opId}>
                                     <tr className="bg-white font-bold">
                                         <td colSpan={5} className="border border-black p-1 text-center">
-                                            رقم العملية: {op?.N_OPERATION?.startsWith('N') ? op.N_OPERATION : `N ${op?.N_OPERATION || ''}`}
+                                            {t('print.bordereau.operation_number', { op: op?.N_OPERATION?.startsWith('N') ? op.N_OPERATION : `N ${op?.N_OPERATION || ''}` })}
                                         </td>
                                     </tr>
                                     {opEngs.map((eng: any) => {
@@ -418,14 +420,14 @@ const PrintBordereauPage: React.FC<PrintBordereauPageProps> = ({ navigate, opera
                     </tbody>
                     <tfoot>
                         <tr className="font-bold">
-                            <td colSpan={1} className="border-none">مجموع البطاقات</td>
+                            <td colSpan={1} className="border-none">{t('print.bordereau.total_cards')}</td>
                             <td className="border border-black bg-gray-50 text-center p-1">{engagements.length.toString().padStart(2, '0')}</td>
                         </tr>
                     </tfoot>
                 </table>
 
                 <div className="mt-4 flex justify-end">
-                    <p className="font-bold underline text-lg ml-10">الآمر بالصرف</p>
+                    <p className="font-bold underline text-lg ml-10">{t('print.ordonnateur_sign')}</p>
                 </div>
             </div>
         </div>

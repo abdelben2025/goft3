@@ -3,6 +3,7 @@ import React, { useMemo } from 'react';
 import { Page } from '../types';
 import { useData } from '../context/DataContext';
 import { normalizeDate } from '../utils/dateUtils';
+import { useLanguage } from '../context/LanguageContext';
 
 interface PrintEngagementPageProps {
     navigate: (page: Page, id?: number, tab?: string) => void;
@@ -21,6 +22,7 @@ const formatCurrency = (amount: number | null | undefined | string) => {
 
 const PrintEngagementPage: React.FC<PrintEngagementPageProps> = ({ navigate, engagementId }) => {
     const { db, loading } = useData();
+    const { t } = useLanguage();
 
     const printData = useMemo(() => {
         if (loading || !engagementId) return null;
@@ -169,8 +171,8 @@ const PrintEngagementPage: React.FC<PrintEngagementPageProps> = ({ navigate, eng
         window.print();
     };
 
-    if (loading) return <div className="p-8 text-center">جار تحميل البيانات...</div>;
-    if (!printData) return <div className="p-8 text-center text-red-500">لم يتم العثور على البيانات.</div>;
+    if (loading) return <div className="p-8 text-center">{t('loading')}</div>;
+    if (!printData) return <div className="p-8 text-center text-red-500">{t('no_data')}</div>;
 
     const { engagement, operation, direction, lots, beneficiary, budgetAmount, displayedTotalEng, displayedSoldeAnt, displayedMontantEng, displayedReliquat, rubriquesForInvoice = [] } = printData;
 
@@ -206,11 +208,11 @@ const PrintEngagementPage: React.FC<PrintEngagementPageProps> = ({ navigate, eng
             `}</style>
 
             <div className="no-print mb-4 flex justify-between items-center bg-gray-100 p-3 rounded shadow">
-                <h2 className="text-xl font-bold">معاينة طباعة بطاقة الالتزام</h2>
+                <h2 className="text-xl font-bold">{t('print.engagement_preview')}</h2>
                 <div className="flex gap-2">
-                    <button onClick={() => navigate('OPERATION_DETAILS', operation.ID_OPERATION, `ENGAGEMENTS:${engagement.ID_ENGAGEMENT}:blue`)} className="bg-gray-600 text-white px-4 py-2 rounded">رجوع</button>
+                    <button onClick={() => navigate('OPERATION_DETAILS', operation.ID_OPERATION, `ENGAGEMENTS:${engagement.ID_ENGAGEMENT}:blue`)} className="bg-gray-600 text-white px-4 py-2 rounded">{t('btn.back')}</button>
                     <button onClick={handlePrintJS} className="bg-blue-700 text-white px-6 py-2 rounded font-bold hover:bg-blue-800 transition-colors">
-                        <i className="bi bi-printer mr-2"></i> طباعة 
+                        <i className="bi bi-printer mr-2"></i> {t('btn.print')} 
                     </button>
                 </div>
             </div>
@@ -219,27 +221,27 @@ const PrintEngagementPage: React.FC<PrintEngagementPageProps> = ({ navigate, eng
             <div id="print-content" className="print-area bg-white mx-auto max-w-[210mm] text-black text-lg" dir="rtl">
                 
                 {/* Header */}
-                <div className="text-center font-bold text-lg mb-2">الجمهورية الجزائرية الديمقراطية الشعبية</div>
+                <div className="text-center font-bold text-lg mb-2">{t('print.header.republic')}</div>
                 
                 <div className="flex justify-between items-start mb-1">
                     <div className="w-2/3 space-y-0.5 text-[9pt]">
                         <p className="font-bold">{direction.INT_PORTEFEUILLE}</p>
                         <p className="font-bold">{direction.DIRECTION}</p>
-                        <p className="font-bold">رمز الآمر بالصرف: {direction.ORDONATEUR}</p>
-                        <p className="font-bold">رقم بطاقة الالتزام: {engagement.N_ENG}/{engagement.ANNEE}</p>
+                        <p className="font-bold">{t('print.label.ordonnateur_code')}: {direction.ORDONATEUR}</p>
+                        <p className="font-bold">{t('col.eng_no')}: {engagement.N_ENG}/{engagement.ANNEE}</p>
                     </div>
                     <div className="w-1/3 text-left space-y-3 text-[9pt]">
-                        <p className="font-bold">التاريخ: ......................</p>   
+                        <p className="font-bold">{t('print.label.date')} ......................</p>   
                     </div>
                 </div>
 
                 <div className="grid grid-cols-1 gap-2 text-[9pt] mb-2 py-1">
                     <div>
-                        <p><b>رمز محفظة البرنامج:</b> {direction.PORTEFEUILLE}</p>
-                        <p><b>رمز البرنامج:</b> {opProg}</p>
-                        <p><b>رمز البرنامج الفرعي:</b> {opSProg}</p>
-                        <p><b>رمز النشاط:</b> {opAct}</p>
-                        <p><b>رمز النشاط الفرعي(عند الاقتضاء):</b> {opSAct || '---'}</p>
+                        <p><b>{t('print.label.portfolio_code')}:</b> {direction.PORTEFEUILLE}</p>
+                        <p><b>{t('print.label.program_code')}:</b> {opProg}</p>
+                        <p><b>{t('print.label.subprogram_code')}:</b> {opSProg}</p>
+                        <p><b>{t('print.label.action_code')}:</b> {opAct}</p>
+                        <p><b>{t('print.label.subaction_code')}:</b> {opSAct || '---'}</p>
                     </div>
                    
                 </div>
@@ -250,23 +252,23 @@ const PrintEngagementPage: React.FC<PrintEngagementPageProps> = ({ navigate, eng
                 </div>
 
                 <div className="mb-2">
-                    <p className="font-bold text-[9pt] mb-1">العنوان 3: نفقات الاستثمار</p>
+                    <p className="font-bold text-[9pt] mb-1">{t('print.label.title_3')}</p>
                     <table className="main-table w-full border-collapse border border-black text-center text-[10pt]">
                         <thead className="bg-gray-50 font-bold">
                             <tr>
-                                <th className="border border-black w-[22%]">الصنف / الصنف الفرعي</th>
-                                <th className="border border-black">رخص الالتزام المفتوحة/المعدلة</th>
-                                <th className="border border-black">مجموع الالتزامات المكتتبة</th>
-                                <th className="border border-black">الرصيد الأولي</th>
-                                <th className="border border-black">الالتزام المقترح</th>
-                                <th className="border border-black">الرصيد المتبقي</th>
+                                <th className="border border-black w-[22%]">{t('col.chapter')}</th>
+                                <th className="border border-black">{t('col.open_credits')}</th>
+                                <th className="border border-black">{t('col.total_committed')}</th>
+                                <th className="border border-black">{t('col.initial_balance')}</th>
+                                <th className="border border-black">{t('col.proposed_commitment')}</th>
+                                <th className="border border-black">{t('col.remaining_balance')}</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr className="h-16">
                                 <td className="border border-black align-top text-center p-1 leading-tight">
-                                    <p className="mb-1"><b>الصنف:</b> {printData.categorie?.C_CATEGORIE} {printData.categorie?.INT_CATEGORIE}</p>
-                                    <p><b>الصنف الفرعي:</b> {printData.scategorie?.C_SCATEGORIE} {printData.scategorie?.INT_SCATEGORIE}</p>
+                                    <p className="mb-1"><b>{t('col.categorie')}:</b> {printData.categorie?.C_CATEGORIE} {printData.categorie?.INT_CATEGORIE}</p>
+                                    <p><b>{t('col.sub_categorie')}:</b> {printData.scategorie?.C_SCATEGORIE} {printData.scategorie?.INT_SCATEGORIE}</p>
                                 </td>
                                 <td className="border border-black font-bold">{formatCurrency(budgetAmount)}</td>
                                 <td className="border border-black">{formatCurrency(displayedTotalEng)}</td>
@@ -279,7 +281,7 @@ const PrintEngagementPage: React.FC<PrintEngagementPageProps> = ({ navigate, eng
                 </div>
 
                 <div className="space-y-1 text-[9pt] mb-4">
-                    <p><b>موضوع الالتزام:</b> {engagement.OBJET_ENG}</p>
+                    <p><b>{t('print.label.engagement_subject')}:</b> {engagement.OBJET_ENG}</p>
                     {isInvoice && lots.length === 0 && rubriquesForInvoice.length > 0 ? (
                         <div className="pr-4 text-[9pt] text-center">
                             {rubriquesForInvoice.map((r, i) => (
@@ -297,7 +299,7 @@ const PrintEngagementPage: React.FC<PrintEngagementPageProps> = ({ navigate, eng
                                     
                                     return (
                                         <p key={l.ID_LOT}>
-                                            - {showLotNumber ? `الحصة ${l.N_LOT}: ` : ''}{l.INTITULE_LOT}
+                                            - {showLotNumber ? `${t('print.label.lot_num')} ${l.N_LOT}: ` : ''}{l.INTITULE_LOT}
                                         </p>
                                     );
                                 })}
@@ -305,26 +307,26 @@ const PrintEngagementPage: React.FC<PrintEngagementPageProps> = ({ navigate, eng
                         )
                     )}
                     {beneficiary?.BENEFICIAIRE && beneficiary.BENEFICIAIRE !== '---' && (
-                        <p><b>لفائدة:</b> {beneficiary.BENEFICIAIRE}</p>
+                        <p><b>{t('print.label.benefit_to')}</b> {beneficiary.BENEFICIAIRE}</p>
                     )}
                     
                 </div>
 
                 <div className="grid grid-cols-2 gap-0 border border-black mt-4">
                     <div className="border-l border-black p-2 h-38 flex flex-col">
-                        <p className="border-b border-black p-2 font-bold text-center mb-1 text-[10pt]">إطار مخصص للمراقب الميزانياتي</p>
-                        <p className="text-[9pt]">رقم التأشيرة: {engagement.N_VISA_CB || '................'}</p>
-                        <p className="text-[9pt] mt-1">تاريخ التأشيرة: {normalizeDate(engagement.DATE_VISA_CB) || '................'}</p>
+                        <p className="border-b border-black p-2 font-bold text-center mb-1 text-[10pt]">{t('print.label.visa_frame')}</p>
+                        <p className="text-[9pt]">{t('col.visa_no')}: {engagement.N_VISA_CB || '................'}</p>
+                        <p className="text-[9pt] mt-1">{t('col.visa_date')}: {normalizeDate(engagement.DATE_VISA_CB) || '................'}</p>
                         <div className="mt-10 flex justify-between px-4 text-xs">
-                            <span className="font-bold">ختم</span>
-                            <span className="font-bold">إمضاء</span>
+                            <span className="font-bold">{t('print.label.stamp')}</span>
+                            <span className="font-bold">{t('print.label.signature')}</span>
                         </div>
                     </div>
                     <div className="p-2 h-38 flex flex-col">
-                        <p className="border-b border-black p-2 font-bold text-center mb-1 text-[10pt]">إطار مخصص للآمر بالصرف</p>
+                        <p className="border-b border-black p-2 font-bold text-center mb-1 text-[10pt]">{t('print.label.ordonnateur_frame')}</p>
                         <div className="mt-auto flex justify-between px-4 text-xs">
-                            <span className="font-bold">ختم</span>
-                            <span className="font-bold">إمضاء</span>
+                            <span className="font-bold">{t('print.label.stamp')}</span>
+                            <span className="font-bold">{t('print.label.signature')}</span>
                         </div>
                     </div>
                 </div>

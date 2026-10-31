@@ -1,5 +1,6 @@
 ﻿import React, { useMemo } from 'react';
 import { useData } from '../context/DataContext';
+import { useLanguage } from '../context/LanguageContext';
 import { formatCurrency } from '../utils/currencyUtils';
 import { formatDate, parseDate } from '../utils/dateUtils';
 import Modal from './Modal';
@@ -36,6 +37,7 @@ const getPieceTypeLabel = (nature?: string | null): string => {
 };
 
 const BeneficiaryDetailsModal: React.FC<BeneficiaryDetailsModalProps> = ({ isOpen, beneficiaryId, onClose }) => {
+    const { t } = useLanguage();
     const { db } = useData();
 
     const ben = beneficiaryId ? db.T_BENEFICIAIRE.find(b => b.ID_BENEFICIAIRE === beneficiaryId) : null;
@@ -205,32 +207,32 @@ const BeneficiaryDetailsModal: React.FC<BeneficiaryDetailsModalProps> = ({ isOpe
     if (!isOpen || !ben) return null;
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="كل معلومات المستفيد" maxWidth="5xl">
+        <Modal isOpen={isOpen} onClose={onClose} title={t('ben.allInfoTitle')} maxWidth="5xl">
             <div dir="rtl" className="space-y-5 text-right">
 
                 {/* ── 1. المعلومات الشخصية ── */}
                 <section className="bg-blue-50 border border-blue-200 rounded-xl p-4">
                     <h3 className="text-sm font-black text-blue-800 mb-3 flex items-center gap-2">
-                        <i className="bi bi-person-vcard"></i> المعلومات الشخصية
+                        <i className="bi bi-person-vcard"></i> {t('ben.personalInfo')}
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                        <div><span className="text-gray-500 font-bold">الاسم:</span> <span className="font-bold">{ben.BENEFICIAIRE}</span></div>
-                        <div><span className="text-gray-500 font-bold">النشاط التجاري:</span> {ben.ACTIVITE || '—'}</div>
-                        <div><span className="text-gray-500 font-bold">العنوان:</span> {ben.ADRESSE || '—'}</div>
-                        <div><span className="text-gray-500 font-bold">رقم السجل التجاري (RC):</span> {ben.RC || '—'}</div>
-                        <div><span className="text-gray-500 font-bold">رقم التعريف الجبائي:</span> {ben.CODE_FISCALE || '—'}</div>
+                        <div><span className="text-gray-500 font-bold">{t('ben.name')}:</span> <span className="font-bold">{ben.BENEFICIAIRE}</span></div>
+                        <div><span className="text-gray-500 font-bold">{t('ben.activity')}:</span> {ben.ACTIVITE || '—'}</div>
+                        <div><span className="text-gray-500 font-bold">{t('ben.address')}:</span> {ben.ADRESSE || '—'}</div>
+                        <div><span className="text-gray-500 font-bold">{t('ben.rc')}:</span> {ben.RC || '—'}</div>
+                        <div><span className="text-gray-500 font-bold">{t('ben.taxId')}:</span> {ben.CODE_FISCALE || '—'}</div>
                     </div>
 
                     {accounts.length > 0 && (
                         <div className="mt-3">
                             <div className="text-xs font-black text-blue-700 mb-1.5 flex items-center gap-1.5">
-                                <i className="bi bi-bank"></i> الحسابات البنكية
+                                <i className="bi bi-bank"></i> {t('col.bank_accounts')}
                             </div>
                             <div className="space-y-2">
                                 {accounts.map(acc => (
                                     <div key={acc.ID_COMPTE} className="bg-white rounded-lg border border-blue-200 px-3 py-2 text-sm grid grid-cols-1 md:grid-cols-2 gap-1">
-                                        <div><span className="text-gray-500 font-bold">البنك:</span> {acc.BANQUE || '—'}</div>
-                                        <div><span className="text-gray-500 font-bold">رقم الحساب (RIB):</span> <span className="font-mono" dir="ltr">{acc.RIB}</span></div>
+                                        <div><span className="text-gray-500 font-bold">{t('ben.bank')}:</span> {acc.BANQUE || '—'}</div>
+                                        <div><span className="text-gray-500 font-bold">{t('ben.rib')}:</span> <span className="font-mono" dir="ltr">{acc.RIB}</span></div>
                                     </div>
                                 ))}
                             </div>
@@ -241,7 +243,7 @@ const BeneficiaryDetailsModal: React.FC<BeneficiaryDetailsModalProps> = ({ isOpe
                 {/* ── 2. العقود ── */}
                 {contracts.length === 0 ? (
                     <section className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center text-gray-500 text-sm">
-                        لا توجد عقود مرتبطة بهذا المستفيد.
+                        {t('ben.noContracts')}
                     </section>
                 ) : (
                     contracts.map((contract: Piece, ci: number) => {
@@ -292,19 +294,19 @@ const BeneficiaryDetailsModal: React.FC<BeneficiaryDetailsModalProps> = ({ isOpe
                                 <div className="bg-gray-800 text-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-2">
                                     <div className="flex items-center gap-2 text-sm font-black">
                                         <i className="bi bi-briefcase-fill"></i>
-                                        عقد {ci + 1}: {contract.PIECE}
+                                        {t('ben.contract', { num: ci + 1, name: contract.PIECE })}
                                         <span className="text-[10px] bg-blue-500 rounded-full px-2 py-0.5">{getPieceTypeLabel(contract.NAT_PIECE)}</span>
                                     </div>
                                     <div className="flex items-center gap-3">
-                                        <div className="text-xs text-gray-300">المبلغ: <span className="text-emerald-300 font-bold">{formatCurrency(contract.MONTANT_PIECE)}</span></div>
+                                        <div className="text-xs text-gray-300">{t('ben.amount')}: <span className="text-emerald-300 font-bold">{formatCurrency(contract.MONTANT_PIECE)}</span></div>
                                         <div className="relative">
                                             <button
                                                 type="button"
                                                 onClick={(e) => { e.stopPropagation(); setPrintMenuId(printMenuId === contractId ? null : contractId); }}
-                                                title="طباعة"
+                                                title={t('btn.print')}
                                                 className="flex items-center gap-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-2.5 py-1 rounded-full transition-colors"
                                             >
-                                                <i className="bi bi-printer"></i> طباعة
+                                                <i className="bi bi-printer"></i> {t('btn.print')}
                                             </button>
                                             {printMenuId === contractId && (
                                                 <div className="absolute left-0 top-full mt-1 z-20 bg-white rounded-lg shadow-xl border border-gray-200 py-1 w-52">
@@ -313,14 +315,14 @@ const BeneficiaryDetailsModal: React.FC<BeneficiaryDetailsModalProps> = ({ isOpe
                                                         onClick={() => handlePrint('all')}
                                                         className="w-full text-right px-3 py-2 text-xs font-bold text-gray-700 hover:bg-blue-50 flex items-center gap-2"
                                                     >
-                                                        <i className="bi bi-person-vcard text-blue-500"></i> طباعة كل معلومات المستفيد
+                                                        <i className="bi bi-person-vcard text-blue-500"></i> {t('ben.printAllInfo')}
                                                     </button>
                                                     <button
                                                         type="button"
                                                         onClick={() => handlePrint(contractId)}
                                                         className="w-full text-right px-3 py-2 text-xs font-bold text-gray-700 hover:bg-blue-50 flex items-center gap-2"
                                                     >
-                                                        <i className="bi bi-briefcase text-amber-500"></i> طباعة هذا العقد فقط
+                                                        <i className="bi bi-briefcase text-amber-500"></i> {t('ben.printThisContract')}
                                                     </button>
                                                 </div>
                                             )}
@@ -330,57 +332,57 @@ const BeneficiaryDetailsModal: React.FC<BeneficiaryDetailsModalProps> = ({ isOpe
 
                                 <div className="p-4 space-y-4 text-sm">
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                                        <div><span className="text-gray-500 font-bold">مدة الإنجاز:</span><div className="font-bold">{contract.DELAI_EX_JOURS || '—'}</div></div>
+                                        <div><span className="text-gray-500 font-bold">{t('col.duration')}:</span><div className="font-bold">{contract.DELAI_EX_JOURS || '—'}</div></div>
                                         {contract.CAUTION ? (
-                                            <div><span className="text-gray-500 font-bold">كفالة الضمان:</span><div className="font-bold text-amber-700">{contract.CAUTION}</div></div>
+                                            <div><span className="text-gray-500 font-bold">{t('ben.caution')}:</span><div className="font-bold text-amber-700">{contract.CAUTION}</div></div>
                                         ) : null}
                                         {guaranteePct > 0 && (
-                                            <div><span className="text-gray-500 font-bold">مبلغ الضمان ({guaranteePct.toFixed(0)}%):</span><div className="font-bold text-blue-700">{formatCurrency(guaranteeAmount)}</div></div>
+                                            <div><span className="text-gray-500 font-bold">{t('ben.guaranteeAmount', { pct: guaranteePct.toFixed(0) })}:</span><div className="font-bold text-blue-700">{formatCurrency(guaranteeAmount)}</div></div>
                                         )}
                                         {contract.N_VISA_CM && (
-                                            <div><span className="text-gray-500 font-bold">رقم التأشيرة (CM):</span><div className="font-mono" dir="ltr">{contract.N_VISA_CM}</div></div>
+                                            <div><span className="text-gray-500 font-bold">{t('ben.visaCmNo')}:</span><div className="font-mono" dir="ltr">{contract.N_VISA_CM}</div></div>
                                         )}
                                         {contract.DATE_VISA_CM && (
-                                            <div><span className="text-gray-500 font-bold">تاريخ التأشيرة (CM):</span><div className="font-bold">{fmtDate(contract.DATE_VISA_CM)}</div></div>
+                                            <div><span className="text-gray-500 font-bold">{t('ben.visaCmDate')}:</span><div className="font-bold">{fmtDate(contract.DATE_VISA_CM)}</div></div>
                                         )}
                                         {contractEng?.N_VISA_CB && (
-                                            <div><span className="text-gray-500 font-bold">رقم التأشيرة (CB):</span><div className="font-mono" dir="ltr">{contractEng.N_VISA_CB}</div></div>
+                                            <div><span className="text-gray-500 font-bold">{t('ben.visaCbNo')}:</span><div className="font-mono" dir="ltr">{contractEng.N_VISA_CB}</div></div>
                                         )}
                                         {contractEng?.DATE_VISA_CB && (
-                                            <div><span className="text-gray-500 font-bold">تاريخ التأشيرة (CB):</span><div className="font-bold">{fmtDate(contractEng.DATE_VISA_CB)}</div></div>
+                                            <div><span className="text-gray-500 font-bold">{t('ben.visaCbDate')}:</span><div className="font-bold">{fmtDate(contractEng.DATE_VISA_CB)}</div></div>
                                         )}
                                         {startWorksDate && (
-                                            <div><span className="text-gray-500 font-bold">تاريخ انطلاق الأشغال:</span><div className="font-bold">{fmtDate(startWorksDate)}</div></div>
+                                            <div><span className="text-gray-500 font-bold">{t('col.work_start_date')}:</span><div className="font-bold">{fmtDate(startWorksDate)}</div></div>
                                         )}
                                         {tempTakeoverDate && (
-                                            <div><span className="text-gray-500 font-bold">تاريخ محضر الاستلام المؤقت:</span><div className="font-bold">{fmtDate(tempTakeoverDate)}</div></div>
+                                            <div><span className="text-gray-500 font-bold">{t('ben.tempTakeoverDate')}:</span><div className="font-bold">{fmtDate(tempTakeoverDate)}</div></div>
                                         )}
                                         {contract.N_OD_PIECE && (
-                                            <div><span className="text-gray-500 font-bold">رقم أمر الخدمة:</span><div className="font-mono" dir="ltr">{contract.N_OD_PIECE}</div></div>
+                                            <div><span className="text-gray-500 font-bold">{t('ben.serviceOrderNo')}:</span><div className="font-mono" dir="ltr">{contract.N_OD_PIECE}</div></div>
                                         )}
                                         {contract.DATE_OD_PIECE && (
-                                            <div><span className="text-gray-500 font-bold">تاريخ أمر الخدمة:</span><div className="font-bold">{fmtDate(contract.DATE_OD_PIECE)}</div></div>
+                                            <div><span className="text-gray-500 font-bold">{t('ben.serviceOrderDate')}:</span><div className="font-bold">{fmtDate(contract.DATE_OD_PIECE)}</div></div>
                                         )}
                                     </div>
 
                                     {op && (
                                         <div className="bg-sky-50 border border-sky-200 rounded-lg px-3 py-2">
                                             <div className="text-xs">
-                                                <span className="text-gray-500 font-bold">رقم العملية:</span> <span className="font-mono font-bold" dir="ltr">{op.N_OPERATION}</span>
+                                                <span className="text-gray-500 font-bold">{t('ben.opNumber')}:</span> <span className="font-mono font-bold" dir="ltr">{op.N_OPERATION}</span>
                                             </div>
                                             <div className="text-xs mt-0.5">
-                                                <span className="text-gray-500 font-bold">عنوان العملية:</span> <span className="font-bold text-sky-800">{op.INT_OPERATION}</span>
+                                                <span className="text-gray-500 font-bold">{t('ben.opTitle')}:</span> <span className="font-bold text-sky-800">{op.INT_OPERATION}</span>
                                             </div>
                                         </div>
                                     )}
 
                                     {lots.length > 0 && (
                                         <div>
-                                            <div className="text-xs font-black text-gray-600 mb-1.5 flex items-center gap-1.5"><i className="bi bi-layers"></i> الحصص</div>
+                                            <div className="text-xs font-black text-gray-600 mb-1.5 flex items-center gap-1.5"><i className="bi bi-layers"></i> {t('ben.lots')}</div>
                                             <div className="flex flex-wrap gap-2">
                                                 {lots.map(l => (
                                                     <span key={l.ID_LOT} className="bg-amber-50 border border-amber-200 rounded-full px-3 py-1 text-xs">
-                                                        حصة {l.N_LOT} — {l.INTITULE_LOT}
+                                                        {t('ben.lot', { num: l.N_LOT, title: l.INTITULE_LOT })}
                                                         <span className="text-gray-500"> ({formatCurrency(l.MONTANT_INITIALE_LOT)})</span>
                                                     </span>
                                                 ))}
@@ -390,7 +392,7 @@ const BeneficiaryDetailsModal: React.FC<BeneficiaryDetailsModalProps> = ({ isOpe
 
                                     {children.length > 0 && (
                                         <div>
-                                            <div className="text-xs font-black text-gray-600 mb-1.5 flex items-center gap-1.5"><i className="bi bi-files"></i> الوثائق المرتبطة بالعقد</div>
+                                            <div className="text-xs font-black text-gray-600 mb-1.5 flex items-center gap-1.5"><i className="bi bi-files"></i> {t('ben.linkedDocs')}</div>
                                             <div className="space-y-1.5">
                                                 {children.map((c: Piece) => {
                                                     const cEngs = engagementsForPieces([c.ID_PIECE]);
@@ -402,27 +404,27 @@ const BeneficiaryDetailsModal: React.FC<BeneficiaryDetailsModalProps> = ({ isOpe
                                                                     <span className="bg-gray-100 rounded-full px-2 py-0.5 text-xs font-black">{getPieceTypeLabel(c.NAT_PIECE)}</span>
                                                                     <span className="text-xs font-bold">{c.PIECE}</span>
                                                                 </div>
-                                                                <span className="text-xs text-gray-500">المبلغ: {formatCurrency(c.MONTANT_PIECE)}</span>
+                                                                <span className="text-xs text-gray-500">{t('ben.amount')}: {formatCurrency(c.MONTANT_PIECE)}</span>
                                                             </div>
                                                             {(c.N_VISA_CM || c.DATE_VISA_CM) && (
                                                                 <div className="mt-1 text-xs text-gray-600">
-                                                                    {c.N_VISA_CM && <span>رقم التأشيرة: <span className="font-mono" dir="ltr">{c.N_VISA_CM}</span> · </span>}
-                                                                    {c.DATE_VISA_CM && <span>التاريخ: {fmtDate(c.DATE_VISA_CM)}</span>}
+                                                                    {c.N_VISA_CM && <span>{t('ben.visaNo')}: <span className="font-mono" dir="ltr">{c.N_VISA_CM}</span> · </span>}
+                                                                    {c.DATE_VISA_CM && <span>{t('ben.date')}: {fmtDate(c.DATE_VISA_CM)}</span>}
                                                                 </div>
                                                             )}
                                                             {cEngs.map(e => (
                                                                 <div key={e.ID_ENGAGEMENT} className="mt-1 text-xs bg-indigo-50 rounded px-2 py-1">
-                                                                    التزام — {e.N_ENG} | المبلغ: {formatCurrency(e.MONTANT_ENG)}
-                                                                    {e.N_VISA_CB && <span> | تأشيرة CB: <span className="font-mono" dir="ltr">{e.N_VISA_CB}</span></span>}
+                                                                    {t('ben.engagement', { num: e.N_ENG, amount: formatCurrency(e.MONTANT_ENG) })}
+                                                                    {e.N_VISA_CB && <span> | {t('ben.visaCb')}: <span className="font-mono" dir="ltr">{e.N_VISA_CB}</span></span>}
                                                                     {e.DATE_VISA_CB && <span> | {fmtDate(e.DATE_VISA_CB)}</span>}
                                                                 </div>
                                                             ))}
                                                             {cPais.map(p => (
                                                                 <div key={p.ID_PAIEMENT} className="mt-1 text-xs bg-emerald-50 rounded px-2 py-1">
-                                                                    دفع — {p.N_PAI} | المبلغ: {formatCurrency(p.MONTANT_PAI)}
-                                                                    {p.N_MANDAT && <span> | حوالة: <span className="font-mono" dir="ltr">{p.N_MANDAT}</span></span>}
+                                                                    {t('ben.payment', { num: p.N_PAI, amount: formatCurrency(p.MONTANT_PAI) })}
+                                                                    {p.N_MANDAT && <span> | {t('ben.mandate')}: <span className="font-mono" dir="ltr">{p.N_MANDAT}</span></span>}
                                                                     {p.DATE_MANDAT && <span> | {fmtDate(p.DATE_MANDAT)}</span>}
-                                                                    {p.DATE_ADMIS && <span> | قبول: {fmtDate(p.DATE_ADMIS)}</span>}
+                                                                    {p.DATE_ADMIS && <span> | {t('ben.accepted')}: {fmtDate(p.DATE_ADMIS)}</span>}
                                                                 </div>
                                                             ))}
                                                         </div>
@@ -435,35 +437,35 @@ const BeneficiaryDetailsModal: React.FC<BeneficiaryDetailsModalProps> = ({ isOpe
                                     {/* الملخص المالي للعقد */}
                                     <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
                                         <div className="text-xs font-black text-gray-700 mb-2 flex items-center gap-1.5">
-                                            <i className="bi bi-calculator"></i> الملخص المالي للعقد
+                                            <i className="bi bi-calculator"></i> {t('ben.financialSummary')}
                                         </div>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-xs">
                                             <div className="bg-white rounded-lg border border-indigo-200 px-3 py-2 flex items-center justify-between">
-                                                <span className="text-gray-500 font-bold">مجموع الالتزامات</span>
+                                                <span className="text-gray-500 font-bold">{t('col.total_engagements')}</span>
                                                 <span className="font-black text-indigo-700">{formatCurrency(totalEngs)}</span>
                                             </div>
                                             <div className="bg-white rounded-lg border border-emerald-200 px-3 py-2 flex items-center justify-between">
-                                                <span className="text-gray-500 font-bold">مجموع الدفعات</span>
+                                                <span className="text-gray-500 font-bold">{t('ben.totalPayments')}</span>
                                                 <span className="font-black text-emerald-700">{formatCurrency(totalPais)}</span>
                                             </div>
                                             <div className="bg-white rounded-lg border border-rose-200 px-3 py-2 flex items-center justify-between">
-                                                <span className="text-gray-500 font-bold">مجموع عقوبات التأخير</span>
+                                                <span className="text-gray-500 font-bold">{t('ben.totalPenalties')}</span>
                                                 <span className="font-black text-rose-600">{formatCurrency(penaltyTotal)}</span>
                                             </div>
                                             <div className="bg-white rounded-lg border border-sky-200 px-3 py-2 flex items-center justify-between">
-                                                <span className="text-gray-500 font-bold">مجموع التسبيقات</span>
+                                                <span className="text-gray-500 font-bold">{t('ben.totalAdvances')}</span>
                                                 <span className="font-black text-sky-700">{formatCurrency(advancesTotal)}</span>
                                             </div>
                                             <div className="bg-white rounded-lg border border-teal-200 px-3 py-2 flex items-center justify-between">
-                                                <span className="text-gray-500 font-bold">مجموع تسديد التسبيقات</span>
+                                                <span className="text-gray-500 font-bold">{t('ben.totalRepayments')}</span>
                                                 <span className="font-black text-teal-700">{formatCurrency(repaymentTotal)}</span>
                                             </div>
                                             <div className="bg-white rounded-lg border border-amber-200 px-3 py-2 flex items-center justify-between">
-                                                <span className="text-gray-500 font-bold">مجموع اقتطاع الضمان</span>
+                                                <span className="text-gray-500 font-bold">{t('ben.totalGuaranteeRetention')}</span>
                                                 <span className="font-black text-amber-700">{formatCurrency(guaranteeRetention)}</span>
                                             </div>
                                             <div className="bg-white rounded-lg border border-gray-300 px-3 py-2 flex items-center justify-between">
-                                                <span className="text-gray-500 font-bold">مبلغ اقتطاع بالزيادة</span>
+                                                <span className="text-gray-500 font-bold">{t('ben.extraDeduction')}</span>
                                                 <span className="font-black text-gray-700">{formatCurrency(extraDeduction)}</span>
                                             </div>
                                         </div>

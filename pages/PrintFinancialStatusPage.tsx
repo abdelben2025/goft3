@@ -220,7 +220,7 @@ const PrintFinancialStatusPage: React.FC<{ navigate: (page: Page) => void }> = (
                             </tbody>
                             <tfoot className="bg-gray-200 font-bold">
                                 <tr>
-                                    <td className="border border-black p-1 text-center">المجموع الفرعي</td>
+                                    <td className="border border-black p-1 text-center">{t('print.subtotal')}</td>
                                     <td className="border border-black p-1">{formatCurrency(page.subtotal.cpFinale)}</td>
                                     <td className="border border-black p-1">{formatCurrency(page.subtotal.paiementsPrevious)}</td>
                                     <td className="border border-black p-1">{formatCurrency(page.subtotal.paiementsCurrentMonth)}</td>
@@ -229,7 +229,7 @@ const PrintFinancialStatusPage: React.FC<{ navigate: (page: Page) => void }> = (
                                 </tr>
                                 {pageIdx === totalPages - 1 && (
                                     <tr className="bg-gray-300">
-                                        <td className="border border-black p-1 text-center">{t('lbl.total')} (الإجمالي الكلي)</td>
+                                        <td className="border border-black p-1 text-center">{t('print.total_grand', { total: t('lbl.total') })}</td>
                                         <td className="border border-black p-1">{formatCurrency(totals.cpFinale)}</td>
                                         <td className="border border-black p-1">{formatCurrency(totals.paiementsPrevious)}</td>
                                         <td className="border border-black p-1">{formatCurrency(totals.paiementsCurrentMonth)}</td>

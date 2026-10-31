@@ -5,6 +5,7 @@ import { useData } from '../context/DataContext';
 import { Page, User } from '../types';
 import { formatCurrency } from '../utils/currencyUtils';
 import { exportToFormattedExcel } from '../utils/exportToCsv';
+import { useLanguage } from '../context/LanguageContext';
 
 interface LotsReportPageProps {
     navigate: (page: Page, id?: number, tab?: string) => void;
@@ -14,6 +15,7 @@ interface LotsReportPageProps {
 
 const LotsReportPage: React.FC<LotsReportPageProps> = ({ navigate, currentUser, onGoBack }) => {
     const { db, loading } = useData();
+    const { t } = useLanguage();
     const [searchTerm, setSearchTerm] = React.useState('');
 
     const lotsData = useMemo(() => {
@@ -79,11 +81,11 @@ const LotsReportPage: React.FC<LotsReportPageProps> = ({ navigate, currentUser, 
             <table border="1">
                 <thead>
                     <tr style="background-color: #f3f4f6;">
-                        <th>الرقم</th>
-                        <th>رقم وعينة الحصة</th>
-                        <th>المبلغ النهائي</th>
-                        <th>المستفيد</th>
-                        <th>رقم وعنوان العملية</th>
+                        <th>{t('lots.seq')}</th>
+                        <th>{t('lots.lot_no_code')}</th>
+                        <th>{t('lots.final_amount')}</th>
+                        <th>{t('col.beneficiary')}</th>
+                        <th>{t('col.operation_info')}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -104,7 +106,7 @@ const LotsReportPage: React.FC<LotsReportPageProps> = ({ navigate, currentUser, 
 
     return (
         <PageWrapper
-            title="جدول الحصص لكل العمليات"
+            title={t('lots.title_all_lots_table')}
             navigate={navigate}
             onGoBack={onGoBack}
             className="bg-white"
@@ -112,12 +114,12 @@ const LotsReportPage: React.FC<LotsReportPageProps> = ({ navigate, currentUser, 
             <div className="p-6">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 no-print gap-4">
                     <div>
-                        <h2 className="text-xl font-bold text-gray-800">قائمة الحصص المفصلة</h2>
+                        <h2 className="text-xl font-bold text-gray-800">{t('lots.title_detailed_list')}</h2>
                         <div className="relative mt-3 w-full md:w-80">
                             <i className="bi bi-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
                             <input
                                 type="text"
-                                placeholder="بحث برقم أو عنوان الحصة..."
+                                placeholder={t('lots.search_placeholder')}
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className="w-full pr-10 pl-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-sm normal-case"
@@ -130,14 +132,14 @@ const LotsReportPage: React.FC<LotsReportPageProps> = ({ navigate, currentUser, 
                             className="bg-emerald-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-emerald-700 transition-colors"
                         >
                             <i className="bi bi-file-earmark-excel"></i>
-                            تصدير Excel
+                            {t('lots.export_excel')}
                         </button>
                         <button
                             onClick={handlePrint}
                             className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors"
                         >
                             <i className="bi bi-printer"></i>
-                            طباعة
+                            {t('btn.print')}
                         </button>
                     </div>
                 </div>
@@ -147,10 +149,10 @@ const LotsReportPage: React.FC<LotsReportPageProps> = ({ navigate, currentUser, 
                         <thead className="bg-gray-50 text-gray-600 border-b">
                             <tr>
                                 <th className="p-3 text-sm font-bold w-16">#</th>
-                                <th className="p-3 text-sm font-bold">رقم وعينة الحصة</th>
-                                <th className="p-3 text-sm font-bold">المبلغ النهائي</th>
-                                <th className="p-3 text-sm font-bold">المستفيد</th>
-                                <th className="p-3 text-sm font-bold">رقم وعنوان العملية</th>
+                                <th className="p-3 text-sm font-bold">{t('lots.lot_no_code')}</th>
+                                <th className="p-3 text-sm font-bold">{t('lots.final_amount')}</th>
+                                <th className="p-3 text-sm font-bold">{t('col.beneficiary')}</th>
+                                <th className="p-3 text-sm font-bold">{t('col.operation_info')}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
@@ -158,7 +160,7 @@ const LotsReportPage: React.FC<LotsReportPageProps> = ({ navigate, currentUser, 
                                 <tr key={lot.ID_LOT} className="hover:bg-gray-50 transition-colors">
                                     <td className="p-3 text-sm text-gray-500 font-mono">{index + 1}</td>
                                     <td className="p-3 text-sm text-gray-800 font-bold">
-                                        <div className="text-blue-600 text-[10px] mb-0.5">الحصة رقم {lot.N_LOT}</div>
+                                        <div className="text-blue-600 text-[10px] mb-0.5">{t('lots.lot_number_prefix', {num: lot.N_LOT})}</div>
                                         {lot.INTITULE_LOT}
                                     </td>
                                     <td className="p-3 text-sm text-gray-800 font-bold font-mono">
@@ -175,7 +177,7 @@ const LotsReportPage: React.FC<LotsReportPageProps> = ({ navigate, currentUser, 
                             {lotsData.length === 0 && !loading && (
                                 <tr>
                                     <td colSpan={5} className="p-8 text-center text-gray-500 italic">
-                                        لا توجد حصص مسجلة حالياً
+                                        {t('lots.empty_no_lots')}
                                     </td>
                                 </tr>
                             )}
@@ -185,8 +187,8 @@ const LotsReportPage: React.FC<LotsReportPageProps> = ({ navigate, currentUser, 
                 
                 <div className="mt-8 pt-8 border-t hidden print:block">
                     <div className="flex justify-between text-sm text-gray-500">
-                        <span>تم الاستخراج بتاريخ: {new Date().toLocaleDateString('ar-DZ')}</span>
-                        <span>صفحة 1 من 1</span>
+                        <span>{t('lots.extracted_date', {date: new Date().toLocaleDateString('ar-DZ')})}</span>
+                        <span>{t('lots.page_footer')}</span>
                     </div>
                 </div>
             </div>

@@ -169,7 +169,7 @@ const FinancialStatusPage: React.FC<FinancialStatusPageProps> = ({ navigate, onG
 
     const handleExport = () => {
         if (financialStatusData.length === 0) {
-            alert('لا توجد بيانات للتصدير.');
+            alert(t('fin.no_data_export'));
             return;
         }
 
@@ -236,19 +236,19 @@ const FinancialStatusPage: React.FC<FinancialStatusPageProps> = ({ navigate, onG
                         <i className="bi bi-exclamation-triangle mr-1"></i> {t('btn.ae_insufficiency')}
                     </button>
                     <button onClick={() => navigate('VISAED_ENGAGEMENTS')} className="bg-teal-500 text-white px-2 py-0.5 rounded-[20px] hover:bg-teal-600 transition-colors text-xs">
-                        <i className="bi bi-table mr-1"></i> جدول الإلتزامات المؤشرة
+                        <i className="bi bi-table mr-1"></i> {t('fin.btn.visaed_engagements')}
                     </button>
                     <button onClick={() => navigate('MONTHLY_COMMITMENTS_REPORT')} className="bg-blue-600 text-white px-2 py-0.5 rounded-[20px] hover:bg-blue-700 transition-colors text-xs">
-                        <i className="bi bi-calendar-check mr-1"></i> الالتزامات حسب الشهر
+                        <i className="bi bi-calendar-check mr-1"></i> {t('fin.btn.monthly_commitments')}
                     </button>
                     <button onClick={() => navigate('MONTHLY_PAYMENTS_REPORT')} className="bg-emerald-600 text-white px-2 py-0.5 rounded-[20px] hover:bg-emerald-700 transition-colors text-xs">
-                        <i className="bi bi-calendar-event mr-1"></i> الدفوعات حسب الشهر
+                        <i className="bi bi-calendar-event mr-1"></i> {t('fin.btn.monthly_payments')}
                     </button>
                     <button onClick={() => navigate('LOTS_REPORT')} className="bg-cyan-600 text-white px-2 py-0.5 rounded-[20px] hover:bg-cyan-700 transition-colors text-xs">
-                        <i className="bi bi-grid-3x3 mr-1"></i> جدول حصص العمليات
+                        <i className="bi bi-grid-3x3 mr-1"></i> {t('fin.btn.lots_report')}
                     </button>
                     <button onClick={() => navigate('APPENDIX_01')} className="bg-blue-700 text-white px-2 py-0.5 rounded-[20px] hover:bg-blue-800 transition-colors text-xs">
-                        <i className="bi bi-file-earmark-spreadsheet mr-1"></i> ملحق رقم 01
+                        <i className="bi bi-file-earmark-spreadsheet mr-1"></i> {t('fin.btn.appendix_01')}
                     </button>
                 </div>
             }
@@ -283,15 +283,15 @@ const FinancialStatusPage: React.FC<FinancialStatusPageProps> = ({ navigate, onG
                         />
                     </div>
                     <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">نوع العملية</label>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">{t('fin.filter.type_op')}</label>
                         <CustomDropdown
                             options={[
-                                { value: 'all', label: 'كل الأنواع' },
+                                { value: 'all', label: t('filter.all_types') },
                                 ...uniqueTypeOps.map(t => ({ value: t, label: t }))
                             ]}
                             value={selectedTypeOp}
                             onChange={setSelectedTypeOp}
-                            placeholder="اختر نوع العملية"
+                            placeholder={t('fin.filter.select_type_op')}
                         />
                     </div>
                     <div className="flex gap-2">

@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useData } from '../../context/DataContext';
 import { useToast } from '../../context/ToastContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { Bordereau, Engagement } from '../../types';
 
 interface AddBordereauFormProps {
@@ -13,6 +14,7 @@ interface AddBordereauFormProps {
 const AddBordereauForm: React.FC<AddBordereauFormProps> = ({ operationId, onClose, editItem }) => {
     const { db, addItem, updateItem } = useData();
     const { showToast } = useToast();
+    const { t } = useLanguage();
     const [loading, setLoading] = useState(false);
 
     const [selectedOpId, setSelectedOpId] = useState(editItem ? -1 : operationId);
@@ -107,11 +109,11 @@ const AddBordereauForm: React.FC<AddBordereauFormProps> = ({ operationId, onClos
             if (editItem) {
                 await updateItem('T_BORDEREAU', editItem.ID_BORDEREAU, formData);
                 bordereauId = editItem.ID_BORDEREAU;
-                showToast('تم تحديث جدول الإرسال بنجاح', 'success');
+                showToast(t('borform.toastUpdated'), 'success');
             } else {
                 const result = await addItem('T_BORDEREAU', formData);
                 bordereauId = result.ID_BORDEREAU;
-                showToast('تم إضافة جدول الإرسال بنجاح', 'success');
+                showToast(t('borform.toastAdded'), 'success');
             }
 
             // Update engagements links and documentation
@@ -147,7 +149,7 @@ const AddBordereauForm: React.FC<AddBordereauFormProps> = ({ operationId, onClos
             onClose();
         } catch (error) {
             console.error(error);
-            showToast('حدث خطأ أثناء الحفظ', 'error');
+            showToast(t('borform.saveError'), 'error');
         } finally {
             setLoading(false);
         }
@@ -192,22 +194,22 @@ const AddBordereauForm: React.FC<AddBordereauFormProps> = ({ operationId, onClos
     return (
         <form onSubmit={handleSubmit} className="flex flex-col max-h-[85vh]">
             <div className="sticky top-0 bg-white z-10 pb-2 border-b border-gray-200 flex justify-end gap-3 pt-1 mb-2">
-                <button type="button" onClick={onClose} className="px-5 py-1.5 bg-gray-200 text-gray-800 rounded-[20px] hover:bg-gray-300 transition-colors text-sm">إلغاء</button>
+                <button type="button" onClick={onClose} className="px-5 py-1.5 bg-gray-200 text-gray-800 rounded-[20px] hover:bg-gray-300 transition-colors text-sm">{t('btn.cancel')}</button>
                 <button type="submit" disabled={loading} className="px-5 py-1.5 bg-blue-600 text-white rounded-[20px] hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm">
-                    {loading ? 'جاري الحفظ...' : (editItem ? 'تحديث' : 'إضافة')}
+                    {loading ? t('borform.saving') : (editItem ? t('borform.update') : t('btn.add'))}
                 </button>
             </div>
             <div className="space-y-3 overflow-y-auto p-1 text-right">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">العملية</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('col.operation')}</label>
                     <select
                         required
                         className="w-full h-9 px-1 py-1 text-xs text-center p-2 border rounded-[20px] focus:ring-2 focus:ring-blue-500 bg-gray-50"
                         value={selectedOpId === -1 ? '' : selectedOpId}
                         onChange={(e) => setSelectedOpId(parseInt(e.target.value))}
                     >
-                        <option value="" disabled>-- إختر العملية --</option>
+                        <option value="" disabled>{t('borform.selectOperationPlaceholder')}</option>
                         {db.T_OPERATION.map(op => (
                             <option key={op.ID_OPERATION} value={op.ID_OPERATION}>
                                 {op.N_OPERATION}
@@ -216,17 +218,17 @@ const AddBordereauForm: React.FC<AddBordereauFormProps> = ({ operationId, onClos
                     </select>
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">رقم جدول الإرسال</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('borform.bordereauNo')}</label>
                     <input
                         type="text"
                         className="w-full h-9 p-2 text-center border rounded-[20px] focus:ring-2 focus:ring-blue-500"
                         value={formData.N_BORDEREAU}
                         onChange={e => setFormData({ ...formData, N_BORDEREAU: e.target.value })}
-                        placeholder="اختياري"
+                        placeholder={t('borform.optionalPlaceholder')}
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">السنة</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('col.year')}</label>
                     <input
                         type="text"
                         required
@@ -236,7 +238,7 @@ const AddBordereauForm: React.FC<AddBordereauFormProps> = ({ operationId, onClos
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">التاريخ</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('col.date')}</label>
                     <input
                         type="date"
                         className="w-full h-9 text-center p-2 border rounded-[20px] focus:ring-2 focus:ring-blue-500"
@@ -245,7 +247,7 @@ const AddBordereauForm: React.FC<AddBordereauFormProps> = ({ operationId, onClos
                     />
                 </div>
                 <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">المرسل إليه</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('borform.recipient')}</label>
                     <input
                         type="text"
                         required
@@ -257,18 +259,18 @@ const AddBordereauForm: React.FC<AddBordereauFormProps> = ({ operationId, onClos
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">اختر الالتزامات المرفقة</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('borform.selectEngagements')}</label>
                 <select 
                     className="w-full h-9 p-2 px-1 py-1 text-xs text-center border rounded-[20px] focus:ring-2 focus:ring-blue-500"
                     onChange={handleSelectEngagement}
                     defaultValue=""
                 >
-                    <option value="" disabled>-- اضغط لإضافة التزام (الوثائق الغير ملتزم بها) --</option>
+                    <option value="" disabled>{t('borform.addEngagementPlaceholder')}</option>
                     {availableEngagements.filter(eng => !selectedEngagements.includes(eng.ID_ENGAGEMENT)).map(eng => {
                         const pieceName = db.T_PIECE.find(p => p.ID_PIECE === eng.ID_PIECE)?.PIECE || '';
                         return (
                             <option key={eng.ID_ENGAGEMENT} value={eng.ID_ENGAGEMENT}>
-                                بطاقة رقم {eng.N_ENG}/{eng.ANNEE} - {pieceName.substring(0, 50)}
+                                {t('borform.cardOption', { num: eng.N_ENG, year: eng.ANNEE, name: pieceName.substring(0, 50) })}
                             </option>
                         )
                     })}
@@ -279,18 +281,18 @@ const AddBordereauForm: React.FC<AddBordereauFormProps> = ({ operationId, onClos
                     <table className="w-full h-9 text-center border-collapse">
                         <thead className="text-xs">
                             <tr className="bg-blue-600 text-white">
-                            <th className="border border-gray-300 p-2 w-24">رقم البطاقة</th>
-                            <th className="border border-gray-300 p-2 w-24">الصنف</th>
-                            <th className="border border-gray-300 p-2">موضوع الالتزام</th>
-                            <th className="border border-gray-300 p-2 w-[40%]">الوثائق المرفقة</th>
-                            <th className="border border-gray-300 p-2 w-32">ملاحظة</th>
+                            <th className="border border-gray-300 p-2 w-24">{t('borform.cardNo')}</th>
+                            <th className="border border-gray-300 p-2 w-24">{t('col.categorie')}</th>
+                            <th className="border border-gray-300 p-2">{t('borform.subject')}</th>
+                            <th className="border border-gray-300 p-2 w-[40%]">{t('det.colAttachedDocs')}</th>
+                            <th className="border border-gray-300 p-2 w-32">{t('borform.note')}</th>
                             <th className="border border-gray-300 p-2 w-10">/</th>
                         </tr>
                     </thead>
                     <tbody className="text-xs">
                         {selectedEngagements.length === 0 ? (
                             <tr>
-                                <td colSpan={6} className="p-4 text-center text-gray-500 italic">برجاء اختيار الالتزامات أعلاه</td>
+                                <td colSpan={6} className="p-4 text-center text-gray-500 italic">{t('borform.noEngagements')}</td>
                             </tr>
                         ) : selectedEngagements.map(engId => {
                             const eng = db.T_ENGAGEMENT.find(e => e.ID_ENGAGEMENT === engId);

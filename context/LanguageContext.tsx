@@ -1,30 +1,43 @@
 
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, ReactNode } from 'react';
-import { translations } from '../i18n/translations';
+import { translations, Language } from '../i18n/translations';
 
 interface LanguageContextType {
     t: (key: string, params?: { [key: string]: string | number }) => string;
-    dir: 'rtl';
+    dir: 'rtl' | 'ltr';
+    language: Language;
+    setLanguage: (lang: Language) => void;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    // Force Arabic settings
-    const language = 'ar';
-    const dir = 'rtl';
+const detectBrowserLanguage = (): Language => {
+    if (typeof navigator !== 'undefined') {
+        const langs = navigator.languages || [navigator.language];
+        for (const lang of langs) {
+            const code = (lang || '').toLowerCase();
+            if (code.startsWith('ar')) return 'ar';
+            if (code.startsWith('fr')) return 'fr';
+        }
+    }
+    return 'ar';
+};
 
-    // Ensure document direction is always RTL
+export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+    const [language, setLanguageState] = React.useState<Language>(() => detectBrowserLanguage());
+    const dir: 'rtl' | 'ltr' = language === 'ar' ? 'rtl' : 'ltr';
+
+    // Ensure document direction/lang is always in sync with the active language
     React.useEffect(() => {
         document.documentElement.dir = dir;
         document.documentElement.lang = language;
-        document.body.classList.add('font-cairo');
-        document.body.classList.remove('font-sans-latin');
-    }, []);
+        document.body.classList.toggle('font-cairo', language === 'ar');
+        document.body.classList.toggle('font-sans-latin', language !== 'ar');
+    }, [dir, language]);
 
-    const t = (key: string, params?: { [key: string]: string | number }): string => {
-        const langData = translations['ar'];
+    const t = React.useCallback((key: string, params?: { [key: string]: string | number }): string => {
+        const langData = translations[language];
         let result = (langData as any)[key];
 
         if (!result) {
@@ -39,10 +52,10 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
         }
 
         return result;
-    };
+    }, [language]);
 
     return (
-        <LanguageContext.Provider value={{ t, dir }}>
+        <LanguageContext.Provider value={{ t, dir, language, setLanguage: setLanguageState }}>
             {children}
         </LanguageContext.Provider>
     );

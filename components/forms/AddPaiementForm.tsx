@@ -3,6 +3,7 @@ import { Paiement, Engagement, Piece, Cp } from '../../types';
 import { normalizeDate, getCurrentDate } from '../../utils/dateUtils';
 import { DateInputField } from '../DateInputField';
 import { formatCurrency, parseCurrency, formatAmountInput, formatCurrencyForInput } from '../../utils/currencyUtils';
+import { useLanguage } from '../../context/LanguageContext';
 
 const parseWorkStatementNumber = (text?: string): number | null => {
     if (!text) return null;
@@ -24,6 +25,7 @@ interface AddPaiementFormProps {
 }
 
 const AddPaiementForm: React.FC<AddPaiementFormProps> = ({ onClose, onSave, operationId, engagements, pieces, cpItems, initialData, allPaiementsForOp, selectedYear, defaultPieceId }) => {
+    const { t } = useLanguage();
     // Basic info
     const [nPai, setNPai] = useState('');
     const [annee, setAnnee] = useState(() => initialData ? initialData.ANNEE : selectedYear);
@@ -432,7 +434,7 @@ const AddPaiementForm: React.FC<AddPaiementFormProps> = ({ onClose, onSave, oper
         if (isSubmitting) return;
 
         if (!idPiece || idPiece === 0) {
-            alert('يرجى تحديد وثيقة الدفع');
+            alert(t('payform.selectDocAlert'));
             return;
         }
 
@@ -488,18 +490,18 @@ const AddPaiementForm: React.FC<AddPaiementFormProps> = ({ onClose, onSave, oper
     return (
         <form onSubmit={handleSubmit} className="flex flex-col max-h-[85vh]">
             <div className="sticky top-0 bg-white z-10 pb-2 border-b border-gray-200 flex justify-end gap-3 pt-1 mb-2">
-                <button type="button" onClick={onClose} className="px-5 py-1.5 bg-gray-200 text-gray-800 rounded-[20px] hover:bg-gray-300 transition-colors text-sm">إلغاء</button>
+                <button type="button" onClick={onClose} className="px-5 py-1.5 bg-gray-200 text-gray-800 rounded-[20px] hover:bg-gray-300 transition-colors text-sm">{t('btn.cancel')}</button>
                 <button type="submit" disabled={isSubmitting} className="px-5 py-1.5 bg-blue-600 text-white rounded-[20px] hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm">
-                    {isSubmitting ? 'جاري الحفظ...' : (initialData ? 'حفظ التعديلات' : 'إضافة الدفع')}
+                    {isSubmitting ? t('payform.saving') : (initialData ? t('payform.saveChanges') : t('payform.addPayment'))}
                 </button>
             </div>
 
             <div className="space-y-3 overflow-y-auto p-1">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div className="md:col-span-2">
-                        <label htmlFor="idPiece" className="block text-sm font-medium text-gray-700 text-right">وثيقة الدفع</label>
+                        <label htmlFor="idPiece" className="block text-sm font-medium text-gray-700 text-right">{t('payform.paymentDoc')}</label>
                         <select id="idPiece" value={idPiece} onChange={e => handlePieceChange(Number(e.target.value))} required className="w-full h-9 px-1 py-1 mt-1 text-center text-gray-700 bg-gray-100 border border-gray-300 rounded-[20px] text-xs">
-                            <option value="0">{availablePieces.length > 0 ? '-- اختر وثيقة --' : 'لا توجد وثائق متاحة للدفع'}</option>
+                            <option value="0">{availablePieces.length > 0 ? t('payform.selectDoc') : t('payform.noDocs')}</option>
                             {availablePieces.map(p => (
                                 <option key={p.ID_PIECE} value={p.ID_PIECE}>{p.PIECE} ({p.NAT_PIECE})</option>
                             ))}
@@ -507,7 +509,7 @@ const AddPaiementForm: React.FC<AddPaiementFormProps> = ({ onClose, onSave, oper
                     </div>
                 <div className="flex gap-2">
                     <div className="flex-1">
-                        <label className="block text-sm font-medium text-gray-700 text-center">رقم / سنة</label>
+                        <label className="block text-sm font-medium text-gray-700 text-center">{t('payform.numYear')}</label>
                         <div className="flex items-center gap-1 mt-1">
                             <input value={nPai} readOnly className="w-16 h-9 px-1 py-1 text-sm text-center text-gray-700 bg-gray-200 border border-gray-300 rounded-[20px] font-bold" />
                             <span className="text-gray-400">/</span>
@@ -522,11 +524,11 @@ const AddPaiementForm: React.FC<AddPaiementFormProps> = ({ onClose, onSave, oper
                     </div>
                 </div>
                 <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 text-right">موضوع الدفع</label>
+                    <label className="block text-sm font-medium text-gray-700 text-right">{t('payform.subject')}</label>
                     <input value={objetPai} onChange={e => { setObjetPai(e.target.value); markDirty(); }} required className="w-full h-9 px-3 py-2 mt-1 text-xs text-gray-700 bg-gray-100 border border-gray-300 rounded-[20px]" />
                 </div>
                 <div>
-                    <DateInputField id="datePai" label="تاريخ البطاقة" value={datePai} onChange={(val) => { setDatePai(val); markDirty(); }} required />
+                    <DateInputField id="datePai" label={t('payform.cardDate')} value={datePai} onChange={(val) => { setDatePai(val); markDirty(); }} required />
                 </div>
             </div>
 
@@ -535,46 +537,46 @@ const AddPaiementForm: React.FC<AddPaiementFormProps> = ({ onClose, onSave, oper
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {createAmountInput(
                             'tr', 
-                            pieces.find(p => Number(p.ID_PIECE) === Number(idPiece))?.NAT_PIECE === 'حكم قضائي' ? 'مبلغ الحكم القضائي' : (isInvoicePayment ? 'مبلغ الفاتورة' : 'مبلغ الأشغال (تراكمي)'), 
+                            pieces.find(p => Number(p.ID_PIECE) === Number(idPiece))?.NAT_PIECE === 'حكم قضائي' ? t('payform.judgmentAmount') : (isInvoicePayment ? t('payform.invoiceAmount') : t('payform.worksAmount')), 
                             montantTravauxRealisesStr, 
                             setMontantTravauxRealisesStr
                         )}
-                        {!isInvoicePayment && createAmountInput('pp', 'مجموع الدفعات السابقة', previousPaymentsStr, setPreviousPaymentsStr)}
+                        {!isInvoicePayment && createAmountInput('pp', t('payform.prevPaymentsSum'), previousPaymentsStr, setPreviousPaymentsStr)}
                     </div>
 
                     {!isInvoicePayment && (
                         <>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <fieldset className="border border-gray-300 p-2 rounded-[20px]">
-                                    <legend className="px-1 text-xs font-bold text-blue-700">التسبيقات (تراكمي)</legend>
+                                    <legend className="px-1 text-xs font-bold text-blue-700">{t('payform.advancesLegend')}</legend>
                                     <div className="grid grid-cols-2 gap-2">
-                                        {createAmountInput('af', 'جزافي', avanceForfaitaireStr, setAvanceForfaitaireStr)}
-                                        {createAmountInput('aa', 'تموين', avanceApprovisionnementStr, setAvanceApprovisionnementStr)}
+                                        {createAmountInput('af', t('payform.lumpSum'), avanceForfaitaireStr, setAvanceForfaitaireStr)}
+                                        {createAmountInput('aa', t('payform.supply'), avanceApprovisionnementStr, setAvanceApprovisionnementStr)}
                                     </div>
                                 </fieldset>
 
                                 <fieldset className="border border-gray-300 p-2 rounded-[20px]">
-                                    <legend className="px-1 text-xs font-bold text-green-700">تسديد التسبيقات (تراكمي)</legend>
+                                    <legend className="px-1 text-xs font-bold text-green-700">{t('payform.repayAdvancesLegend')}</legend>
                                     <div className="grid grid-cols-2 gap-2">
-                                        {createAmountInput('raf', 'جزافي', remboursementAvanceForfaitaireStr, setRemboursementAvanceForfaitaireStr)}
-                                        {createAmountInput('raa', 'تموين', remboursementAvanceApprovisionnementStr, setRemboursementAvanceApprovisionnementStr)}
+                                        {createAmountInput('raf', t('payform.lumpSum'), remboursementAvanceForfaitaireStr, setRemboursementAvanceForfaitaireStr)}
+                                        {createAmountInput('raa', t('payform.supply'), remboursementAvanceApprovisionnementStr, setRemboursementAvanceApprovisionnementStr)}
                                     </div>
                                 </fieldset>
                             </div>
 
                             <fieldset className="border border-gray-300 p-2 rounded-[20px]">
-                                <legend className="px-1 text-xs font-bold text-red-700">الاقتطاعات</legend>
+                                <legend className="px-1 text-xs font-bold text-red-700">{t('payform.deductionsLegend')}</legend>
                                 <div className="grid grid-cols-3 gap-3">
-                                    {createAmountInput('rg', 'الضمان', retenueGarantieStr, setRetenueGarantieStr)}
-                                    {createAmountInput('ad', 'بالزيادة', autreDeductionStr, setAutreDeductionStr)}
-                                    {createAmountInput('pr', 'التأخير', penaliteRetardStr, setPenaliteRetardStr)}
+                                    {createAmountInput('rg', t('payform.guarantee'), retenueGarantieStr, setRetenueGarantieStr)}
+                                    {createAmountInput('ad', t('payform.excess'), autreDeductionStr, setAutreDeductionStr)}
+                                    {createAmountInput('pr', t('payform.delay'), penaliteRetardStr, setPenaliteRetardStr)}
                                 </div>
                             </fieldset>
                         </>
                     )}
 
                     <div className="p-3 bg-blue-50 border-r-4 border-blue-600 rounded-[20px] flex items-center justify-between">
-                        <label className="text-md font-bold text-blue-900">صافي الدفع الحالي:</label>
+                        <label className="text-md font-bold text-blue-900">{t('payform.netPayment')}</label>
                         <input value={montantPaiStr} readOnly className="text-xl font-black text-right bg-transparent border-none text-blue-800 w-auto" />
                     </div>
                 </div>
@@ -582,11 +584,11 @@ const AddPaiementForm: React.FC<AddPaiementFormProps> = ({ onClose, onSave, oper
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 border-t pt-3">
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 text-right">رقم الحوالة</label>
+                    <label className="block text-sm font-medium text-gray-700 text-right">{t('payform.mandatNo')}</label>
                     <input value={nManda ?? ''} onChange={e => { setNMandat(e.target.value); markDirty(); }} className="w-full h-9 px-3 py-2 mt-1 text-gray-700 bg-gray-100 border border-gray-300 rounded-[20px]" />
                 </div>
-                <DateInputField id="dm" label="تاريخ الحوالة" value={dateMandat} onChange={(val) => { setDateMandat(val); markDirty(); }} />
-                <DateInputField id="da" label="تاريخ القبول" value={dateAdmis} onChange={(val) => { setDateAdmis(val); markDirty(); }} />
+                <DateInputField id="dm" label={t('payform.mandatDate')} value={dateMandat} onChange={(val) => { setDateMandat(val); markDirty(); }} />
+                <DateInputField id="da" label={t('payform.acceptanceDate')} value={dateAdmis} onChange={(val) => { setDateAdmis(val); markDirty(); }} />
             </div>
 
             </div>

@@ -132,7 +132,7 @@ const PrintDeclarationPage: React.FC<PrintDeclarationPageProps> = ({ navigate, p
                 <div className="flex items-center gap-4">
                     {beneficiaryAccounts.length > 0 && (
                         <div className="flex items-center gap-2 bg-sky-50 px-3 py-1.5 rounded border border-sky-200">
-                            <span className="text-sm font-semibold text-sky-800">الحساب البنكي للطباعة:</span>
+                            <span className="text-sm font-semibold text-sky-800">{t('print.declaration.bank_print')}</span>
                             <select 
                                 className="text-xs border rounded p-1 bg-white focus:outline-none focus:ring-1 focus:ring-sky-500"
                                 value={activeAccount?.ID_COMPTE || ''}
@@ -147,8 +147,8 @@ const PrintDeclarationPage: React.FC<PrintDeclarationPageProps> = ({ navigate, p
                         </div>
                     )}
                     <div className="flex gap-2">
-                        <button onClick={() => navigate('OPERATION_DETAILS', operation.ID_OPERATION, `PAIEMENTS:${paiement.ID_PAIEMENT}:blue`)} className="bg-gray-600 text-white px-4 py-2 rounded">رجوع</button>
-                        <button onClick={handlePrintJS} className="bg-blue-700 text-white px-6 py-2 rounded font-bold hover:bg-blue-800 transition-colors"><i className="bi bi-printer mr-2"></i> طباعة </button>
+                        <button onClick={() => navigate('OPERATION_DETAILS', operation.ID_OPERATION, `PAIEMENTS:${paiement.ID_PAIEMENT}:blue`)} className="bg-gray-600 text-white px-4 py-2 rounded">{t('btn.back')}</button>
+                        <button onClick={handlePrintJS} className="bg-blue-700 text-white px-6 py-2 rounded font-bold hover:bg-blue-800 transition-colors"><i className="bi bi-printer mr-2"></i> {t('btn.print')} </button>
                     </div>
                 </div>
             </div>
@@ -167,7 +167,7 @@ const PrintDeclarationPage: React.FC<PrintDeclarationPageProps> = ({ navigate, p
                      <p>{t('print.label.wilaya')}</p>
                 </div>
 
-                <p className="ltr:text-left rtl:text-right">عن طريق الخصم من حسابنا المفتوح في دفاتركم تحت رقم بيان التعريف المصرفي</p>
+                <p className="ltr:text-left rtl:text-right">{t('print.declaration.via_debit')}</p>
                 <p className="ltr:text-left rtl:text-right font-bold my-2">{`008.48001.574444800195`}</p>
 
                 <table className="w-full my-3">
@@ -182,7 +182,7 @@ const PrintDeclarationPage: React.FC<PrintDeclarationPageProps> = ({ navigate, p
                             <td className="w-2/3 ltr:text-left rtl:text-right font-bold"> {t('print.label.social_reason')} :  {direction.DIRECTION}</td>
                         </tr>
                         <tr>
-                            <td className="ltr:text-left rtl:text-right font-bold">  عنوان الأمر : حي الانتصار غليزان</td>
+                            <td className="ltr:text-left rtl:text-right font-bold">  {t('print.declaration.order_address')}</td>
                         </tr>
                         <tr>
                             <td><span className="ltr:text-left rtl:text-right font-bold"> {t('print.label.operation_title')} </span>{operation.INT_OPERATION}</td>
@@ -216,7 +216,7 @@ const PrintDeclarationPage: React.FC<PrintDeclarationPageProps> = ({ navigate, p
                 </table>
 
                 <p><span className="font-bold">{t('print.label.payment_subject')} : </span> {paiement.OBJET_PAI}</p>
-                <p className="font-bold mt-2">المبلغ بالدينار الجزائري : </p>
+                <p className="font-bold mt-2">{t('print.declaration.amount_dinar')} </p>
                 
                  <table className="w-full my-3">
                     <tbody>

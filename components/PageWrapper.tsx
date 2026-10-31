@@ -85,7 +85,7 @@ const PageWrapper: React.FC<PageWrapperProps> = ({ title, navigate, backPage, on
                         <button 
                             onClick={() => window.dispatchEvent(new CustomEvent('open-global-search'))}
                             className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-blue-600 transition-colors flex items-center justify-center"
-                            title="بحث شامل (Ctrl+K)"
+                            title={t('home.search_title')}
                         >
                             <i className="bi bi-search text-lg"></i>
                         </button>

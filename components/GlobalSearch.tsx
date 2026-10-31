@@ -15,16 +15,16 @@ interface GlobalSearchProps {
 type SearchMode = 'operation' | 'piece' | 'beneficiaire' | 'lot' | 'transfer';
 
 const MODES: { key: SearchMode; label: string; icon: string; color: string }[] = [
-    { key: 'beneficiaire', label: 'مستفيد', icon: 'bi-person-badge', color: 'text-purple-600' },
-    { key: 'transfer', label: 'حوالة', icon: 'bi-arrow-left-right', color: 'text-cyan-600' },
-    { key: 'operation', label: 'عملية', icon: 'bi-briefcase', color: 'text-blue-600' },
-    { key: 'piece', label: 'وثيقة', icon: 'bi-file-earmark-text', color: 'text-green-600' },
-    { key: 'lot', label: 'حصة', icon: 'bi-layers', color: 'text-amber-600' },
+    { key: 'beneficiaire', label: 'search.mode_beneficiary', icon: 'bi-person-badge', color: 'text-purple-600' },
+    { key: 'transfer', label: 'search.mode_transfer', icon: 'bi-arrow-left-right', color: 'text-cyan-600' },
+    { key: 'operation', label: 'search.mode_operation', icon: 'bi-briefcase', color: 'text-blue-600' },
+    { key: 'piece', label: 'search.mode_piece', icon: 'bi-file-earmark-text', color: 'text-green-600' },
+    { key: 'lot', label: 'search.mode_lot', icon: 'bi-layers', color: 'text-amber-600' },
 ];
 
 const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose, navigate }) => {
     const { db } = useData();
-    const { dir } = useLanguage();
+    const { t, dir } = useLanguage();
     const [query, setQuery] = useState('');
     const [selectedModes, setSelectedModes] = useState<SearchMode[]>([]);
     const [beneficiaryId, setBeneficiaryId] = useState<number | null>(null);
@@ -89,7 +89,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose, navigate }
         if (active('lot')) {
             db.T_LOT_OPERATION.forEach(lot => {
                 if ((lot.INTITULE_LOT || '').toLowerCase().includes(q) || (lot.N_LOT || '').toLowerCase().includes(q)) {
-                    foundResults.push({ type: 'lot', data: lot, label: lot.INTITULE_LOT, secondary: `الحصة رقم: ${lot.N_LOT} - ${formatCurrency(lot.MONTANT_INITIALE_LOT)}`, id: lot.ID_OPERATION, page: 'OPERATION_DETAILS' });
+                    foundResults.push({ type: 'lot', data: lot, label: lot.INTITULE_LOT,                     secondary: `${t('search.lot_num', { num: lot.N_LOT })} - ${formatCurrency(lot.MONTANT_INITIALE_LOT)}`, id: lot.ID_OPERATION, page: 'OPERATION_DETAILS' });
                 }
             });
         }
@@ -127,8 +127,8 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose, navigate }
                     foundResults.push({
                         type: 'transfer',
                         data: p,
-                        label: `حوالة ${p.N_MANDAT || p.N_PAI}`,
-                        secondary: `المبلغ: ${formatCurrency(p.MONTANT_PAI)} — ${p.ANNEE}`,
+                        label: t('search.transfer_label', { num: p.N_MANDAT || p.N_PAI }),
+                        secondary: t('search.amount_label', { amount: formatCurrency(p.MONTANT_PAI), year: p.ANNEE }),
                         id: p.ID_OPERATION,
                         page: 'OPERATION_DETAILS',
                     });
@@ -161,7 +161,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose, navigate }
         });
 
         return foundResults.slice(0, 50);
-    }, [query, db, selectedModes, opYear]);
+    }, [query, db, selectedModes, opYear, t]);
 
     const openBeneficiary = (id: number) => setBeneficiaryId(id);
 
@@ -206,7 +206,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose, navigate }
                         >
                             {/* شريط اختيار نوع البحث */}
                             <div className="flex flex-wrap items-center gap-2 px-4 pt-3 pb-1 border-b border-gray-100">
-                                <span className="text-[11px] font-bold text-gray-500 ml-1">ابحث في:</span>
+                                <span className="text-[11px] font-bold text-gray-500 ml-1">{t('search.search_in')}</span>
                                 {MODES.map(mode => {
                                     const on = selectedModes.length === 0 || selectedModes.includes(mode.key);
                                     return (
@@ -218,13 +218,13 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose, navigate }
                                             }`}
                                         >
                                             <i className={`bi ${mode.icon} ${on ? '' : mode.color}`}></i>
-                                            {mode.label}
+                                            {t(mode.label)}
                                         </button>
                                     );
                                 })}
                                 {selectedModes.length > 0 && (
                                     <button onClick={() => setSelectedModes([])} className="text-[11px] text-gray-400 hover:text-red-500 font-bold underline">
-                                        عرض الكل
+                                        {t('search.show_all')}
                                     </button>
                                 )}
                             </div>
@@ -235,7 +235,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose, navigate }
                                     ref={inputRef}
                                     type="text"
                                     className="w-full bg-gray-100 border-none rounded-xl py-3 px-12 text-sm focus:ring-2 focus:ring-blue-500 transition-all outline-none"
-                                    placeholder="اكتب ثم اضغط Enter... (مستفيد، حوالة بالرقم/المبلغ، عملية، وثيقة، حصة)"
+                                    placeholder={t('search.placeholder')}
                                     value={query}
                                     onChange={e => setQuery(e.target.value)}
                                     onKeyDown={handleKeyDown}
@@ -251,14 +251,14 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose, navigate }
                             <div className="max-h-[55vh] overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-gray-200">
                                 {query.trim().length > 0 && query.trim().length < 2 && (
                                     <div className="p-8 text-center text-gray-500">
-                                        <p className="text-sm">اكتب حرفين على الأقل للبحث...</p>
+                                        <p className="text-sm">{t('search.min_chars')}</p>
                                     </div>
                                 )}
 
                                 {query.trim().length >= 2 && results.length === 0 && (
                                     <div className="p-8 text-center text-gray-500">
                                         <i className="bi bi-search text-3xl mb-2 block opacity-20"></i>
-                                        <p className="text-sm">لم يتم العثور على نتائج لـ "{query}"</p>
+                                        <p className="text-sm">{t('search.no_results', { query })}</p>
                                     </div>
                                 )}
 
@@ -307,11 +307,11 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose, navigate }
                                             {MODES.map(mode => (
                                                 <div key={mode.key} className="bg-gray-50 p-4 rounded-2xl flex flex-col items-center">
                                                     <i className={`bi ${mode.icon} text-2xl mb-1 ${mode.color}`}></i>
-                                                    <span className="text-[10px] font-bold">{mode.label}</span>
+                                                    <span className="text-[10px] font-bold">{t(mode.label)}</span>
                                                 </div>
                                             ))}
                                         </div>
-                                        <p className="text-xs">استخدم البحث الموحد للوصول السريع للمعلومات</p>
+                                        <p className="text-xs">{t('search.hint')}</p>
                                     </div>
                                 )}
                             </div>
@@ -320,11 +320,11 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose, navigate }
                                 <div className="flex gap-4">
                                     <span className="flex items-center gap-1">
                                         <kbd className="border bg-white px-1.5 rounded text-[9px] shadow-sm">Enter</kbd>
-                                        فتح نافذة المستفيد (إن كان البحث عن مستفيد)
+                                        {t('search.enter_hint')}
                                     </span>
                                     <span className="flex items-center gap-1">
                                         <kbd className="border bg-white px-1.5 rounded text-[9px] shadow-sm">ESC</kbd>
-                                        للإغلاق
+                                        {t('search.esc_hint')}
                                     </span>
                                 </div>
                             </div>

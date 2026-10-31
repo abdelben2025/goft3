@@ -139,8 +139,8 @@ const PrintMandatTablePage: React.FC<PrintMandatTablePageProps> = ({ navigate, p
             <div className="no-print mb-4 flex justify-between items-center bg-gray-100 p-3 rounded shadow">
                 <h2 className="text-xl font-bold">{t('print.title.mandate_table')}</h2>
                 <div className="flex gap-2">
-                    <button onClick={() => navigate('OPERATION_DETAILS', operation.ID_OPERATION, `PAIEMENTS:${paiement.ID_PAIEMENT}:blue`)} className="bg-gray-600 text-white px-4 py-2 rounded">رجوع</button>
-                    <button onClick={handlePrintJS} className="bg-blue-700 text-white px-6 py-2 rounded font-bold hover:bg-blue-800 transition-colors"><i className="bi bi-printer mr-2"></i> طباعة </button>
+                    <button onClick={() => navigate('OPERATION_DETAILS', operation.ID_OPERATION, `PAIEMENTS:${paiement.ID_PAIEMENT}:blue`)} className="bg-gray-600 text-white px-4 py-2 rounded">{t('btn.back')}</button>
+                    <button onClick={handlePrintJS} className="bg-blue-700 text-white px-6 py-2 rounded font-bold hover:bg-blue-800 transition-colors"><i className="bi bi-printer mr-2"></i> {t('btn.print')} </button>
                 </div>
             </div>
 
@@ -210,7 +210,7 @@ const PrintMandatTablePage: React.FC<PrintMandatTablePageProps> = ({ navigate, p
                         <tr className="font-bold">
                             <th className="border border-black p-1">{t('col.categorie')}</th>
                             <th className="border border-black p-1">{t('col.sub_categorie')}</th>
-                            <th className="border border-black p-1">الحوالة</th>
+                            <th className="border border-black p-1">{t('print.mandat_table.mandat_cell')}</th>
                             <th className="border border-black p-1">{t('col.categorie')}</th>
                         </tr>
                     </thead>

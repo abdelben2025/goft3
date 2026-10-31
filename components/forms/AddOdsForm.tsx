@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Ods, LotOperation } from '../../types';
 import { normalizeDate, compareDates, getCurrentDate } from '../../utils/dateUtils';
 import { DateInputField } from '../DateInputField';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface AddOdsFormProps {
     onClose: () => void;
@@ -15,6 +16,7 @@ interface AddOdsFormProps {
 const natureOdsOptions = ["انطلاق", "ايقاف", "استئناف", "ختام"];
 
 const AddOdsForm: React.FC<AddOdsFormProps> = ({ onClose, onSave, pieceId, initialData, associatedOds, associatedLots = [] }) => {
+    const { t } = useLanguage();
     const [objetOds, setObjetOds] = useState('');
     const [natureOds, setNatureOds] = useState(() => {
         if (initialData) return initialData.NATURE_ODS;
@@ -68,14 +70,14 @@ const AddOdsForm: React.FC<AddOdsFormProps> = ({ onClose, onSave, pieceId, initi
         // Chronological order: a later order must not be placed before its predecessor
         for (let i = 1; i < timeline.length; i++) {
             if (compareDates(timeline[i].DATE_ODS, timeline[i - 1].DATE_ODS) < 0) {
-                setNotification({ message: `التاريخ الجديد يجب أن لا يكون قبل التاريخ السابق لأمر الخدمة (${timeline[i - 1].DATE_ODS}).`, type: 'error' });
+                setNotification({ message: t('odsform.notifDateBefore', { date: timeline[i - 1].DATE_ODS }), type: 'error' });
                 return;
             }
         }
 
         // The first order must be a start (انطلاق)
         if (timeline[0] && timeline[0].NATURE_ODS !== 'انطلاق') {
-            setNotification({ message: 'أول أمر خدمة لهذا النطاق يجب أن يكون "انطلاق".', type: 'error' });
+            setNotification({ message: t('odsform.notifFirstStart'), type: 'error' });
             return;
         }
 
@@ -85,15 +87,15 @@ const AddOdsForm: React.FC<AddOdsFormProps> = ({ onClose, onSave, pieceId, initi
             const nextNat = timeline[i + 1].NATURE_ODS;
 
             if (nat === 'ختام') {
-                setNotification({ message: 'لا يمكن إضافة أمر خدمة جديد بعد الختام.', type: 'error' });
+                setNotification({ message: t('odsform.notifAfterClosure'), type: 'error' });
                 return;
             }
             if ((nat === 'انطلاق' || nat === 'استئناف') && !['ايقاف', 'ختام'].includes(nextNat)) {
-                setNotification({ message: 'بعد الإنطلاق أو الإستئناف، يجب أن يكون الأمر التالي "ايقاف" أو "ختام".', type: 'error' });
+                setNotification({ message: t('odsform.notifAfterStart'), type: 'error' });
                 return;
             }
             if (nat === 'ايقاف' && nextNat !== 'استئناف') {
-                setNotification({ message: 'بعد الإيقاف، يجب أن يكون الأمر التالي "استئناف".', type: 'error' });
+                setNotification({ message: t('odsform.notifAfterStop'), type: 'error' });
                 return;
             }
         }
@@ -101,15 +103,15 @@ const AddOdsForm: React.FC<AddOdsFormProps> = ({ onClose, onSave, pieceId, initi
         // No more than one start (انطلاق) or closing (ختام) per scope
         const startsCount = timeline.filter(o => o.NATURE_ODS === 'انطلاق').length;
         if (startsCount > 1) {
-            setNotification({ message: 'لا يمكن إضافة أكثر من أمر "انطلاق" لنفس النطاق.', type: 'error' });
+            setNotification({ message: t('odsform.notifMultipleStart'), type: 'error' });
             return;
         }
         const closuresCount = timeline.filter(o => o.NATURE_ODS === 'ختام').length;
         if (closuresCount > 1) {
-            setNotification({ message: 'لا يمكن إضافة أكثر من أمر "ختام" لنفس النطاق.', type: 'error' });
+            setNotification({ message: t('odsform.notifMultipleClosure'), type: 'error' });
             return;
         }
-    }, [dateOds, natureOds, associatedOds, initialData, selectedLotId]);
+    }, [dateOds, natureOds, associatedOds, initialData, selectedLotId, t]);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -118,7 +120,7 @@ const AddOdsForm: React.FC<AddOdsFormProps> = ({ onClose, onSave, pieceId, initi
         if (isSubmitting) return;
 
         if (notification?.type === 'error') {
-            alert(`خطأ في الإدخال: ${notification.message}`);
+            alert(t('odsform.inputError', { message: notification.message }));
             return;
         }
 
@@ -135,7 +137,7 @@ const AddOdsForm: React.FC<AddOdsFormProps> = ({ onClose, onSave, pieceId, initi
         );
 
         if (isExactDuplicate) {
-            alert('يوجد أمر خدمة بنفس الطبيعة والتاريخ مسجل بالفعل لهذا النطاق.');
+            alert(t('odsform.dupAlert'));
             return;
         }
 
@@ -146,7 +148,7 @@ const AddOdsForm: React.FC<AddOdsFormProps> = ({ onClose, onSave, pieceId, initi
                 o.ID_ODS !== initialData?.ID_ODS
             );
             if (hasExistingType) {
-                alert(`لا يمكن إضافة أكثر من أمر "${natureOds}" لنفس النطاق.`);
+                alert(t('odsform.multiAlert', { nature: natureOds }));
                 return;
             }
         }
@@ -171,31 +173,31 @@ const AddOdsForm: React.FC<AddOdsFormProps> = ({ onClose, onSave, pieceId, initi
     return (
         <form onSubmit={handleSubmit} className="flex flex-col max-h-[85vh]">
             <div className="sticky top-0 bg-white z-10 pb-2 border-b border-gray-200 flex justify-end gap-3 pt-1 mb-2">
-                <button type="button" onClick={onClose} className="px-5 py-1.5 bg-gray-200 text-gray-800 rounded-[20px] hover:bg-gray-300 transition-colors text-sm">إلغاء</button>
+                <button type="button" onClick={onClose} className="px-5 py-1.5 bg-gray-200 text-gray-800 rounded-[20px] hover:bg-gray-300 transition-colors text-sm">{t('btn.cancel')}</button>
                 <button type="submit" disabled={isSubmitting} className="px-5 py-1.5 bg-blue-600 text-white rounded-[20px] hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm">
-                    {isSubmitting ? 'جاري الحفظ...' : (initialData ? 'حفظ التغييرات' : 'إضافة')}
+                    {isSubmitting ? t('odsform.saving') : (initialData ? t('odsform.saveChanges') : t('btn.add'))}
                 </button>
             </div>
             <div className="space-y-3 overflow-y-auto p-1 text-right">
             <div>
-                <label htmlFor="idLot" className="block text-sm font-medium text-gray-700 text-right">النطاق (حصة أو عام)</label>
+                <label htmlFor="idLot" className="block text-sm font-medium text-gray-700 text-right">{t('odsform.scopeLabel')}</label>
                 <select
                     id="idLot"
                     value={selectedLotId}
                     onChange={(e) => { setSelectedLotId(e.target.value ? Number(e.target.value) : ''); markDirty(); }}
                     className="w-full px-3 py-2 mt-1 text-gray-700 bg-gray-100 border border-gray-300 rounded-[20px]"
                 >
-                    <option value="">الصفقة ككل (عام)</option>
+                    <option value="">{t('odsform.globalOption')}</option>
                     {associatedLots.map(lot => (
                         <option key={lot.ID_LOT} value={lot.ID_LOT}>
-                            حصة {lot.N_LOT}: {lot.INTITULE_LOT}
+                            {t('odsform.lotOption', { num: lot.N_LOT, title: lot.INTITULE_LOT })}
                         </option>
                     ))}
                 </select>
             </div>
 
             <div>
-                <label htmlFor="objetOds" className="block text-sm font-medium text-gray-700 text-right">موضوع أمر الخدمة</label>
+                <label htmlFor="objetOds" className="block text-sm font-medium text-gray-700 text-right">{t('odsform.subjectLabel')}</label>
                 <input
                     id="objetOds"
                     type="text"
@@ -207,7 +209,7 @@ const AddOdsForm: React.FC<AddOdsFormProps> = ({ onClose, onSave, pieceId, initi
             </div>
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label htmlFor="natureOds" className="block text-sm font-medium text-gray-700 text-right">طبيعة الأمر</label>
+                    <label htmlFor="natureOds" className="block text-sm font-medium text-gray-700 text-right">{t('odsform.natureLabel')}</label>
                      <select
                         id="natureOds"
                         value={natureOds}
@@ -226,7 +228,7 @@ const AddOdsForm: React.FC<AddOdsFormProps> = ({ onClose, onSave, pieceId, initi
                  <div>
                     <DateInputField
                         id="dateOds"
-                        label="تاريخ الأمر"
+                        label={t('odsform.dateLabel')}
                         value={dateOds}
                         onChange={(val) => { setDateOds(val); markDirty(); }}
                         required

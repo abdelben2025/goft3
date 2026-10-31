@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Cp } from '../../types';
+import { useLanguage } from '../../context/LanguageContext';
 import { formatCurrency, parseCurrency, formatAmountInput, formatCurrencyForInput } from '../../utils/currencyUtils';
 
 
@@ -13,6 +14,7 @@ interface AddCpFormProps {
 
 const AddCpForm: React.FC<AddCpFormProps> = ({ onClose, onSave, operationId, initialData, selectedYear }) => {
     const [annee, setAnnee] = useState(() => initialData ? initialData.ANNEE : selectedYear);
+    const { t } = useLanguage();
     const [montantInitialeStr, setMontantInitialeStr] = useState('0');
     const [montantFinaleStr, setMontantFinaleStr] = useState('0');
 
@@ -47,14 +49,14 @@ const AddCpForm: React.FC<AddCpFormProps> = ({ onClose, onSave, operationId, ini
     return (
         <form onSubmit={handleSubmit} className="flex flex-col max-h-[85vh]">
             <div className="sticky top-0 bg-white z-10 pb-2 border-b border-gray-200 flex justify-end gap-3 pt-1 mb-2">
-                <button type="button" onClick={onClose} className="px-5 py-1.5 bg-gray-200 text-gray-800 rounded-[20px] hover:bg-gray-300 transition-colors text-sm">إلغاء</button>
+                <button type="button" onClick={onClose} className="px-5 py-1.5 bg-gray-200 text-gray-800 rounded-[20px] hover:bg-gray-300 transition-colors text-sm">{t('btn.cancel')}</button>
                 <button type="submit" disabled={isSubmitting} className="px-5 py-1.5 bg-blue-600 text-white rounded-[20px] hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm">
-                    {isSubmitting ? 'جاري الحفظ...' : (initialData ? 'حفظ التغييرات' : 'إضافة')}
+                    {isSubmitting ? t('cpform.saving') : (initialData ? t('cpform.saveChanges') : t('btn.add'))}
                 </button>
             </div>
             <div className="space-y-3 overflow-y-auto p-1 text-right">
             <div>
-                <label htmlFor="annee" className="block text-sm font-medium text-gray-700 text-right">السنة</label>
+                <label htmlFor="annee" className="block text-sm font-medium text-gray-700 text-right">{t('col.year')}</label>
                 <input
                     id="annee"
                     type="text"
@@ -67,7 +69,7 @@ const AddCpForm: React.FC<AddCpFormProps> = ({ onClose, onSave, operationId, ini
             </div>
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label htmlFor="montantInitiale" className="block text-sm font-medium text-gray-700 text-right">المبلغ الأولي</label>
+                    <label htmlFor="montantInitiale" className="block text-sm font-medium text-gray-700 text-right">{t('det.colInitialAmount')}</label>
                     <input
                         id="montantInitiale"
                         type="text"
@@ -87,7 +89,7 @@ const AddCpForm: React.FC<AddCpFormProps> = ({ onClose, onSave, operationId, ini
                     />
                 </div>
                 <div>
-                    <label htmlFor="montantFinale" className="block text-sm font-medium text-gray-700 text-right">المبلغ النهائي</label>
+                    <label htmlFor="montantFinale" className="block text-sm font-medium text-gray-700 text-right">{t('det.colFinalAmount')}</label>
                     <input
                         id="montantFinale"
                         type="text"

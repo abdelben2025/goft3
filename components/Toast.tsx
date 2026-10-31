@@ -1,5 +1,6 @@
 
 import React, { useEffect } from 'react';
+import { useLanguage } from '../context/LanguageContext';
 
 interface ToastProps {
     message: string;
@@ -110,36 +111,38 @@ const TOAST_STYLES: Record<string, { badge: string; icon: string; title: string;
     success: {
         badge: 'bg-green-50 ring-green-100',
         icon: 'bi-check-circle-fill text-green-600',
-        title: 'نجحت العملية',
+        title: 'toast.success',
         accent: 'bg-green-500',
     },
     error: {
         badge: 'bg-red-50 ring-red-100',
         icon: 'bi-x-octagon-fill text-red-600',
-        title: 'تنبيه خطأ',
+        title: 'toast.error',
         accent: 'bg-red-500',
     },
     info: {
         badge: 'bg-blue-50 ring-blue-100',
         icon: 'bi-info-circle-fill text-blue-600',
-        title: 'معلومة',
+        title: 'toast.info',
         accent: 'bg-blue-500',
     },
     event: {
         badge: 'bg-indigo-50 ring-indigo-100',
         icon: 'bi-broadcast text-indigo-600',
-        title: 'نشاط مباشر',
+        title: 'toast.event',
         accent: 'bg-indigo-500',
     },
     loading: {
         badge: 'bg-blue-50 ring-blue-100',
         icon: 'bi-arrow-repeat text-blue-600 animate-spin',
-        title: 'جاري المعالجة...',
+        title: 'toast.loading',
         accent: 'bg-blue-500',
     },
 };
 
 const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
+    const { t } = useLanguage();
+
     useEffect(() => {
         // Play sound on mount (loading state stays silent)
         if (type !== 'loading') {
@@ -166,7 +169,7 @@ const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
                     </div>
                     <div className="flex-grow min-w-0 pr-1">
                         <span className="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-0.5">
-                            {style.title}
+                            {t(style.title)}
                         </span>
                         <span className="block text-sm font-bold text-gray-800 leading-snug break-words">
                             {message}
@@ -176,7 +179,7 @@ const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
                         <button
                             onClick={onClose}
                             className="flex-shrink-0 mt-0.5 text-gray-300 hover:text-gray-600 transition-colors"
-                            aria-label="إغلاق"
+                            aria-label={t('toast.close')}
                         >
                             <i className="bi bi-x-lg text-sm"></i>
                         </button>

@@ -215,13 +215,13 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
 
     const handlePermissionCheck = (action: () => void) => {
         if (loading) {
-            alert("يجب الانتظار حتى يتم تحديث النافذة");
+            alert(t('det.waitUpdate'));
             return;
         }
         if (canEdit && !isViewer) {
             action();
         } else {
-            alert('ليس لديك صلاحية التعديل على هذه العملية.');
+            alert(t('det.noEditPermission'));
         }
     };
 
@@ -568,15 +568,15 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
     const handleSave = async (table: keyof Database, data: any, idField: string) => {
         const targetTab = getTabForTable(table);
         navigate('OPERATION_DETAILS', operationId, targetTab);
-        showToast('جاري الحفظ...', 'loading');
+        showToast(t('det.saving'), 'loading');
         try {
             let savedItem = data;
             if (data[idField]) {
                 savedItem = await updateItem(table, data[idField], data);
-                showToast('تم التعديل بنجاح', 'success');
+                showToast(t('det.editSuccess'), 'success');
             } else {
                 savedItem = await addItem(table, data);
-                showToast('تمت الإضافة بنجاح', 'success');
+                showToast(t('det.addSuccess'), 'success');
             }
 
             // Auto-update piece registration status
@@ -618,7 +618,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
             setModalState({ type: null }); 
         } catch (error) {
             console.error('Save error:', error);
-            showToast(`حدث خطأ أثناء الحفظ — السبب: ${errorMessage(error)}`, 'error');
+            showToast(t('det.saveError', { reason: errorMessage(error) }), 'error');
         }
     };
 
@@ -627,7 +627,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
             // Confirmation ONLY — delete runs after user confirms in the modal
             setPendingDelete({ table, id, message: confirmMsg, kind: 'item' });
         } else {
-            alert('ليس لديك صلاحية الحذف.');
+            alert(t('det.noDeletePermission'));
         }
     };
 
@@ -637,27 +637,27 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
         if (!pending) return;
 
         if (pending.kind === 'bordereau') {
-            showToast('جاري الحذف...', 'loading');
+            showToast(t('det.deleting'), 'loading');
             try {
                 const linkedEngs = db.T_ENGAGEMENT.filter(eng => eng.ID_BORDEREAU === pending.id);
                 for (const eng of linkedEngs) {
                     await updateItem('T_ENGAGEMENT', eng.ID_ENGAGEMENT, { ...eng, ID_BORDEREAU: null });
                 }
                 await deleteItem('T_BORDEREAU', pending.id);
-                showToast('تم حذف جدول الإرسال بنجاح', 'success');
+                showToast(t('det.bordereauDeleteSuccess'), 'success');
             } catch (error) {
                 console.error(error);
-                showToast(`حدث خطأ أثناء الحذف — السبب: ${errorMessage(error)}`, 'error');
+                showToast(t('det.deleteError', { reason: errorMessage(error) }), 'error');
             }
             return;
         }
 
         const targetTab = getTabForTable(pending.table);
         navigate('OPERATION_DETAILS', operationId, targetTab);
-        showToast('جاري الحذف...', 'loading');
+        showToast(t('det.deleting'), 'loading');
         try {
             await deleteItem(pending.table, pending.id);
-            showToast('تم الحذف بنجاح', 'success');
+            showToast(t('det.deleteSuccess'), 'success');
 
             // Sync scategories if a rubrique was deleted
             if (pending.table === 'T_RUBRIQUE_OP') {
@@ -671,9 +671,9 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
 
     const handleDeleteBordereau = async (id: number) => {
         if (canEdit && !isViewer) {
-            setPendingDelete({ table: 'T_BORDEREAU', id, message: 'هل أنت متأكد من حذف جدول الإرسال هذا؟', kind: 'bordereau' });
+            setPendingDelete({ table: 'T_BORDEREAU', id, message: t('det.deleteBordereauConfirm'), kind: 'bordereau' });
         } else {
-            alert('ليس لديك صلاحية الحذف.');
+            alert(t('det.noDeletePermission'));
         }
     };
 
@@ -697,13 +697,13 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
         const reader = new FileReader();
         reader.onload = async (e) => {
             try {
-                showToast('جاري استيراد الحصص...', 'loading');
+                showToast(t('det.importingLots'), 'loading');
                 const buffer = e.target?.result as ArrayBuffer;
                 const workbook = new ExcelJS.Workbook();
                 await workbook.xlsx.load(buffer);
                 const worksheet = workbook.getWorksheet(1);
                 if (!worksheet) {
-                    showToast("الملف فارغ أو بصيغة غير صحيحة", 'error');
+                    showToast(t('det.emptyInvalidFile'), 'error');
                     return;
                 }
 
@@ -742,10 +742,10 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                     }
                 });
                 if (successCount > 0) {
-                    showToast(`تم استيراد ${successCount} حصص`, 'success');
+                    showToast(t('det.lotsImported', { count: successCount }), 'success');
                     broadcastEvent('import', `عدد ${successCount} من الحصص للعملية`);
                 }
-            } catch { alert("فشل قراءة الملف."); } finally { if(event.target) event.target.value = ''; }
+            } catch { alert(t('det.fileReadFailed')); } finally { if(event.target) event.target.value = ''; }
         };
         reader.readAsArrayBuffer(file);
     };
@@ -761,7 +761,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                 await workbook.xlsx.load(buffer);
                 const worksheet = workbook.getWorksheet(1);
                 if (!worksheet) {
-                    showToast("الملف فارغ أو بصيغة غير صحيحة", 'error');
+                    showToast(t('det.emptyInvalidFile'), 'error');
                     return;
                 }
 
@@ -803,7 +803,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                     const pieceName = String(row['موضوع الوثيقة'] || '').trim();
                     
                     if (!nEngStr || !annee || !pieceName) {
-                        errors.push(`السطر ${rowNum}: بيانات أساسية مفقودة.`);
+                        errors.push(t('det.rowMissingBasic', { row: rowNum }));
                         continue;
                     }
 
@@ -811,7 +811,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                     const piece = operationPieces.find(p => p.PIECE.trim() === pieceName);
                     
                     if (!piece) {
-                        errors.push(`السطر ${rowNum}: لم يتم العثور على وثيقة بعنوان "${pieceName}".`);
+                        errors.push(t('det.rowDocNotFound', { row: rowNum, name: pieceName }));
                     }
 
                     if (!nextNumbersByYear[annee]) {
@@ -821,18 +821,18 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                     }
 
                     if (nEng !== nextNumbersByYear[annee]) {
-                        errors.push(`السطر ${rowNum}: خطأ في تسلسل الأرقام لسنة ${annee}. المتوقع ${String(nextNumbersByYear[annee]).padStart(2, '0')} ولكن وُجد ${nEngStr}.`);
+                        errors.push(t('det.rowSeqError', { row: rowNum, year: annee, expected: String(nextNumbersByYear[annee]).padStart(2, '0'), found: nEngStr }));
                     } else {
                         nextNumbersByYear[annee]++;
                     }
                 }
 
                 if (errors.length > 0) {
-                    alert("فشل الاستيراد بسبب أخطاء:\n\n" + errors.slice(0, 10).join('\n'));
+                    alert(t('det.importFailedErrors', { errors: errors.slice(0, 10).join('\n') }));
                     return;
                 }
 
-                showToast('جاري استيراد الإلتزامات...', 'loading');
+                showToast(t('det.importingEngagements'), 'loading');
                 let successCount = 0;
                 await runInTransaction(async () => {
                     for (const row of json) {
@@ -859,8 +859,8 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                         }
                     }
                 });
-                showToast(`تم استيراد ${successCount} التزامات بنجاح`, 'success');
-            } catch { alert("حدث خطأ أثناء الاستيراد."); } finally { if(event.target) event.target.value = ''; }
+                showToast(t('det.engagementsImported', { count: successCount }), 'success');
+            } catch { alert(t('det.importError')); } finally { if(event.target) event.target.value = ''; }
         };
         reader.readAsArrayBuffer(file);
     };
@@ -876,7 +876,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                 await workbook.xlsx.load(buffer);
                 const worksheet = workbook.getWorksheet(1);
                 if (!worksheet) {
-                    showToast("الملف فارغ أو بصيغة غير صحيحة", 'error');
+                    showToast(t('det.emptyInvalidFile'), 'error');
                     return;
                 }
 
@@ -918,7 +918,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                     const pieceName = String(row['وثيقة الدفع'] || '').trim();
 
                     if (!nPaiStr || !annee || !pieceName) {
-                        errors.push(`السطر ${rowNum}: بيانات مفقودة.`);
+                        errors.push(t('det.rowMissingData', { row: rowNum }));
                         continue;
                     }
 
@@ -926,13 +926,13 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                     const piece = operationPieces.find(p => p.PIECE.trim() === pieceName);
                     
                     if (!piece) {
-                        errors.push(`السطر ${rowNum}: لم يتم العثور على وثيقة "${pieceName}".`);
+                        errors.push(t('det.rowPaymentDocNotFound', { row: rowNum, name: pieceName }));
                     } else {
                         const relatedEngId = ['فاتورة', 'حكم قضائي'].includes(piece.NAT_PIECE)
                             ? (engagements.find(e => e.ID_PIECE === piece.ID_PIECE)?.ID_ENGAGEMENT || engagements.find(e => e.ID_PIECE === piece.ID_PIECE_INIT)?.ID_ENGAGEMENT)
                             : engagements.find(e => e.ID_PIECE === piece.ID_PIECE_INIT)?.ID_ENGAGEMENT;
                         
-                        if (!relatedEngId) errors.push(`السطر ${rowNum}: الوثيقة ليس لها التزام.`);
+                        if (!relatedEngId) errors.push(t('det.rowNoCommitment', { row: rowNum }));
                     }
 
                     if (!nextNumbersByYear[annee]) {
@@ -942,18 +942,18 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                     }
 
                     if (nPai !== nextNumbersByYear[annee]) {
-                        errors.push(`السطر ${rowNum}: خطأ في تسلسل سنة ${annee}. المتوقع ${String(nextNumbersByYear[annee]).padStart(2, '0')}.`);
+                        errors.push(t('det.rowSeqYearError', { row: rowNum, year: annee, expected: String(nextNumbersByYear[annee]).padStart(2, '0') }));
                     } else {
                         nextNumbersByYear[annee]++;
                     }
                 }
 
                 if (errors.length > 0) {
-                    alert("فشل الاستيراد:\n\n" + errors.slice(0, 10).join('\n'));
+                    alert(t('det.importFailed', { errors: errors.slice(0, 10).join('\n') }));
                     return;
                 }
 
-                showToast('جاري استيراد الدفعات...', 'loading');
+                showToast(t('det.importingPayments'), 'loading');
                 let successCount = 0;
                 await runInTransaction(async () => {
                     for (const row of json) {
@@ -993,8 +993,8 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                         }
                     }
                 });
-                showToast(`تم استيراد ${successCount} دفعات بنجاح`, 'success');
-            } catch { alert("حدث خطأ أثناء استيراد الدفعات."); } finally { if(event.target) event.target.value = ''; }
+                showToast(t('det.paymentsImported', { count: successCount }), 'success');
+            } catch { alert(t('det.importPaymentsError')); } finally { if(event.target) event.target.value = ''; }
         };
         reader.readAsArrayBuffer(file);
     };
@@ -1010,7 +1010,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
         exportToFormattedExcel(tableElement.outerHTML, filename);
     };
 
-    if (loading) return <div className="p-8 text-center">جار تحميل البيانات...</div>;
+    if (loading) return <div className="p-8 text-center">{t('det.loadingData')}</div>;
     if (!operation) return null; // Component will unmount soon due to the navigate() in useEffect
 
     return (
@@ -1041,7 +1041,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                         </div>
                         <h2 className="text-sm md:text-base font-bold text-gray-800 leading-tight">{operation.INT_OPERATION}</h2>
                         <div className="flex gap-4 mt-2 text-[10px] font-medium text-gray-500 uppercase tracking-wider">
-                            <span><i className="bi bi-folder-fill ml-1 text-blue-400"></i>الصنف: {categorie?.INT_CATEGORIE}</span>
+                            <span><i className="bi bi-folder-fill ml-1 text-blue-400"></i>{t('det.categoryLabel')} {categorie?.INT_CATEGORIE}</span>
                         </div>
                     </div>
                 </div>
@@ -1049,12 +1049,12 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                 {/* Navigation Tabs */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-1 flex space-x-1 space-x-reverse overflow-x-auto no-scrollbar">
                     {[
-                        { id: 'OVERVIEW', label: 'نظرة عامة', icon: 'bi-grid-1x2' },
-                        { id: 'STRUCTURE', label: 'الهيكلة', icon: 'bi-diagram-3' },
-                        { id: 'LOTS', label: 'الحصص', icon: 'bi-layers' },
-                        { id: 'ENGAGEMENTS', label: 'الإلتزامات', icon: 'bi-pen' },
-                        { id: 'PAIEMENTS', label: 'الدفعات', icon: 'bi-cash-stack' },
-                        { id: 'BORDEREAUX', label: 'جداول الإرسال', icon: 'bi-send' },
+                        { id: 'OVERVIEW', label: t('det.tabOverview'), icon: 'bi-grid-1x2' },
+                        { id: 'STRUCTURE', label: t('det.tabStructure'), icon: 'bi-diagram-3' },
+                        { id: 'LOTS', label: t('det.tabLots'), icon: 'bi-layers' },
+                        { id: 'ENGAGEMENTS', label: t('det.tabEngagements'), icon: 'bi-pen' },
+                        { id: 'PAIEMENTS', label: t('det.tabPayments'), icon: 'bi-cash-stack' },
+                        { id: 'BORDEREAUX', label: t('det.tabBordereaux'), icon: 'bi-send' },
                     ].map((tab) => (
                         <button
                             key={tab.id}
@@ -1076,10 +1076,10 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
             {activeTab === 'OVERVIEW' && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <Card title="رخصة الإلتزام" value={formatCurrency(totalAE)} icon="bi-journal-check" color="bg-blue-600" isLargeValue />
-                        <Card title="مجموع الإلتزامات" value={formatCurrency(totalEngagedTotal)} icon="bi-pen" color="bg-amber-600" isLargeValue />
-                        <Card title="مجموع اعتمادات الدفع" value={formatCurrency(totalCP)} icon="bi-calendar-check" color="bg-indigo-600" isLargeValue />
-                        <Card title="مجموع الدفعات" value={formatCurrency(totalPaidTotal)} icon="bi-cash-coin" color="bg-emerald-600" isLargeValue />
+                        <Card title={t('det.cardAE')} value={formatCurrency(totalAE)} icon="bi-journal-check" color="bg-blue-600" isLargeValue />
+                        <Card title={t('det.cardTotalEng')} value={formatCurrency(totalEngagedTotal)} icon="bi-pen" color="bg-amber-600" isLargeValue />
+                        <Card title={t('det.cardTotalCP')} value={formatCurrency(totalCP)} icon="bi-calendar-check" color="bg-indigo-600" isLargeValue />
+                        <Card title={t('det.cardTotalPay')} value={formatCurrency(totalPaidTotal)} icon="bi-cash-coin" color="bg-emerald-600" isLargeValue />
                     </div>
                     
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -1087,12 +1087,12 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                             <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
                                 <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
                                     <i className="bi bi-activity text-blue-500"></i>
-                                    مؤشرات الإستهلاك الإجمالية
+                                    {t('det.indicatorsConsumption')}
                                 </h3>
                                 <div className="space-y-6">
                                     <div>
                                         <div className="flex justify-between items-end mb-2">
-                                            <span className="text-xs font-bold text-gray-600">إستهلاك رخصة الإلتزام (AE)</span>
+                                            <span className="text-xs font-bold text-gray-600">{t('det.consumptionAE')}</span>
                                             <span className="text-sm font-black text-blue-600">
                                                 {totalAE > 0 ? ((totalEngagedTotal / totalAE) * 100).toFixed(1) : '0.0'}%
                                             </span>
@@ -1101,14 +1101,14 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                                             <div className="bg-blue-600 h-full rounded-full transition-all duration-1000 shadow-lg shadow-blue-200" style={{ width: `${Math.min(100, (totalEngagedTotal / (totalAE || 1)) * 100)}%` }}></div>
                                         </div>
                                         <div className="flex justify-between mt-1 text-[10px] text-gray-400 font-bold">
-                                            <span>إجمالي الإلتزامات: {formatCurrency(totalEngagedTotal)}</span>
-                                            <span>رخصة AE المتبقية: {formatCurrency(remainingAE)}</span>
+                                            <span>{t('det.totalEngColon', { amount: formatCurrency(totalEngagedTotal) })}</span>
+                                            <span>{t('det.remainingAEColon', { remaining: formatCurrency(remainingAE) })}</span>
                                         </div>
                                     </div>
 
                                     <div>
                                         <div className="flex justify-between items-end mb-2">
-                                            <span className="text-xs font-bold text-gray-600">إستهلاك إعتمادات الدفع الكلية (CP)</span>
+                                            <span className="text-xs font-bold text-gray-600">{t('det.consumptionCP')}</span>
                                             <span className="text-sm font-black text-emerald-600">
                                                 {totalCP > 0 ? ((totalPaidTotal / totalCP) * 100).toFixed(1) : '0.0'}%
                                             </span>
@@ -1117,8 +1117,8 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                                             <div className="bg-emerald-600 h-full rounded-full transition-all duration-1000 shadow-lg shadow-emerald-200" style={{ width: `${Math.min(100, (totalPaidTotal / (totalCP || 1)) * 100)}%` }}></div>
                                         </div>
                                         <div className="flex justify-between mt-1 text-[10px] text-gray-400 font-bold">
-                                            <span>إجمالي المدفوعات: {formatCurrency(totalPaidTotal)}</span>
-                                            <span>إعتمادات CP المتبقية: {formatCurrency(totalCP - totalPaidTotal)}</span>
+                                            <span>{t('det.totalPaidColon', { amount: formatCurrency(totalPaidTotal) })}</span>
+                                            <span>{t('det.remainingCPColon', { remaining: formatCurrency(totalCP - totalPaidTotal) })}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -1129,25 +1129,25 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                             <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-200 h-full">
                                 <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
                                     <i className="bi bi-calendar3 text-indigo-500"></i>
-                                    مؤشرات السنة المالية {selectedPaymentYear}
+                                    {t('det.yearIndicators', { year: selectedPaymentYear })}
                                 </h3>
                                 <div className="space-y-2">
                                     <div className="p-1 bg-gray-50 rounded-lg border border-gray-100">
-                                        <p className="text-[10px] text-gray-500 font-bold uppercase mb-1">إعتماد الدفع (CP) للسنة</p>
+                                        <p className="text-[10px] text-gray-500 font-bold uppercase mb-1">{t('det.CPForYear')}</p>
                                         <p className="text-lg font-black text-indigo-700">{formatCurrency(cpYearAmount)}</p>
                                     </div>
                                     <div className="p-1 bg-emerald-50 rounded-lg border border-emerald-100">
-                                        <p className="text-[10px] text-emerald-600 font-bold uppercase mb-1">مدفوعات السنة</p>
+                                        <p className="text-[10px] text-emerald-600 font-bold uppercase mb-1">{t('det.paidForYear')}</p>
                                         <p className="text-lg font-black text-emerald-700">{formatCurrency(paidYearAmount)}</p>
                                     </div>
                                     <div className={`p-1 rounded-lg border ${remainingCpYear < 0 ? 'bg-rose-50 border-rose-100 text-rose-700' : 'bg-blue-50 border-blue-100 text-blue-700'}`}>
-                                        <p className="text-[10px] font-bold uppercase mb-1">الرصيد المتبقي (CP) للسنة</p>
+                                        <p className="text-[10px] font-bold uppercase mb-1">{t('det.remainingCPForYear')}</p>
                                         <p className="text-lg font-black">{formatCurrency(remainingCpYear)}</p>
                                     </div>
                                     
                                     <div className="pt-1">
                                          <div className="flex justify-between items-end mb-1">
-                                            <span className="text-[10px] font-bold text-gray-400">كفاءة استغلال CP السنة</span>
+                                            <span className="text-[10px] font-bold text-gray-400">{t('det.CPefficiency')}</span>
                                             <span className="text-xs font-black text-indigo-600">
                                                 {cpYearAmount > 0 ? ((paidYearAmount / cpYearAmount) * 100).toFixed(1) : '0.0'}%
                                             </span>
@@ -1170,11 +1170,11 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                         <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                             <h3 className="font-bold text-gray-800 flex items-center gap-2">
                                 <i className="bi bi-calendar-check text-blue-500"></i>
-                                اعتمادات الدفع (CP)
+                                {t('det.cpTitle')}
                             </h3>
                             {!isViewer && (
                                 <button onClick={() => handlePermissionCheck(() => setModalState({ type: 'CP', timestamp: Date.now() }))} className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-[10px] font-bold shadow-sm">
-                                    <i className="bi bi-plus-lg ml-1"></i> إضافة CP
+                                    <i className="bi bi-plus-lg ml-1"></i> {t('det.addCP')}
                                 </button>
                             )}
                         </div>
@@ -1182,10 +1182,10 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                             <table className="w-full text-right" id="table-cp">
                                 <thead className="bg-gray-50 text-gray-500 text-[10px] uppercase font-bold tracking-wider">
                                     <tr>
-                                        <th className="px-4 py-3 border-b">السنة</th>
-                                        <th className="px-4 py-3 border-b">المبلغ الأولي</th>
-                                        <th className="px-4 py-3 border-b">المبلغ النهائي</th>
-                                        {!isViewer && <th className="px-4 py-3 border-b text-center">إجراءات</th>}
+                                        <th className="px-4 py-3 border-b">{t('det.colYear')}</th>
+                                        <th className="px-4 py-3 border-b">{t('det.colInitialAmount')}</th>
+                                        <th className="px-4 py-3 border-b">{t('det.colFinalAmount')}</th>
+                                        {!isViewer && <th className="px-4 py-3 border-b text-center">{t('det.colActions')}</th>}
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
@@ -1198,7 +1198,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                                                 <td className="px-4 py-3">
                                                     <div className="flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                         <button onClick={() => handlePermissionCheck(() => setModalState({ type: 'CP', data: cp, timestamp: Date.now() }))} className="p-1 text-amber-500 hover:bg-amber-50 rounded"><i className="bi bi-pencil-square"></i></button>
-                                                        <button onClick={() => handleDelete('T_CP', cp.ID_CP, 'حذف CP؟')} className="p-1 text-rose-500 hover:bg-rose-50 rounded"><i className="bi bi-trash3"></i></button>
+                                                        <button onClick={() => handleDelete('T_CP', cp.ID_CP, t('det.deleteCP'))} className="p-1 text-rose-500 hover:bg-rose-50 rounded"><i className="bi bi-trash3"></i></button>
                                                     </div>
                                                 </td>
                                             )}
@@ -1207,7 +1207,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                                 </tbody>
                                 <tfoot className="bg-gray-900 text-white font-bold text-xs">
                                     <tr>
-                                        <td className="px-4 py-3">المجموع</td>
+                                        <td className="px-4 py-3">{t('det.total')}</td>
                                         <td className="px-4 py-3">{formatCurrency(totalCpInitial)}</td>
                                         <td className="px-4 py-3 text-emerald-400">{formatCurrency(totalCpFinal)}</td>
                                         {!isViewer && <td></td>}
@@ -1222,11 +1222,11 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                         <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                             <h3 className="font-bold text-gray-800 flex items-center gap-2">
                                 <i className="bi bi-collection text-indigo-500"></i>
-                                هيكلة الكلفة (Rubriques)
+                                {t('det.rubriquesTitle')}
                             </h3>
                             {!isViewer && (
                                 <button onClick={() => handlePermissionCheck(() => setModalState({ type: 'RUBRIQUE_OP', timestamp: Date.now() }))} className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-[10px] font-bold shadow-sm">
-                                    <i className="bi bi-plus-lg ml-1"></i> إضافة هيكل
+                                    <i className="bi bi-plus-lg ml-1"></i> {t('det.addStruct')}
                                 </button>
                             )}
                         </div>
@@ -1234,10 +1234,10 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                             <table className="w-full text-right" id="table-rubrique">
                                 <thead className="bg-gray-50 text-gray-500 text-[10px] uppercase font-bold tracking-wider">
                                     <tr>
-                                        <th className="px-4 py-3 border-b">الهيكل</th>
-                                        <th className="px-4 py-3 border-b">المبلغ الأولي</th>
-                                        <th className="px-4 py-3 border-b">المبلغ النهائي</th>
-                                        {!isViewer && <th className="px-4 py-3 border-b text-center">إجراءات</th>}
+                                        <th className="px-4 py-3 border-b">{t('det.colStruct')}</th>
+                                        <th className="px-4 py-3 border-b">{t('det.colInitialAmount')}</th>
+                                        <th className="px-4 py-3 border-b">{t('det.colFinalAmount')}</th>
+                                        {!isViewer && <th className="px-4 py-3 border-b text-center">{t('det.colActions')}</th>}
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
@@ -1250,7 +1250,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                                                 <td className="px-4 py-3">
                                                     <div className="flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                         <button onClick={() => handlePermissionCheck(() => setModalState({ type: 'RUBRIQUE_OP', data: ro, timestamp: Date.now() }))} className="p-1 text-amber-500 hover:bg-amber-50 rounded"><i className="bi bi-pencil-square"></i></button>
-                                                        <button onClick={() => handleDelete('T_RUBRIQUE_OP', ro.ID_RUBRIQUE_OP, 'حذف هيكل؟')} className="p-1 text-rose-500 hover:bg-rose-50 rounded"><i className="bi bi-trash3"></i></button>
+                                                        <button onClick={() => handleDelete('T_RUBRIQUE_OP', ro.ID_RUBRIQUE_OP, t('det.deleteStruct'))} className="p-1 text-rose-500 hover:bg-rose-50 rounded"><i className="bi bi-trash3"></i></button>
                                                     </div>
                                                 </td>
                                             )}
@@ -1259,7 +1259,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                                 </tbody>
                                 <tfoot className="bg-gray-900 text-white font-bold text-xs">
                                     <tr>
-                                        <td className="px-4 py-3">المجموع</td>
+                                        <td className="px-4 py-3">{t('det.total')}</td>
                                         <td className="px-4 py-3"></td>
                                         <td className="px-4 py-3 text-blue-400">{formatCurrency(totalRubriqueAmount)}</td>
                                         {!isViewer && <td></td>}
@@ -1274,11 +1274,11 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                         <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                             <h3 className="font-bold text-gray-800 flex items-center gap-2">
                                 <i className="bi bi-diagram-2 text-purple-500"></i>
-                                الأصناف الفرعية (Sous-catégories)
+                                {t('det.scategoriesTitle')}
                             </h3>
                             {!isViewer && (
                                 <button onClick={() => handlePermissionCheck(() => setModalState({ type: 'SCATEGORIE_OP', timestamp: Date.now() }))} className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-[10px] font-bold shadow-sm">
-                                    <i className="bi bi-plus-lg ml-1"></i> إضافة صنف
+                                    <i className="bi bi-plus-lg ml-1"></i> {t('det.addScat')}
                                 </button>
                             )}
                         </div>
@@ -1286,11 +1286,11 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                             <table className="w-full text-right" id="table-scat">
                                 <thead className="bg-gray-50 text-gray-500 text-[10px] uppercase font-bold tracking-wider">
                                     <tr>
-                                        <th className="px-4 py-3 border-b">الرمز</th>
-                                        <th className="px-4 py-3 border-b">العنوان</th>
-                                        <th className="px-4 py-3 border-b">المبلغ الأولي</th>
-                                        <th className="px-4 py-3 border-b">المبلغ النهائي</th>
-                                        {!isViewer && <th className="px-4 py-3 border-b text-center">إجراءات</th>}
+                                        <th className="px-4 py-3 border-b">{t('det.colCode')}</th>
+                                        <th className="px-4 py-3 border-b">{t('det.colTitle')}</th>
+                                        <th className="px-4 py-3 border-b">{t('det.colInitialAmount')}</th>
+                                        <th className="px-4 py-3 border-b">{t('det.colFinalAmount')}</th>
+                                        {!isViewer && <th className="px-4 py-3 border-b text-center">{t('det.colActions')}</th>}
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
@@ -1306,7 +1306,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                                                     <td className="px-4 py-3">
                                                         <div className="flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                             <button onClick={() => handlePermissionCheck(() => setModalState({ type: 'SCATEGORIE_OP', data: so, timestamp: Date.now() }))} className="p-1 text-amber-500 hover:bg-amber-50 rounded"><i className="bi bi-pencil-square"></i></button>
-                                                            <button onClick={() => handleDelete('T_SCATEGORIE_OP', so.ID_SCATEGORIE_OP, 'حذف صنف فرعي؟')} className="p-1 text-rose-500 hover:bg-rose-50 rounded"><i className="bi bi-trash3"></i></button>
+                                                            <button onClick={() => handleDelete('T_SCATEGORIE_OP', so.ID_SCATEGORIE_OP, t('det.deleteScat'))} className="p-1 text-rose-500 hover:bg-rose-50 rounded"><i className="bi bi-trash3"></i></button>
                                                         </div>
                                                     </td>
                                                 )}
@@ -1316,7 +1316,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                                 </tbody>
                                 <tfoot className="bg-gray-900 text-white font-bold text-xs">
                                     <tr>
-                                        <td colSpan={2} className="px-4 py-3 text-center">المجموع</td>
+                                        <td colSpan={2} className="px-4 py-3 text-center">{t('det.total')}</td>
                                         <td className="px-4 py-3"></td>
                                         <td className="px-4 py-3 text-purple-400">{formatCurrency(totalScatAmount)}</td>
                                         {!isViewer && <td></td>}
@@ -1333,25 +1333,25 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                     <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-center bg-gray-50/50 gap-4">
                         <h3 className="font-bold text-gray-800 flex items-center gap-2">
                             <i className="bi bi-layers text-blue-500"></i>
-                            إدارة حصص العملية (Lots)
+                            {t('det.lotsTitle')}
                         </h3>
                         <div className="flex gap-2 flex-wrap justify-center sm:justify-end">
                             {!isViewer && (
                                 <>
                                     <button onClick={() => handlePermissionCheck(() => setModalState({ type: 'LOT', timestamp: Date.now() }))} className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-[10px] font-bold shadow-sm flex items-center">
-                                        <i className="bi bi-plus-lg ml-1"></i> إضافة حصة
+                                        <i className="bi bi-plus-lg ml-1"></i> {t('det.addLot')}
                                     </button>
                                     <button onClick={() => handleDownloadTemplate('LOTS')} className="px-3 py-1 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-[10px] font-bold flex items-center">
-                                        <i className="bi bi-download ml-1"></i> نموذج
+                                        <i className="bi bi-download ml-1"></i> {t('det.template')}
                                     </button>
                                     <button onClick={() => fileInputLotsRef.current?.click()} className="px-3 py-1 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-[10px] font-bold flex items-center">
-                                        <i className="bi bi-upload ml-1"></i> استيراد
+                                        <i className="bi bi-upload ml-1"></i> {t('det.import')}
                                     </button>
                                     <input type="file" ref={fileInputLotsRef} onChange={handleLotsFileChange} className="hidden" accept=".xlsx, .xls" />
                                 </>
                             )}
                             <button onClick={() => exportTableToExcel('table-lots', `lots_op_${operationId}.xls`)} className="px-3 py-1 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-[10px] font-bold flex items-center">
-                                <i className="bi bi-file-earmark-excel ml-1"></i> تصدير
+                                <i className="bi bi-file-earmark-excel ml-1"></i> {t('det.export')}
                             </button>
                         </div>
                     </div>
@@ -1359,12 +1359,12 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                         <table className="w-full text-right" id="table-lots">
                             <thead className="bg-gray-50 text-gray-500 text-[10px] uppercase font-bold tracking-wider sticky top-0 z-10 box-shadow-sm">
                                 <tr>
-                                    <th className="px-4 py-3 border-b">رقم الحصة</th>
-                                    <th className="px-4 py-3 border-b">عنوان الحصة</th>
-                                    <th className="px-4 py-3 border-b">المبلغ الأولي</th>
-                                    <th className="px-4 py-3 border-b">المبلغ النهائي</th>
-                                    <th className="px-4 py-3 border-b text-center">الحالة</th>
-                                    {!isViewer && <th className="px-4 py-3 border-b text-center">إجراءات</th>}
+                                    <th className="px-4 py-3 border-b">{t('det.colLotNo')}</th>
+                                    <th className="px-4 py-3 border-b">{t('det.colLotTitle')}</th>
+                                    <th className="px-4 py-3 border-b">{t('det.colInitialAmount')}</th>
+                                    <th className="px-4 py-3 border-b">{t('det.colFinalAmount')}</th>
+                                    <th className="px-4 py-3 border-b text-center">{t('det.colStatus')}</th>
+                                    {!isViewer && <th className="px-4 py-3 border-b text-center">{t('det.colActions')}</th>}
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
@@ -1390,14 +1390,14 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                                             }}
                                         >
                                             {lot.ATTRIBUER ? (
-                                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100" title="انقر للتوجه للوثيقة">
+                                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100" title={t('det.gotoDoc')}>
                                                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                                    مسندة
+                                                    {t('det.allocated')}
                                                 </span>
                                             ) : (
                                                 <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-50 text-gray-500 border border-gray-200">
                                                     <span className="w-1.5 h-1.5 rounded-full bg-gray-300"></span>
-                                                    غير مسندة
+                                                    {t('det.unallocated')}
                                                 </span>
                                             )}
                                         </td>
@@ -1405,7 +1405,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                                             <td className="px-4 py-3">
                                                 <div className="flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <button onClick={() => handlePermissionCheck(() => setModalState({ type: 'LOT', data: lot, timestamp: Date.now() }))} className="p-1 text-amber-500 hover:bg-amber-50 rounded"><i className="bi bi-pencil-square"></i></button>
-                                                    <button onClick={() => handleDelete('T_LOT_OPERATION', lot.ID_LOT, 'حذف حصة؟')} className="p-1 text-rose-500 hover:bg-rose-50 rounded"><i className="bi bi-trash3"></i></button>
+                                                    <button onClick={() => handleDelete('T_LOT_OPERATION', lot.ID_LOT, t('det.deleteLot'))} className="p-1 text-rose-500 hover:bg-rose-50 rounded"><i className="bi bi-trash3"></i></button>
                                                 </div>
                                             </td>
                                         )}
@@ -1414,7 +1414,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                             </tbody>
                             <tfoot className="bg-gray-900 text-white font-bold text-xs">
                                 <tr>
-                                    <td colSpan={2} className="px-4 py-3 text-center">المجموع الإجمالي للحصص</td>
+                                    <td colSpan={2} className="px-4 py-3 text-center">{t('det.totalLots')}</td>
                                     <td className="px-4 py-3">{formatCurrency(totalLotInitial)}</td>
                                     <td className="px-4 py-3 text-blue-400">{formatCurrency(totalLotFinal)}</td>
                                     <td colSpan={isViewer ? 1 : 2}></td>
@@ -1431,54 +1431,54 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                         <div className="flex justify-between items-center">
                             <h3 className="font-bold text-gray-800 flex items-center gap-2">
                                 <i className="bi bi-pen text-blue-500"></i>
-                                سجل الإلتزامات المالية
+                                {t('det.engTitle')}
                             </h3>
                             <div className="flex gap-2">
                                 {!isViewer && (
                                     <>
                                         <button onClick={() => handlePermissionCheck(() => setModalState({ type: 'ENGAGEMENT', timestamp: Date.now() }))} className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-[10px] font-bold shadow-sm flex items-center">
-                                            <i className="bi bi-plus-lg ml-1"></i> إضافة إلتزام
+                                            <i className="bi bi-plus-lg ml-1"></i> {t('det.addEng')}
                                         </button>
                                         <button onClick={() => fileInputEngagementsRef.current?.click()} className="px-3 py-1 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-[10px] font-bold flex items-center">
-                                            <i className="bi bi-upload ml-1"></i> استيراد
+                                            <i className="bi bi-upload ml-1"></i> {t('det.import')}
                                         </button>
                                         <input type="file" ref={fileInputEngagementsRef} onChange={handleEngagementsFileChange} className="hidden" accept=".xlsx, .xls" />
                                     </>
                                 )}
                                 <button onClick={() => exportTableToExcel('table-eng', 'engagements.xls')} className="px-3 py-1 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-[10px] font-bold flex items-center">
-                                    <i className="bi bi-file-earmark-excel ml-1"></i> تصدير
+                                    <i className="bi bi-file-earmark-excel ml-1"></i> {t('det.export')}
                                 </button>
                             </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">السنة المالية</label>
+                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">{t('det.filterYear')}</label>
                                 <CustomDropdown
-                                    options={[{ value: '', label: 'كل السنوات' }, ...engYears.map(y => ({ value: y, label: y }))]}
+                                    options={[{ value: '', label: t('det.allYears') }, ...engYears.map(y => ({ value: y, label: y }))]}
                                     value={selectedEngYear}
                                     onChange={setSelectedEngYear}
-                                    placeholder="تصفية حسب السنة"
+                                    placeholder={t('det.placeholderYear')}
                                     className="bg-white"
                                 />
                             </div>
                             <div>
-                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">اسم المستفيد</label>
+                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">{t('det.filterBeneficiary')}</label>
                                 <CustomDropdown
-                                    options={[{ value: '', label: 'كل المستفيدين' }, ...engBeneficiaries.map(b => ({ value: b.ID_BENEFICIAIRE, label: b.BENEFICIAIRE }))]}
+                                    options={[{ value: '', label: t('det.allBeneficiaries') }, ...engBeneficiaries.map(b => ({ value: b.ID_BENEFICIAIRE, label: b.BENEFICIAIRE }))]}
                                     value={selectedEngBeneficiaryId}
                                     onChange={setSelectedEngBeneficiaryId}
-                                    placeholder="تصفية حسب المستفيد"
+                                    placeholder={t('det.placeholderBeneficiary')}
                                     className="bg-white"
                                 />
                             </div>
                             <div>
-                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">موضوع الإلتزام</label>
+                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">{t('det.filterSubject')}</label>
                                 <CustomDropdown
-                                    options={[{ value: '', label: 'كل المواضيع' }, ...engObjects.map(o => ({ value: o, label: o }))]}
+                                    options={[{ value: '', label: t('det.allSubjects') }, ...engObjects.map(o => ({ value: o, label: o }))]}
                                     value={selectedEngObject}
                                     onChange={setSelectedEngObject}
-                                    placeholder="البحث في المواضيع"
+                                    placeholder={t('det.placeholderSubject')}
                                     className="bg-white"
                                 />
                             </div>
@@ -1489,14 +1489,14 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                         <table className="w-full text-right" id="table-eng">
                             <thead className="bg-gray-50 text-gray-500 text-[10px] uppercase font-bold tracking-wider sticky top-0 z-10 box-shadow-sm">
                                 <tr>
-                                    <th className="px-4 py-3 border-b">رقم / سنة</th>
-                                    <th className="px-4 py-3 border-b">التاريخ</th>
-                                    <th className="px-4 py-3 border-b">الطبيعة</th>
-                                    <th className="px-4 py-3 border-b w-1/4">الموضوع</th>
-                                    <th className="px-4 py-3 border-b">المستفيد</th>
-                                    <th className="px-4 py-3 border-b">المبلغ</th>
-                                    <th className="px-4 py-3 border-b">التأشيرة</th>
-                                    <th className="px-4 py-3 border-b text-center">إجراءات</th>
+                                    <th className="px-4 py-3 border-b">{t('det.colNumYear')}</th>
+                                    <th className="px-4 py-3 border-b">{t('det.colDate')}</th>
+                                    <th className="px-4 py-3 border-b">{t('det.colNature')}</th>
+                                    <th className="px-4 py-3 border-b w-1/4">{t('det.colSubject')}</th>
+                                    <th className="px-4 py-3 border-b">{t('det.colBeneficiary')}</th>
+                                    <th className="px-4 py-3 border-b">{t('det.colAmount')}</th>
+                                    <th className="px-4 py-3 border-b">{t('det.colVisa')}</th>
+                                    <th className="px-4 py-3 border-b text-center">{t('det.colActions')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
@@ -1538,7 +1538,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                                                             navigate('DOCUMENTS', operationId, eng.ID_PIECE.toString() + ':blue'); 
                                                         }}
                                                         className="h-6 w-6 flex items-center justify-center text-blue-500 hover:bg-blue-50 rounded-full opacity-0 group-hover/subj:opacity-100 transition-opacity"
-                                                        title="انتقل إلى الوثيقة"
+                                                        title={t('det.goToDoc')}
                                                     >
                                                         <i className="bi bi-box-arrow-up-right text-[10px]"></i>
                                                     </button>
@@ -1556,7 +1556,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                                                     </div>
                                                 ) : (
                                                     <span className="text-rose-500 text-[10px] font-bold flex items-center gap-1">
-                                                        <i className="bi bi-hourglass-split"></i> قيد التأشير
+                                                        <i className="bi bi-hourglass-split"></i> {t('det.pendingVisa')}
                                                     </span>
                                                 )}
                                             </td>
@@ -1564,11 +1564,11 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                                                 <div className="flex justify-center gap-2">
                                                     {!isViewer && (
                                                         <>
-                                                            <button onClick={() => handlePermissionCheck(() => setModalState({ type: 'ENGAGEMENT', data: eng, timestamp: Date.now() }))} className="p-1 text-amber-500 hover:bg-amber-50 rounded" title="تعديل"><i className="bi bi-pencil-square"></i></button>
-                                                            <button onClick={() => handleDelete('T_ENGAGEMENT', eng.ID_ENGAGEMENT, 'حذف التزام؟')} className="p-1 text-rose-500 hover:bg-rose-50 rounded" title="حذف"><i className="bi bi-trash3"></i></button>
+                                                            <button onClick={() => handlePermissionCheck(() => setModalState({ type: 'ENGAGEMENT', data: eng, timestamp: Date.now() }))} className="p-1 text-amber-500 hover:bg-amber-50 rounded" title={t('det.edit')}><i className="bi bi-pencil-square"></i></button>
+                                                            <button onClick={() => handleDelete('T_ENGAGEMENT', eng.ID_ENGAGEMENT, t('det.deleteEng'))} className="p-1 text-rose-500 hover:bg-rose-50 rounded" title={t('det.delete')}><i className="bi bi-trash3"></i></button>
                                                         </>
                                                     )}
-                                                    <button onClick={(e) => { e.stopPropagation(); handlePrintNavigate('PRINT_ENGAGEMENT', eng.ID_ENGAGEMENT, `بطاقة التزام رقم ${eng.N_ENG}`); }} className="p-1 text-gray-600 hover:bg-gray-100 rounded" title="طباعة">
+                                                    <button onClick={(e) => { e.stopPropagation(); handlePrintNavigate('PRINT_ENGAGEMENT', eng.ID_ENGAGEMENT, t('det.printEngCard', { num: eng.N_ENG })); }} className="p-1 text-gray-600 hover:bg-gray-100 rounded" title={t('det.print')}>
                                                         <i className="bi bi-printer"></i>
                                                     </button>
                                                 </div>
@@ -1580,7 +1580,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                         </table>
                     </div>
                     <div className="p-4 bg-gray-900 text-white font-bold text-xs flex justify-between items-center">
-                        <span className="text-gray-400">إجمالي الالتزامات المعروضة:</span>
+                        <span className="text-gray-400">{t('det.totalEngDisplayed')}</span>
                         <span className="text-blue-400 text-sm tracking-wide ltr">{formatCurrency(totalEngAmount)}</span>
                     </div>
                 </div>
@@ -1592,54 +1592,54 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                         <div className="flex justify-between items-center">
                             <h3 className="font-bold text-gray-800 flex items-center gap-2">
                                 <i className="bi bi-wallet2 text-emerald-500"></i>
-                                سجل المدفوعات (Paiements)
+                                {t('det.payTitle')}
                             </h3>
                             <div className="flex gap-2">
                                 {!isViewer && (
                                     <>
                                         <button onClick={() => handlePermissionCheck(() => setModalState({ type: 'PAIEMENT', timestamp: Date.now() }))} className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-[10px] font-bold shadow-sm flex items-center">
-                                            <i className="bi bi-plus-lg ml-1"></i> إضافة دفع
+                                            <i className="bi bi-plus-lg ml-1"></i> {t('det.addPay')}
                                         </button>
                                         <button onClick={() => fileInputPaiementsRef.current?.click()} className="px-3 py-1 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-[10px] font-bold flex items-center">
-                                            <i className="bi bi-upload ml-1"></i> استيراد
+                                            <i className="bi bi-upload ml-1"></i> {t('det.import')}
                                         </button>
                                         <input type="file" ref={fileInputPaiementsRef} onChange={handlePaiementsFileChange} className="hidden" accept=".xlsx, .xls" />
                                     </>
                                 )}
                                 <button onClick={() => exportTableToExcel('table-pai', 'paiements.xls')} className="px-3 py-1 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-[10px] font-bold flex items-center">
-                                    <i className="bi bi-file-earmark-excel ml-1"></i> تصدير
+                                    <i className="bi bi-file-earmark-excel ml-1"></i> {t('det.export')}
                                 </button>
                             </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">السنة المالية</label>
+                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">{t('det.filterYear')}</label>
                                 <CustomDropdown
-                                    options={[{ value: '', label: 'كل السنوات' }, ...paiYears.map(y => ({ value: y, label: y }))]}
+                                    options={[{ value: '', label: t('det.allYears') }, ...paiYears.map(y => ({ value: y, label: y }))]}
                                     value={selectedPaiYear}
                                     onChange={setSelectedPaiYear}
-                                    placeholder="تصفية حسب السنة"
+                                    placeholder={t('det.placeholderYear')}
                                     className="bg-white"
                                 />
                             </div>
                             <div>
-                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">اسم المستفيد</label>
+                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">{t('det.filterBeneficiary')}</label>
                                 <CustomDropdown
-                                    options={[{ value: '', label: 'كل المستفيدين' }, ...paiBeneficiaries.map(b => ({ value: b.ID_BENEFICIAIRE, label: b.BENEFICIAIRE }))]}
+                                    options={[{ value: '', label: t('det.allBeneficiaries') }, ...paiBeneficiaries.map(b => ({ value: b.ID_BENEFICIAIRE, label: b.BENEFICIAIRE }))]}
                                     value={selectedPaiBeneficiaryId}
                                     onChange={setSelectedPaiBeneficiaryId}
-                                    placeholder="تصفية حسب المستفيد"
+                                    placeholder={t('det.placeholderBeneficiary')}
                                     className="bg-white"
                                 />
                             </div>
                             <div>
-                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">موضوع الدفع</label>
+                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">{t('det.filterSubjectPay')}</label>
                                 <CustomDropdown
-                                    options={[{ value: '', label: 'كل المواضيع' }, ...paiObjects.map(o => ({ value: o, label: o }))]}
+                                    options={[{ value: '', label: t('det.allSubjects') }, ...paiObjects.map(o => ({ value: o, label: o }))]}
                                     value={selectedPaiObject}
                                     onChange={setSelectedPaiObject}
-                                    placeholder="البحث في المواضيع"
+                                    placeholder={t('det.placeholderSubject')}
                                     className="bg-white"
                                 />
                             </div>
@@ -1650,13 +1650,13 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                         <table className="w-full text-right" id="table-pai">
                             <thead className="bg-gray-50 text-gray-500 text-[10px] uppercase font-bold tracking-wider sticky top-0 z-10 box-shadow-sm">
                                 <tr>
-                                    <th className="px-4 py-3 border-b">رقم / سنة</th>
-                                    <th className="px-4 py-3 border-b">التاريخ</th>
-                                    <th className="px-4 py-3 border-b w-1/4">الموضوع</th>
-                                    <th className="px-4 py-3 border-b">المستفيد</th>
-                                    <th className="px-4 py-3 border-b">المبلغ</th>
-                                    <th className="px-4 py-3 border-b">بيانات الحوالة</th>
-                                    <th className="px-4 py-3 border-b text-center">إجراءات</th>
+                                    <th className="px-4 py-3 border-b">{t('det.colNumYear')}</th>
+                                    <th className="px-4 py-3 border-b">{t('det.colDate')}</th>
+                                    <th className="px-4 py-3 border-b w-1/4">{t('det.colSubject')}</th>
+                                    <th className="px-4 py-3 border-b">{t('det.colBeneficiary')}</th>
+                                    <th className="px-4 py-3 border-b">{t('det.colAmount')}</th>
+                                    <th className="px-4 py-3 border-b">{t('det.colMandatData')}</th>
+                                    <th className="px-4 py-3 border-b text-center">{t('det.colActions')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
@@ -1682,7 +1682,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                                                             navigate('DOCUMENTS', operationId, pai.ID_PIECE.toString() + ':blue'); 
                                                         }}
                                                         className="h-6 w-6 flex items-center justify-center text-blue-500 hover:bg-blue-50 rounded-full opacity-0 group-hover/subj:opacity-100 transition-opacity"
-                                                        title="انتقل إلى الوثيقة"
+                                                        title={t('det.goToDoc')}
                                                     >
                                                         <i className="bi bi-box-arrow-up-right text-[10px]"></i>
                                                     </button>
@@ -1699,7 +1699,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                                                         <span className="text-[9px] text-blue-600/70 font-bold" dir="ltr">{normalizeDate(pai.DATE_MANDAT)}</span>
                                                         {pai.DATE_ADMIS && (
                                                             <span className="text-[9px] text-emerald-600 font-bold mt-0.5 flex items-center gap-1">
-                                                                <i className="bi bi-check-circle-fill"></i> مقبول {normalizeDate(pai.DATE_ADMIS)}
+                                                                <i className="bi bi-check-circle-fill"></i> {t('det.acceptedOn', { date: normalizeDate(pai.DATE_ADMIS) })}
                                                             </span>
                                                         )}
                                                     </div>
@@ -1711,11 +1711,11 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                                                 <div className="flex justify-center gap-2">
                                                     {!isViewer && (
                                                         <>
-                                                            <button onClick={() => handlePermissionCheck(() => setModalState({ type: 'PAIEMENT', data: pai, timestamp: Date.now() }))} className="p-1 text-amber-500 hover:bg-amber-50 rounded" title="تعديل"><i className="bi bi-pencil-square"></i></button>
-                                                            <button onClick={() => handleDelete('T_PAIEMENT', pai.ID_PAIEMENT, 'حذف دفع؟')} className="p-1 text-rose-500 hover:bg-rose-50 rounded" title="حذف"><i className="bi bi-trash3"></i></button>
+                                                            <button onClick={() => handlePermissionCheck(() => setModalState({ type: 'PAIEMENT', data: pai, timestamp: Date.now() }))} className="p-1 text-amber-500 hover:bg-amber-50 rounded" title={t('det.edit')}><i className="bi bi-pencil-square"></i></button>
+                                                            <button onClick={() => handleDelete('T_PAIEMENT', pai.ID_PAIEMENT, t('det.deletePay'))} className="p-1 text-rose-500 hover:bg-rose-50 rounded" title={t('det.delete')}><i className="bi bi-trash3"></i></button>
                                                         </>
                                                     )}
-                                                    <button onClick={(e) => handlePrintClick(e, pai.ID_PAIEMENT)} className="p-1 text-gray-600 hover:bg-gray-100 rounded" title="طباعة">
+                                                    <button onClick={(e) => handlePrintClick(e, pai.ID_PAIEMENT)} className="p-1 text-gray-600 hover:bg-gray-100 rounded" title={t('det.print')}>
                                                         <i className="bi bi-printer"></i>
                                                     </button>
                                                 </div>
@@ -1727,7 +1727,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                         </table>
                     </div>
                     <div className="p-4 bg-gray-900 text-white font-bold text-xs flex justify-between items-center">
-                        <span className="text-gray-400">إجمالي المدفوعات المعروضة:</span>
+                        <span className="text-gray-400">{t('det.totalPayDisplayed')}</span>
                         <span className="text-emerald-400 text-sm tracking-wide ltr">{formatCurrency(totalPaiAmount)}</span>
                     </div>
                 </div>
@@ -1738,14 +1738,14 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                     <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                         <h3 className="font-bold text-gray-800 flex items-center gap-2">
                             <i className="bi bi-send-check text-blue-500"></i>
-                            جداول الإرسال (Bordereaux)
+                            {t('det.borTitle')}
                         </h3>
                         {!isViewer && (
                             <button 
                                 onClick={() => handlePermissionCheck(() => setModalState({ type: 'BORDEREAU', timestamp: Date.now() }))}
                                 className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-[10px] font-bold shadow-sm"
                             >
-                                <i className="bi bi-plus-lg ml-1"></i> إضافة جدول إرسال
+                                <i className="bi bi-plus-lg ml-1"></i> {t('det.addBor')}
                             </button>
                         )}
                     </div>
@@ -1753,18 +1753,18 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                         <table className="w-full text-right" id="table-bordereaux">
                             <thead className="bg-gray-50 text-gray-500 text-[10px] uppercase font-bold tracking-wider">
                                 <tr>
-                                    <th className="px-4 py-3 border-b">رقم جدول الإرسال</th>
-                                    <th className="px-4 py-3 border-b">السنة</th>
-                                    <th className="px-4 py-3 border-b">التاريخ</th>
-                                    <th className="px-4 py-3 border-b">المرسل إليه</th>
-                                    <th className="px-4 py-3 border-b">الوثائق المرفقة</th>
-                                    <th className="px-4 py-3 border-b text-center">إجراءات</th>
+                                    <th className="px-4 py-3 border-b">{t('det.colBorNo')}</th>
+                                    <th className="px-4 py-3 border-b">{t('det.colYear')}</th>
+                                    <th className="px-4 py-3 border-b">{t('det.colDate')}</th>
+                                    <th className="px-4 py-3 border-b">{t('det.colRecipient')}</th>
+                                    <th className="px-4 py-3 border-b">{t('det.colAttachedDocs')}</th>
+                                    <th className="px-4 py-3 border-b text-center">{t('det.colActions')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
                                 {bordereaux.length === 0 ? (
                                     <tr>
-                                        <td colSpan={6} className="px-4 py-8 text-center text-gray-400 italic text-xs">لا توجد جداول إرسال مسجلة لهذه العملية.</td>
+                                        <td colSpan={6} className="px-4 py-8 text-center text-gray-400 italic text-xs">{t('det.noBordereaux')}</td>
                                     </tr>
                                 ) : (
                                     bordereaux.map((bor) => {
@@ -1786,12 +1786,12 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                                                 <td className="px-4 py-3 text-[11px] font-bold text-gray-700">{bor.DESTINATAIRE}</td>
                                                 <td className="px-4 py-3 text-[11px] text-gray-700">
                                                     {docsList.length === 0 ? (
-                                                        <span className="text-gray-400 italic">-- بدون وثائق --</span>
+                                                        <span className="text-gray-400 italic">{t('det.noDocsPlaceholder')}</span>
                                                     ) : (
                                                         <div className="flex flex-col gap-1.5 max-w-[340px] max-h-[140px] overflow-y-auto text-right font-medium">
                                                             {docsList.map((doc, idx) => (
                                                                 <div key={idx} className="bg-sky-50/65 border border-sky-100 rounded px-2.5 py-1 text-gray-800 leading-relaxed shadow-sm">
-                                                                    <span className="font-bold text-blue-700 block text-[10px] mb-0.5">بطاقة: {doc.n_eng}/{doc.annee}</span>
+                                                                    <span className="font-bold text-blue-700 block text-[10px] mb-0.5">{t('det.cardLabel', { num: doc.n_eng, year: doc.annee })}</span>
                                                                     <span className="text-[10px] text-gray-700 break-words">{doc.pieceStr}</span>
                                                                 </div>
                                                             ))}
@@ -1801,9 +1801,9 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                                                 <td className="px-4 py-3">
                                                     <div className="flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                         <button 
-                                                            onClick={() => handlePrintNavigate('PRINT_BORDEREAU', bor.ID_BORDEREAU, 'جدول إرسال')}
+                                                            onClick={() => handlePrintNavigate('PRINT_BORDEREAU', bor.ID_BORDEREAU, t('det.printBordereau'))}
                                                             className="p-1 text-gray-600 hover:bg-gray-100 rounded"
-                                                            title="طباعة"
+                                                            title={t('det.print')}
                                                         >
                                                             <i className="bi bi-printer"></i>
                                                         </button>
@@ -1812,14 +1812,14 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                                                                 <button 
                                                                     onClick={() => handlePermissionCheck(() => setModalState({ type: 'BORDEREAU', data: bor, timestamp: Date.now() }))}
                                                                     className="p-1 text-amber-500 hover:bg-amber-50 rounded"
-                                                                    title="تعديل"
+                                                                    title={t('det.edit')}
                                                                 >
                                                                     <i className="bi bi-pencil-square"></i>
                                                                 </button>
                                                                 <button 
                                                                     onClick={() => handleDeleteBordereau(bor.ID_BORDEREAU)}
                                                                     className="p-1 text-rose-500 hover:bg-rose-50 rounded"
-                                                                    title="حذف"
+                                                                    title={t('det.delete')}
                                                                 >
                                                                     <i className="bi bi-trash3"></i>
                                                                 </button>
@@ -1842,20 +1842,20 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                     className="fixed bg-white border border-gray-200 shadow-xl rounded-md z-[100] py-1 w-48"
                     style={{ top: printMenu.top, left: printMenu.left }}
                 >
-                    <button onClick={() => handlePrintNavigate('PRINT_PAIEMENT', printMenu.id, 'بطاقة دفع')} className="block w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors">
-                        <i className="bi bi-card-heading ml-2"></i> بطاقة الدفع
+                    <button onClick={() => handlePrintNavigate('PRINT_PAIEMENT', printMenu.id, t('det.printPaymentCard'))} className="block w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors">
+                        <i className="bi bi-card-heading ml-2"></i> {t('det.printPaymentCard')}
                     </button>
-                    <button onClick={() => handlePrintNavigate('PRINT_CERTIFICAT', printMenu.id, 'شهادة دفع')} className="block w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors">
-                        <i className="bi bi-patch-check ml-2"></i> شهادة الدفع
+                    <button onClick={() => handlePrintNavigate('PRINT_CERTIFICAT', printMenu.id, t('det.printCertificate'))} className="block w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors">
+                        <i className="bi bi-patch-check ml-2"></i> {t('det.printCertificate')}
                     </button>
-                    <button onClick={() => handlePrintNavigate('PRINT_MANDAT', printMenu.id, 'حوالة دفع')} className="block w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors">
-                        <i className="bi bi-file-text ml-2"></i> حوالة الدفع
+                    <button onClick={() => handlePrintNavigate('PRINT_MANDAT', printMenu.id, t('det.printMandate'))} className="block w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors">
+                        <i className="bi bi-file-text ml-2"></i> {t('det.printMandate')}
                     </button>
-                    <button onClick={() => handlePrintNavigate('PRINT_DECLARATION', printMenu.id, 'إعلان دفع')} className="block w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors">
-                        <i className="bi bi-megaphone ml-2"></i> إعلان بالدفع
+                    <button onClick={() => handlePrintNavigate('PRINT_DECLARATION', printMenu.id, t('det.printDeclaration'))} className="block w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors">
+                        <i className="bi bi-megaphone ml-2"></i> {t('det.printDeclaration')}
                     </button>
-                    <button onClick={() => handlePrintNavigate('PRINT_MANDAT_TABLE', printMenu.id, 'جدول حوالة')} className="block w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors">
-                        <i className="bi bi-table ml-2"></i> جدول الحوالة
+                    <button onClick={() => handlePrintNavigate('PRINT_MANDAT_TABLE', printMenu.id, t('det.printMandateTable'))} className="block w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors">
+                        <i className="bi bi-table ml-2"></i> {t('det.printMandateTable')}
                     </button>
                     {(() => {
                         const selectedPaiement = paiements.find(p => Number(p.ID_PAIEMENT) === Number(printMenu.id));
@@ -1866,14 +1866,14 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                         if (!hasDeduction) return null;
                         return (
                             <>
-                                <button onClick={() => handlePrintNavigate('PRINT_REVENUE_ORDER', printMenu.id, 'أمر بالإيراد')} className="block w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors border-t border-gray-100">
-                                    <i className="bi bi-file-earmark-plus ml-2"></i> أمر بالإيراد (ملحق 01)
+                                <button onClick={() => handlePrintNavigate('PRINT_REVENUE_ORDER', printMenu.id, t('det.printRevenueOrder'))} className="block w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors border-t border-gray-100">
+                                    <i className="bi bi-file-earmark-plus ml-2"></i> {t('det.printRevenueOrder')}
                                 </button>
-                                <button onClick={() => handlePrintNavigate('PRINT_REVENUE_NOTICE', printMenu.id, 'إشعار إصدار أمر بالإيراد')} className="block w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors">
-                                    <i className="bi bi-bell ml-2"></i> إشعار أمر بالإيراد (ملحق 02)
+                                <button onClick={() => handlePrintNavigate('PRINT_REVENUE_NOTICE', printMenu.id, t('det.printRevenueNotice'))} className="block w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors">
+                                    <i className="bi bi-bell ml-2"></i> {t('det.printRevenueNotice')}
                                 </button>
-                                <button onClick={() => handlePrintNavigate('PRINT_REVENUE_TABLE', printMenu.id, 'جدول إرسال أوامر الإيرادات')} className="block w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors">
-                                    <i className="bi bi-table ml-2"></i> جدول أوامر الإيرادات (ملحق 05)
+                                <button onClick={() => handlePrintNavigate('PRINT_REVENUE_TABLE', printMenu.id, t('det.printRevenueTable'))} className="block w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors">
+                                    <i className="bi bi-table ml-2"></i> {t('det.printRevenueTable')}
                                 </button>
                             </>
                         );
@@ -1881,7 +1881,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                 </div>
             )}
 
-            <Modal isOpen={modalState.type === 'CP'} onClose={() => setModalState({ type: null })} title={modalState.data ? "تعديل اعتمادات الدفع" : "إضافة اعتمادات الدفع"}>
+            <Modal isOpen={modalState.type === 'CP'} onClose={() => setModalState({ type: null })} title={modalState.data ? t('det.editCpTitle') : t('det.addCpTitle')}>
                 <AddCpForm 
                     key={modalState.timestamp ? `cp-${modalState.timestamp}` : 'add-cp'}
                     onClose={() => setModalState({ type: null })} 
@@ -1891,7 +1891,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                     selectedYear={selectedPaymentYear}
                 />
             </Modal>
-            <Modal isOpen={modalState.type === 'RUBRIQUE_OP'} onClose={() => setModalState({ type: null })} title={modalState.data ? "تعديل هيكل الكلفة" : "إضافة هيكل الكلفة"}>
+            <Modal isOpen={modalState.type === 'RUBRIQUE_OP'} onClose={() => setModalState({ type: null })} title={modalState.data ? t('det.editRubriqueTitle') : t('det.addRubriqueTitle')}>
                 <AddRubriqueOpForm 
                     key={modalState.timestamp ? `rub-${modalState.timestamp}` : 'add-rub'}
                     onClose={() => setModalState({ type: null })} 
@@ -1901,7 +1901,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                     initialData={modalState.data} 
                 />
             </Modal>
-            <Modal isOpen={modalState.type === 'SCATEGORIE_OP'} onClose={() => setModalState({ type: null })} title={modalState.data ? "تعديل صنف فرعي" : "إضافة صنف فرعي"}>
+            <Modal isOpen={modalState.type === 'SCATEGORIE_OP'} onClose={() => setModalState({ type: null })} title={modalState.data ? t('det.editScatTitle') : t('det.addScatTitle')}>
                 <AddScategorieOpForm 
                     key={modalState.timestamp ? `scat-${modalState.timestamp}` : 'add-scat'}
                     onClose={() => setModalState({ type: null })} 
@@ -1911,7 +1911,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                     initialData={modalState.data} 
                 />
             </Modal>
-            <Modal isOpen={modalState.type === 'LOT'} onClose={() => setModalState({ type: null })} title={modalState.data ? "تعديل حصة" : "إضافة حصة"}>
+            <Modal isOpen={modalState.type === 'LOT'} onClose={() => setModalState({ type: null })} title={modalState.data ? t('det.editLotTitle') : t('det.addLotTitle')}>
                 <AddLotForm 
                     key={modalState.timestamp ? `lot-${modalState.timestamp}` : 'add-lot'}
                     onClose={() => setModalState({ type: null })} 
@@ -1920,7 +1920,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                     initialData={modalState.data} 
                 />
             </Modal>
-            <Modal isOpen={modalState.type === 'ENGAGEMENT'} onClose={() => setModalState({ type: null })} title={modalState.data ? "تعديل التزام" : "إضافة التزام"} maxWidth="2xl">
+            <Modal isOpen={modalState.type === 'ENGAGEMENT'} onClose={() => setModalState({ type: null })} title={modalState.data ? t('det.editEngTitle') : t('det.addEngTitle')} maxWidth="2xl">
                 <AddEngagementForm 
                     key={modalState.timestamp ? `eng-${modalState.timestamp}` : 'add-eng'}
                     onClose={() => setModalState({ type: null })} 
@@ -1934,7 +1934,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                     defaultPieceId={modalState.extraData?.defaultPieceId}
                 />
             </Modal>
-            <Modal isOpen={modalState.type === 'PAIEMENT'} onClose={() => setModalState({ type: null })} title={modalState.data ? "تعديل دفع" : "إضافة دفع"} maxWidth="2xl">
+            <Modal isOpen={modalState.type === 'PAIEMENT'} onClose={() => setModalState({ type: null })} title={modalState.data ? t('det.editPayTitle') : t('det.addPayTitle')} maxWidth="2xl">
                 <AddPaiementForm 
                     key={modalState.timestamp ? `pai-${modalState.timestamp}` : 'add-pai'}
                     onClose={() => setModalState({ type: null })} 
@@ -1949,7 +1949,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                     defaultPieceId={modalState.extraData?.defaultPieceId}
                 />
             </Modal>
-            <Modal isOpen={modalState.type === 'BORDEREAU'} onClose={() => setModalState({ type: null })} title={modalState.data ? "تعديل جدول إرسال" : "إضافة جدول إرسال"}>
+            <Modal isOpen={modalState.type === 'BORDEREAU'} onClose={() => setModalState({ type: null })} title={modalState.data ? t('det.editBorTitle') : t('det.addBorTitle')}>
                 <AddBordereauForm 
                     key={modalState.timestamp ? `bor-${modalState.timestamp}` : 'add-bor'}
                     operationId={operationId}
@@ -1959,8 +1959,8 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
             </Modal>
             <ConfirmActionModal
                 isOpen={!!pendingDelete}
-                title="تأكيد الحذف"
-                message={pendingDelete?.message || 'هل أنت متأكد من الحذف؟'}
+                title={t('det.confirmDeleteTitle')}
+                message={pendingDelete?.message || t('det.confirmDeleteMsg')}
                 onCancel={() => setPendingDelete(null)}
                 onConfirm={confirmPendingDelete}
             />

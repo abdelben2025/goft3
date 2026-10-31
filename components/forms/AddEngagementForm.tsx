@@ -3,6 +3,7 @@ import { Engagement, Piece, RubriqueOp } from '../../types';
 import { normalizeDate, compareDates, getCurrentDate } from '../../utils/dateUtils';
 import { DateInputField } from '../DateInputField';
 import { formatCurrency, parseCurrency, formatAmountInput, formatCurrencyForInput } from '../../utils/currencyUtils';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface AddEngagementFormProps {
     onClose: () => void;
@@ -19,6 +20,7 @@ interface AddEngagementFormProps {
 const natureEngOptions = ["التسجيل", "تفريد", "تغطية مالية", "تغيير هيكلة الكلفة", "التزام", "سحب", "فسخ", "إعادة التقييم", "إنخفاض التقييم", "غلق", "إعادة الترتيب", "إلغاء", "أخرى"];
 
 const AddEngagementForm: React.FC<AddEngagementFormProps> = ({ onClose, onSave, operationId, pieces, rubriqueOps, initialData, allEngagementsForOp, selectedYear, defaultPieceId }) => {
+    const { t } = useLanguage();
     const [nEng, setNEng] = useState('');
     const [annee, setAnnee] = useState(() => initialData ? initialData.ANNEE : selectedYear);
     
@@ -428,9 +430,7 @@ const AddEngagementForm: React.FC<AddEngagementFormProps> = ({ onClose, onSave, 
                 const newTotalForRubrique = totalCurrentlyEngagedInRubrique + montantEng;
 
                 if (newTotalForRubrique > (montantAutorise + 0.01)) { // Added small epsilon for float precision
-                    alert(`لا يمكن إضافة هذا الالتزام لأنه يتجاوز رخصة الالتزام حسب الهيكلة.\n\n` +
-                        `المبلغ المتاح: ${formatCurrency(montantAutorise - totalCurrentlyEngagedInRubrique)}\n` +
-                        `المبلغ المطلوب التزامه: ${formatCurrency(montantEng)}`);
+                    alert(t('engform.exceedsAuth', { available: formatCurrency(montantAutorise - totalCurrentlyEngagedInRubrique), requested: formatCurrency(montantEng) }));
                     return;
                 }
             }
@@ -467,16 +467,16 @@ const AddEngagementForm: React.FC<AddEngagementFormProps> = ({ onClose, onSave, 
     return (
         <form onSubmit={handleSubmit} className="flex flex-col max-h-[85vh]">
             <div className="sticky top-0 bg-white z-10 pb-2 border-b border-gray-200 flex justify-end gap-3 pt-1 mb-2">
-                <button type="button" onClick={onClose} className="px-5 py-1.5 bg-gray-200 text-gray-800 rounded-[20px] hover:bg-gray-300 transition-colors text-sm">إلغاء</button>
+                <button type="button" onClick={onClose} className="px-5 py-1.5 bg-gray-200 text-gray-800 rounded-[20px] hover:bg-gray-300 transition-colors text-sm">{t('btn.cancel')}</button>
                 <button type="submit" disabled={isSubmitting} className="px-5 py-1.5 bg-blue-600 text-white rounded-[20px] hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm">
-                    {isSubmitting ? 'جاري الحفظ...' : (initialData ? 'حفظ التغييرات' : 'إضافة')}
+                    {isSubmitting ? t('engform.saving') : (initialData ? t('engform.saveChanges') : t('btn.add'))}
                 </button>
             </div>
 
             <div className="space-y-3 overflow-y-auto p-1">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 text-right">رقم الإلتزام</label>
+                        <label className="block text-sm font-medium text-gray-700 text-right">{t('engform.engagementNo')}</label>
                         <div className="flex items-center gap-1 mt-1">
                             <input type="text" value={nEng} readOnly className="w-16 h-9 px-1 py-1 text-sm text-center text-gray-700 bg-gray-200 border border-gray-300 rounded-[20px] font-bold" />
                             <span className="text-gray-400">/</span>
@@ -490,7 +490,7 @@ const AddEngagementForm: React.FC<AddEngagementFormProps> = ({ onClose, onSave, 
                         </div>
                     </div>
                     <div>
-                        <label htmlFor="natureEng" className="block text-sm font-medium text-gray-700 text-right">طبيعة الإلتزام</label>
+                        <label htmlFor="natureEng" className="block text-sm font-medium text-gray-700 text-right">{t('engform.nature')}</label>
                         <select 
                             id="natureEng" 
                             value={natureEng} 
@@ -510,7 +510,7 @@ const AddEngagementForm: React.FC<AddEngagementFormProps> = ({ onClose, onSave, 
                     </div>
                 </div>
                 <div>
-                    <label htmlFor="idPiece" className="block text-sm font-medium text-gray-700 text-right">الوثيقة</label>
+                    <label htmlFor="idPiece" className="block text-sm font-medium text-gray-700 text-right">{t('engform.document')}</label>
                     <select
                         id="idPiece"
                         value={idPiece}
@@ -524,18 +524,18 @@ const AddEngagementForm: React.FC<AddEngagementFormProps> = ({ onClose, onSave, 
                         required
                         className="w-full h-9 px-1 py-1 mt-1 text-xs text-center text-gray-700 bg-gray-100 border border-gray-300 rounded-[20px]"
                     >
-                        <option value="">{availablePieces.length > 0 ? '-- اختر وثيقة --' : 'لا توجد وثائق متاحة لهذا النوع'}</option>
+                        <option value="">{availablePieces.length > 0 ? t('engform.selectDocument') : t('engform.noDocuments')}</option>
                         {availablePieces.map(p => <option key={p.ID_PIECE} value={p.ID_PIECE}>{p.PIECE} ({p.NAT_PIECE})</option>)}
                     </select>
                 </div>
                 <div>
-                    <label htmlFor="objetEng" className="block text-sm font-medium text-gray-700 text-center">موضوع الإلتزام</label>
+                    <label htmlFor="objetEng" className="block text-sm font-medium text-gray-700 text-center">{t('engform.subject')}</label>
                     <input id="objetEng" value={objetEng} onChange={e => { setObjetEng(e.target.value); markDirty(); }} required className="w-full h-9 px-1 py-1 mt-1 text-sx text-center text-gray-700 bg-gray-100 border border-gray-300 rounded-[20px]" />
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                        <label htmlFor="montantEng" className="block text-sm font-medium text-gray-700 text-center">المبلغ</label>
+                        <label htmlFor="montantEng" className="block text-sm font-medium text-gray-700 text-center">{t('engform.amount')}</label>
                         <input
                             id="montantEng"
                             type="text"
@@ -557,7 +557,7 @@ const AddEngagementForm: React.FC<AddEngagementFormProps> = ({ onClose, onSave, 
                     <div>
                         <DateInputField
                             id="dateEng"
-                            label="تاريخ البطاقة"
+                            label={t('engform.cardDate')}
                             value={dateEng}
                             onChange={(val) => { setDateEng(val); markDirty(); }}
                             required
@@ -567,13 +567,13 @@ const AddEngagementForm: React.FC<AddEngagementFormProps> = ({ onClose, onSave, 
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div className="md:col-span-2">
-                        <label htmlFor="nVisaCb" className="block text-sm font-medium text-gray-700 text-center">رقم تأشيرة المراقب الميزانياتي</label>
+                        <label htmlFor="nVisaCb" className="block text-sm font-medium text-gray-700 text-center">{t('engform.controllerVisaNo')}</label>
                         <input id="nVisaCb" type="text" value={nVisaCb} onChange={e => { setNVisaCb(e.target.value); markDirty(); }} className="w-full h-9 px-1 py-1 mt-1 text-center text-gray-700 bg-gray-100 border border-gray-300 rounded-[20px]" />
                     </div>
                     <div>
                         <DateInputField
                             id="dateVisaCb"
-                            label="تاريخ التأشيرة"
+                            label={t('engform.visaDate')}
                             value={dateVisaCb}
                             onChange={(val) => { setDateVisaCb(val); markDirty(); }}
                         />

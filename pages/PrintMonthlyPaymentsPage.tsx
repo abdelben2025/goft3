@@ -157,17 +157,17 @@ const PrintMonthlyPaymentsPage: React.FC<PrintMonthlyPaymentsPageProps> = ({ nav
             `}</style>
             
             <div className="no-print mb-4 flex justify-between items-center bg-white p-2 rounded shadow">
-                <h2 className="text-xl font-bold">معاينة الطباعة</h2>
+                <h2 className="text-xl font-bold">{t('print.preview')}</h2>
                 <div className="flex gap-2">
-                    <button onClick={() => navigate('MONTHLY_PAYMENTS_REPORT')} className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors">→ رجوع</button>
-                    <button onClick={() => window.print()} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"><i className="bi bi-printer mr-2"></i> طباعة</button>
+                    <button onClick={() => navigate('MONTHLY_PAYMENTS_REPORT')} className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors">→ {t('btn.back')}</button>
+                    <button onClick={() => window.print()} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"><i className="bi bi-printer mr-2"></i> {t('btn.print')}</button>
                 </div>
             </div>
 
             <div className="print-area space-y-6 mx-auto max-w-full">
                 {dataPages.length === 0 ? (
                     <div className="print-page bg-white p-8 mx-auto max-w-full shadow-lg border border-gray-300 flex flex-col items-center justify-center min-h-[300px]">
-                        <p className="text-gray-500 font-bold">لا توجد بيانات للطباعة</p>
+                        <p className="text-gray-500 font-bold">{t('print.no_data_print')}</p>
                     </div>
                 ) : (
                     dataPages.map((pageItems, pageIndex) => {
@@ -190,23 +190,23 @@ const PrintMonthlyPaymentsPage: React.FC<PrintMonthlyPaymentsPageProps> = ({ nav
                                         </>
                                     )}
                                     <div className="flex justify-between items-center border-b border-black pb-2 mt-4">
-                                        <h1 className="text-xl font-bold underline">جدول الدفوعات حسب الشهر</h1>
-                                        <span className="text-xs font-bold font-mono">الصفحة {pageIndex + 1} / {dataPages.length}</span>
+                                        <h1 className="text-xl font-bold underline">{t('print.monthly_payments_title')}</h1>
+                                        <span className="text-xs font-bold font-mono">{t('print.page_of', { page: pageIndex + 1, total: dataPages.length })}</span>
                                     </div>
-                                    <p className="text-md font-bold mt-2 font-mono">شهر: {months.find(m => m.value === selectedMonth)?.label} {selectedYear}</p>
-                                    <p className="text-sm font-bold mt-1">الحالة: {statusFilter === 'ALL' ? 'كل الدفوعات' : statusFilter === 'ACCEPTED' ? 'الدفوعات المقبولة فقط' : 'الدفوعات غير المقبولة فقط'}</p>
+                                    <p className="text-md font-bold mt-2 font-mono">{t('print.month_month', { month: months.find(m => m.value === selectedMonth)?.label ?? '', year: selectedYear })}</p>
+                                    <p className="text-sm font-bold mt-1">{t('print.status_colon')} {statusFilter === 'ALL' ? t('print.all_payments') : statusFilter === 'ACCEPTED' ? t('print.accepted_only') : t('print.not_accepted_only')}</p>
                                 </header>
 
                                 <table className="w-full border-collapse border border-black text-right">
                                     <thead className="bg-gray-100 font-bold">
                                         <tr>
                                             <th className="border border-black p-2 text-center w-[40px]">#</th>
-                                            <th className="border border-black p-2 w-[350px]">رقم وعنوان العملية</th>
-                                            <th className="border border-black p-2 w-[180px]">رقم الحوالة</th>
-                                            <th className="border border-black p-2">الوثيقة / الالتزام</th>
-                                            <th className="border border-black p-2">المستفيذ</th>
-                                            <th className="border border-black p-2 w-[150px] text-center">الحالة</th>
-                                            <th className="border border-black p-2 text-left w-[150px]">المبلغ</th>
+                                            <th className="border border-black p-2 w-[350px]">{t('col.operation_info')}</th>
+                                            <th className="border border-black p-2 w-[180px]">{t('col.mandat_no')}</th>
+                                            <th className="border border-black p-2">{t('print.doc_commitment')}</th>
+                                            <th className="border border-black p-2">{t('col.beneficiary')}</th>
+                                            <th className="border border-black p-2 w-[150px] text-center">{t('col.status')}</th>
+                                            <th className="border border-black p-2 text-left w-[150px]">{t('col.amount')}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -216,19 +216,19 @@ const PrintMonthlyPaymentsPage: React.FC<PrintMonthlyPaymentsPageProps> = ({ nav
                                                 <td className="border border-black p-2 text-[9pt] leading-tight">{item.opName}</td>
                                                 <td className="border border-black p-2">
                                                     <div className="font-bold">{item.N_PAI} / {item.ANNEE}</div>
-                                                    <div className="text-[7pt] italic">في: {normalizeDate(item.DATE_PAI)}</div>
-                                                    {item.N_MANDAT && <div className="text-[8pt] font-mono mt-1">حوالة: {item.N_MANDAT}</div>}
+                                                    <div className="text-[7pt] italic">{t('print.on_date', { date: normalizeDate(item.DATE_PAI) })}</div>
+                                                    {item.N_MANDAT && <div className="text-[8pt] font-mono mt-1">{t('print.mandat_prefix', { num: item.N_MANDAT })}</div>}
                                                 </td>
                                                 <td className="border border-black p-2 text-[9pt]">
                                                     <div>{item.pieceName}</div>
-                                                    <div className="text-[7pt] text-gray-600 mt-1">التزام: {item.engRef}</div>
+                                                    <div className="text-[7pt] text-gray-600 mt-1">{t('print.commitment_colon', { ref: item.engRef })}</div>
                                                 </td>
                                                 <td className="border border-black p-2 text-[9pt]">{item.beneficiaryName}</td>
                                                 <td className="border border-black p-2 text-center text-[8pt]">
                                                     {item.isAccepted ? (
-                                                        <span className="font-bold">مقبولة لدى AM ({normalizeDate(item.DATE_ADMIS)})</span>
+                                                        <span className="font-bold">{t('print.accepted_by_am', { date: normalizeDate(item.DATE_ADMIS) })}</span>
                                                     ) : (
-                                                        <span className="italic">في انتظار القبول</span>
+                                                        <span className="italic">{t('print.waiting_acceptance')}</span>
                                                     )}
                                                 </td>
                                                 <td className="border border-black p-2 font-bold text-left">
@@ -239,12 +239,12 @@ const PrintMonthlyPaymentsPage: React.FC<PrintMonthlyPaymentsPageProps> = ({ nav
                                     </tbody>
                                     <tfoot className="bg-gray-100 font-bold">
                                         <tr className="bg-gray-50">
-                                            <td colSpan={6} className="border border-black p-2 text-left uppercase text-xs">المجموع الفرعي للصفحة</td>
+                                            <td colSpan={6} className="border border-black p-2 text-left uppercase text-xs">{t('print.page_subtotal')}</td>
                                             <td className="border border-black p-2 text-left text-xs">{formatCurrency(pageSubtotal)}</td>
                                         </tr>
                                         {pageIndex === dataPages.length - 1 && (
                                             <tr className="bg-gray-200">
-                                                <td colSpan={6} className="border border-black p-2 text-left uppercase text-sm font-black">إجمالي الدفوعات في هذا الشهر (المجموع العام)</td>
+                                                <td colSpan={6} className="border border-black p-2 text-left uppercase text-sm font-black">{t('print.monthly_payments_grand_total')}</td>
                                                 <td className="border border-black p-2 text-left text-sm font-black">{formatCurrency(totalAmount)}</td>
                                             </tr>
                                         )}
@@ -258,7 +258,7 @@ const PrintMonthlyPaymentsPage: React.FC<PrintMonthlyPaymentsPageProps> = ({ nav
                                                 <p className="mb-2 underline"></p>
                                             </div>
                                             <div>
-                                                <p className="mb-2 underline">المــديـــــر</p>
+                                                <p className="mb-2 underline">{t('print.footer.director')}</p>
                                             </div>
                                         </div>
                                     </div>

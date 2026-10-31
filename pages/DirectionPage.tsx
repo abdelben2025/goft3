@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Page, Direction, User } from '../types';
 import { useData } from '../context/DataContext';
 import { useToast } from '../context/ToastContext';
+import { useLanguage } from '../context/LanguageContext';
 import { errorMessage } from '../utils/errorMessage';
 import PageWrapper from '../components/PageWrapper';
 import Modal from '../components/Modal';
@@ -18,6 +19,7 @@ interface DirectionPageProps {
 const DirectionPage: React.FC<DirectionPageProps> = ({ navigate, onGoBack, currentUser }) => {
     const { db, loading, addItem, updateItem, deleteItem } = useData();
     const { showToast } = useToast();
+    const { t } = useLanguage();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingDirection, setEditingDirection] = useState<Direction | undefined>(undefined);
     const [selectedDirectionId, setSelectedDirectionId] = useState<number | null>(null);
@@ -25,19 +27,19 @@ const DirectionPage: React.FC<DirectionPageProps> = ({ navigate, onGoBack, curre
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
     const handleSaveDirection = async (data: Omit<Direction, 'ID_DIRECTION'> | Direction) => {
-        showToast('جاري حفظ البيانات...', 'loading');
+        showToast(t('dir.toast_saving'), 'loading');
         try {
             if ('ID_DIRECTION' in data) {
                 await updateItem('T_DIRECTION', data.ID_DIRECTION, data);
-                showToast('تم تعديل المديرية بنجاح', 'success');
+                showToast(t('dir.toast_edit_success'), 'success');
             } else {
                 await addItem('T_DIRECTION', data);
-                showToast('تمت إضافة المديرية بنجاح', 'success');
+                showToast(t('dir.toast_add_success'), 'success');
             }
             setIsModalOpen(false);
             setEditingDirection(undefined);
         } catch (error) {
-            showToast(`حدث خطأ أثناء الحفظ — السبب: ${errorMessage(error)}`, 'error');
+            showToast(t('dir.toast_save_error', { reason: errorMessage(error) }), 'error');
         }
     };
 
@@ -49,19 +51,19 @@ const DirectionPage: React.FC<DirectionPageProps> = ({ navigate, onGoBack, curre
     const confirmDeleteDirection = async () => {
         setIsDeleteConfirmOpen(false);
         if (selectedDirectionId === null) return;
-        showToast('جاري الحذف...', 'loading');
+        showToast(t('dir.toast_deleting'), 'loading');
         try {
             await deleteItem('T_DIRECTION', selectedDirectionId);
             setSelectedDirectionId(null);
-            showToast('تم حذف المديرية بنجاح', 'success');
+            showToast(t('dir.toast_delete_success'), 'success');
         } catch (error) {
-            showToast(`حدث خطأ أثناء الحذف — السبب: ${errorMessage(error)}`, 'error');
+            showToast(t('dir.toast_delete_error', { reason: errorMessage(error) }), 'error');
         }
     };
     
     const openAddModal = () => {
         if (loading) {
-            alert("يجب الانتظار حتى يتم تحديث النافذة");
+            alert(t('op.alert_wait_loading'));
             return;
         }
         setEditingDirection(undefined);
@@ -71,7 +73,7 @@ const DirectionPage: React.FC<DirectionPageProps> = ({ navigate, onGoBack, curre
 
     const openEditModal = () => {
         if (loading) {
-            alert("يجب الانتظار حتى يتم تحديث النافذة");
+            alert(t('op.alert_wait_loading'));
             return;
         }
         if (selectedDirectionId === null) return;
@@ -83,11 +85,11 @@ const DirectionPage: React.FC<DirectionPageProps> = ({ navigate, onGoBack, curre
         }
     };
 
-    if (loading) return <div>جار التحميل...</div>;
+    if (loading) return <div>{t('loading')}</div>;
 
     return (
         <PageWrapper
-            title="إدارة المديرية"
+            title={t('page.direction')}
             navigate={navigate}
             onGoBack={onGoBack}
             backPage="SETTINGS"
@@ -95,13 +97,13 @@ const DirectionPage: React.FC<DirectionPageProps> = ({ navigate, onGoBack, curre
             actions={
                 <div className="flex items-center gap-2">
                     <button onClick={openAddModal} className="bg-green-500 text-white px-4 py-2 rounded-lg shadow hover:bg-green-600 transition-colors">
-                        <i className="bi bi-plus-circle mr-2"></i> إضافة مديرية
+                        <i className="bi bi-plus-circle mr-2"></i> {t('dir.add_direction')}
                     </button>
                     <button onClick={openEditModal} disabled={selectedDirectionId === null} className="bg-yellow-500 text-white px-4 py-2 rounded-lg shadow hover:bg-yellow-600 transition-colors disabled:bg-gray-400">
-                        <i className="bi bi-pencil-fill mr-2"></i> تعديل
+                        <i className="bi bi-pencil-fill mr-2"></i> {t('btn.edit')}
                     </button>
                     <button onClick={handleDeleteDirection} disabled={selectedDirectionId === null} className="bg-red-500 text-white px-4 py-2 rounded-lg shadow hover:bg-red-600 transition-colors disabled:bg-gray-400">
-                        <i className="bi bi-trash-fill mr-2"></i> حذف
+                        <i className="bi bi-trash-fill mr-2"></i> {t('btn.delete')}
                     </button>
                 </div>
             }
@@ -110,10 +112,10 @@ const DirectionPage: React.FC<DirectionPageProps> = ({ navigate, onGoBack, curre
                 <table className="w-full text-right min-w-[900px]">
                     <thead className="bg-blue-100">
                         <tr>
-                            <th className="p-3 text-sm font-semibold text-gray-700">المديرية</th>
-                            <th className="p-3 text-sm font-semibold text-gray-700">المحفظة</th>
-                            <th className="p-3 text-sm font-semibold text-gray-700">عنوان المحفظة</th>
-                            <th className="p-3 text-sm font-semibold text-gray-700">الآمر بالصرف</th>
+                            <th className="p-3 text-sm font-semibold text-gray-700">{t('dir.direction')}</th>
+                            <th className="p-3 text-sm font-semibold text-gray-700">{t('col.portfolio')}</th>
+                            <th className="p-3 text-sm font-semibold text-gray-700">{t('col.portfolio_title')}</th>
+                            <th className="p-3 text-sm font-semibold text-gray-700">{t('col.ordonnateur')}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -129,13 +131,13 @@ const DirectionPage: React.FC<DirectionPageProps> = ({ navigate, onGoBack, curre
                 </table>
             </div>
 
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingDirection ? "تعديل مديرية" : "إضافة مديرية جديدة"}>
+            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingDirection ? t('dir.edit_title') : t('dir.add_title')}>
                 <AddDirectionForm key={formKey} onClose={() => setIsModalOpen(false)} onSave={handleSaveDirection} initialData={editingDirection} />
             </Modal>
             <ConfirmActionModal
                 isOpen={isDeleteConfirmOpen}
-                title="تأكيد حذف المديرية"
-                message="هل أنت متأكد أنك تريد حذف هذه المديرية؟"
+                title={t('dir.delete_confirm_title')}
+                message={t('dir.delete_confirm_message')}
                 onCancel={() => setIsDeleteConfirmOpen(false)}
                 onConfirm={confirmDeleteDirection}
             />

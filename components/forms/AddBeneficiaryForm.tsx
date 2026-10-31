@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Beneficiaire, CompteBancaire } from '../../types';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface AddBeneficiaryFormProps {
     onClose: () => void;
@@ -9,6 +10,7 @@ interface AddBeneficiaryFormProps {
 }
 
 const AddBeneficiaryForm: React.FC<AddBeneficiaryFormProps> = ({ onClose, onSave, initialData }) => {
+    const { t } = useLanguage();
     const [beneficiaire, setBeneficiaire] = useState('');
     const [activite, setActivite] = useState('');
     const [adresse, setAdresse] = useState('');
@@ -92,12 +94,12 @@ const AddBeneficiaryForm: React.FC<AddBeneficiaryFormProps> = ({ onClose, onSave
         if (isSubmitting) return;
 
         if (accounts.some(acc => !acc.rib.trim() || !acc.banque.trim())) {
-            alert('يرجى ملء جميع حقول الحسابات البنكية (رقم الحساب والبنك).');
+            alert(t('benform.accountsRequired'));
             return;
         }
 
         if (!['الخزينة العمومية', 'حضيرة العتاد', 'حضير العتاد'].includes(beneficiaire.trim()) && accounts.some(acc => acc.rib.replace(/\s/g, '').length !== 20)) {
-            alert('رقم الحساب (RIB) يجب أن يتكون من 20 رقمًا.');
+            alert(t('benform.ribLength'));
             return;
         }
 
@@ -125,31 +127,31 @@ const AddBeneficiaryForm: React.FC<AddBeneficiaryFormProps> = ({ onClose, onSave
     return (
         <form onSubmit={handleSubmit} className="flex flex-col max-h-[85vh]">
             <div className="sticky top-0 bg-white z-10 pb-2 border-b border-gray-200 flex justify-end gap-3 pt-1 mb-2">
-                <button type="button" onClick={onClose} className="px-5 py-1.5 bg-gray-200 text-gray-800 rounded-[20PX] hover:bg-gray-300 transition-colors text-sm">إلغاء</button>
+                <button type="button" onClick={onClose} className="px-5 py-1.5 bg-gray-200 text-gray-800 rounded-[20PX] hover:bg-gray-300 transition-colors text-sm">{t('btn.cancel')}</button>
                 <button type="submit" disabled={isSubmitting} className="px-5 py-1.5 bg-blue-600 text-white rounded-[20PX] hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm">
-                    {isSubmitting ? 'جاري الحفظ...' : (initialData ? 'حفظ التغييرات' : 'إضافة')}
+                    {isSubmitting ? t('benform.saving') : (initialData ? t('benform.saveChanges') : t('btn.add'))}
                 </button>
             </div>
 
             <div className="space-y-3 overflow-y-auto p-1">
             <div>
-                <label htmlFor="beneficiaire" className="block text-sm font-medium text-gray-700 text-right">الإسم المستفيد</label>
+                <label htmlFor="beneficiaire" className="block text-sm font-medium text-gray-700 text-right">{t('benform.name')}</label>
                 <input id="beneficiaire" type="text" value={beneficiaire} onChange={e => { setBeneficiaire(e.target.value.toUpperCase()); markDirty(); }} required className="w-full px-3 py-2 mt-1 text-gray-700 bg-gray-100 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase" />
             </div>
             <div>
-                <label htmlFor="activite" className="block text-sm font-medium text-gray-700 text-right">النشاط التجاري</label>
+                <label htmlFor="activite" className="block text-sm font-medium text-gray-700 text-right">{t('benform.activity')}</label>
                 <input id="activite" type="text" value={activite} onChange={e => { setActivite(e.target.value.toUpperCase()); markDirty(); }} className="w-full px-3 py-2 mt-1 text-gray-700 bg-gray-100 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase" />
             </div>
             <div>
-                <label htmlFor="adresse" className="block text-sm font-medium text-gray-700 text-right">العنوان</label>
+                <label htmlFor="adresse" className="block text-sm font-medium text-gray-700 text-right">{t('col.address')}</label>
                 <input id="adresse" type="text" value={adresse} onChange={e => { setAdresse(e.target.value.toUpperCase()); markDirty(); }} required className="w-full px-3 py-2 mt-1 text-gray-700 bg-gray-100 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase" />
             </div>
             
             <div className="space-y-3 p-4 border border-gray-200 rounded-md bg-gray-50">
                 <div className="flex justify-between items-center">
-                    <h4 className="text-md font-semibold text-gray-700">الحسابات البنكية</h4>
+                    <h4 className="text-md font-semibold text-gray-700">{t('col.bank_accounts')}</h4>
                     <button type="button" onClick={addAccount} className="px-3 py-1 bg-green-500 text-white rounded-full text-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400">
-                        <i className="bi bi-plus"></i> إضافة حساب
+                        <i className="bi bi-plus"></i> {t('benform.addAccount')}
                     </button>
                 </div>
                 {accounts.map((account, index) => (
@@ -157,7 +159,7 @@ const AddBeneficiaryForm: React.FC<AddBeneficiaryFormProps> = ({ onClose, onSave
                         <div className="flex-grow grid grid-cols-2 gap-3">
                              <div>
                                  <label htmlFor={`rib-${index}`} className="block text-xs font-bold text-gray-500 text-right uppercase tracking-tighter">
-                                     {['الخزينة العمومية', 'حضيرة العتاد', 'حضير العتاد'].includes(beneficiaire.trim()) ? 'رقم الحساب الخاص (COMPTE SPECIAL)' : 'رقم الحساب (RIB)'}
+                                     {['الخزينة العمومية', 'حضيرة العتاد', 'حضير العتاد'].includes(beneficiaire.trim()) ? t('benform.specialAccount') : t('benform.ribLabel')}
                                  </label>
                                      <div className="relative">
                                     <input 
@@ -173,19 +175,19 @@ const AddBeneficiaryForm: React.FC<AddBeneficiaryFormProps> = ({ onClose, onSave
                                         dir={['الخزينة العمومية', 'حضيرة العتاد', 'حضير العتاد'].includes(beneficiaire.trim()) ? 'rtl' : 'ltr'}
                                     />
                                     <p className="text-[9px] text-blue-500 mt-0.5 text-right font-medium">
-                                        {account.rib.replace(/\s/g, '').length} / {['الخزينة العمومية', 'حضيرة العتاد', 'حضير العتاد'].includes(beneficiaire.trim()) ? 'أقصى 20' : '20'} رقم
+                                        {account.rib.replace(/\s/g, '').length} / {['الخزينة العمومية', 'حضيرة العتاد', 'حضير العتاد'].includes(beneficiaire.trim()) ? t('benform.max20') : '20'} {t('benform.digits')}
                                     </p>
                                  </div>
                             </div>
                             <div>
-                                <label htmlFor={`banque-${index}`} className="block text-xs font-bold text-gray-500 text-right uppercase tracking-tighter">البنك / الوكالة</label>
+                                <label htmlFor={`banque-${index}`} className="block text-xs font-bold text-gray-500 text-right uppercase tracking-tighter">{t('benform.bankAgency')}</label>
                                 <input 
                                     id={`banque-${index}`} 
                                     type="text" 
                                     value={account.banque} 
                                     onChange={e => handleAccountChange(index, 'banque', e.target.value.toUpperCase())} 
                                     required 
-                                    placeholder="مثلا: BNA RELIZANE . أو بنك الوطني الجزائري غليزان"
+                                    placeholder={t('benform.bankPlaceholder')}
                                     className="w-full px-2 py-1.5 mt-1 text-sm bg-gray-50 border border-gray-200 rounded-md focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all uppercase"
                                 />
                             </div>
@@ -199,11 +201,11 @@ const AddBeneficiaryForm: React.FC<AddBeneficiaryFormProps> = ({ onClose, onSave
 
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label htmlFor="rc" className="block text-sm font-medium text-gray-700 text-right">رقم السجل</label>
+                    <label htmlFor="rc" className="block text-sm font-medium text-gray-700 text-right">{t('col.rc')}</label>
                     <input id="rc" type="text" value={rc} onChange={e => { setRc(e.target.value.toUpperCase()); markDirty(); }} className="w-full px-3 py-2 mt-1 text-gray-700 bg-gray-100 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-left font-mono uppercase" dir="ltr" />
                 </div>
                 <div>
-                    <label htmlFor="codeFiscale" className="block text-sm font-medium text-gray-700 text-right">التعريف الجبائي</label>
+                    <label htmlFor="codeFiscale" className="block text-sm font-medium text-gray-700 text-right">{t('col.tax_id')}</label>
                     <input id="codeFiscale" type="text" value={codeFiscale} onChange={e => { setCodeFiscale(e.target.value.toUpperCase()); markDirty(); }} required className="w-full px-3 py-2 mt-1 text-gray-700 bg-gray-100 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-left font-mono uppercase" dir="ltr" />
                 </div>
             </div>

@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Categorie } from '../../types';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface AddCategorieFormProps {
     onClose: () => void;
@@ -9,6 +10,7 @@ interface AddCategorieFormProps {
 }
 
 const AddCategorieForm: React.FC<AddCategorieFormProps> = ({ onClose, onSave, initialData }) => {
+    const { t } = useLanguage();
     const [categorieCode, setCategorieCode] = useState('');
     const [categorieName, setCategorieName] = useState('');
 
@@ -44,14 +46,14 @@ const AddCategorieForm: React.FC<AddCategorieFormProps> = ({ onClose, onSave, in
     return (
         <form onSubmit={handleSubmit} className="flex flex-col max-h-[85vh]">
             <div className="sticky top-0 bg-white z-10 pb-2 border-b border-gray-200 flex justify-end gap-3 pt-1 mb-2">
-                <button type="button" onClick={onClose} className="px-5 py-1.5 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors text-sm">إلغاء</button>
+                <button type="button" onClick={onClose} className="px-5 py-1.5 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors text-sm">{t('btn.cancel')}</button>
                 <button type="submit" disabled={isSubmitting} className="px-5 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm">
-                    {isSubmitting ? 'جاري الحفظ...' : (initialData ? 'حفظ التغييرات' : 'إضافة')}
+                    {isSubmitting ? t('op.form_saving') : (initialData ? t('op.form_save_changes') : t('btn.add'))}
                 </button>
             </div>
             <div className="space-y-3 overflow-y-auto p-1 text-right">
             <div>
-                <label htmlFor="categorieCode" className="block text-sm font-medium text-gray-700 text-right">رمز الصنف</label>
+                <label htmlFor="categorieCode" className="block text-sm font-medium text-gray-700 text-right">{t('cat.code_label')}</label>
                 <input
                     id="categorieCode"
                     type="text"
@@ -62,7 +64,7 @@ const AddCategorieForm: React.FC<AddCategorieFormProps> = ({ onClose, onSave, in
                 />
             </div>
             <div>
-                <label htmlFor="categorieName" className="block text-sm font-medium text-gray-700 text-right">عنوان الصنف</label>
+                <label htmlFor="categorieName" className="block text-sm font-medium text-gray-700 text-right">{t('cat.title_label')}</label>
                 <input
                     id="categorieName"
                     type="text"

@@ -186,15 +186,15 @@ const DocumentDetailsPage: React.FC<DocumentDetailsPageProps> = ({ navigate, cur
 
     if (!piece) {
         return (
-            <PageWrapper title="تفاصيل الوثيقة" navigate={navigate} onGoBack={onGoBack} currentUser={currentUser}>
+            <PageWrapper title={t('doc.details_title')} navigate={navigate} onGoBack={onGoBack} currentUser={currentUser}>
                 <div className="flex flex-col items-center justify-center py-20 text-center">
                     <i className="bi bi-file-earmark-x-fill text-5xl text-gray-300 mb-3"></i>
-                    <p className="text-gray-500 font-bold">لم يتم العثور على الوثيقة المطلوبة</p>
+                    <p className="text-gray-500 font-bold">{t('doc.document_not_found')}</p>
                     <button
                         onClick={() => navigate('DOCUMENTS')}
                         className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors"
                     >
-                        العودة إلى الوثائق
+                        {t('doc.back_to_documents')}
                     </button>
                 </div>
             </PageWrapper>
@@ -205,7 +205,7 @@ const DocumentDetailsPage: React.FC<DocumentDetailsPageProps> = ({ navigate, cur
 
     return (
         <PageWrapper
-            title="تفاصيل الوثيقة"
+            title={t('doc.details_title')}
             navigate={navigate}
             onGoBack={onGoBack}
             currentUser={currentUser}
@@ -236,13 +236,13 @@ const DocumentDetailsPage: React.FC<DocumentDetailsPageProps> = ({ navigate, cur
                             {piece.DELAI_EX_JOURS && (
                                 <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold border border-amber-200">
                                     <i className="bi bi-clock-history ml-1"></i>
-                                    مدة الإنجاز: {formatDurationArabic(piece.DELAI_EX_JOURS)}
+                                    {t('doc.completion_duration', { duration: formatDurationArabic(piece.DELAI_EX_JOURS) })}
                                 </span>
                             )}
                             {piece.CAUTION != null && piece.CAUTION !== '' && (
                                 <span className="text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-bold border border-purple-200">
                                     <i className="bi bi-shield-lock-fill ml-1"></i>
-                                    {piece.TYPE_CAUTION === 'RETENTION' ? 'اقتطاع ضمان' : 'كفالة ضمان'}: {piece.CAUTION}
+                                    {piece.TYPE_CAUTION === 'RETENTION' ? t('doc.caution_retention') : t('doc.caution_bank')}: {piece.CAUTION}
                                 </span>
                             )}
                         </div>
@@ -253,13 +253,13 @@ const DocumentDetailsPage: React.FC<DocumentDetailsPageProps> = ({ navigate, cur
                         onClick={() => navigate('DOCUMENTS')}
                         className="bg-white text-gray-600 border border-gray-200 px-3 py-1.5 rounded-[20px] text-xs font-bold hover:bg-gray-50 transition-colors shadow-sm"
                     >
-                        <i className="bi bi-arrow-left mr-1"></i> الوثائق
+                        <i className="bi bi-arrow-left mr-1"></i> {t('menu.documents')}
                     </button>
                     <button
                         onClick={() => navigate('OPERATION_DETAILS', piece.ID_OPERATION)}
                         className="bg-blue-600 text-white px-3 py-1.5 rounded-[20px] text-xs font-bold hover:bg-blue-700 transition-colors shadow-sm"
                     >
-                        <i className="bi bi-kanban mr-1"></i> العملية
+                        <i className="bi bi-kanban mr-1"></i> {t('col.operation')}
                     </button>
                 </div>
             </div>
@@ -277,7 +277,7 @@ const DocumentDetailsPage: React.FC<DocumentDetailsPageProps> = ({ navigate, cur
                         <div className="flex items-center justify-between px-3 py-2 bg-indigo-50 border-b border-indigo-100">
                             <h3 className="text-xs font-extrabold text-indigo-800 flex items-center gap-2">
                                 <i className="bi bi-paperclip"></i>
-                                الحصص المرتبطة
+                                {t('lbl.linked_lots')}
                             </h3>
                             <div className="flex items-center gap-2">
                                 <span className="bg-indigo-100 text-indigo-700 text-[10px] px-2 py-0.5 rounded-full font-bold">
@@ -287,10 +287,10 @@ const DocumentDetailsPage: React.FC<DocumentDetailsPageProps> = ({ navigate, cur
                                     <button
                                         onClick={handleAddLot}
                                         className="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-0.5 rounded-[20px] text-[10px] font-bold transition-colors shadow-sm flex items-center gap-1"
-                                        title="إضافة حصة"
+                                        title={t('doc.add_lot')}
                                     >
                                         <i className="bi bi-plus-circle-fill"></i>
-                                        <span>إضافة حصة</span>
+                                        <span>{t('doc.add_lot')}</span>
                                     </button>
                                 )}
                             </div>
@@ -300,13 +300,13 @@ const DocumentDetailsPage: React.FC<DocumentDetailsPageProps> = ({ navigate, cur
                                 <table className="w-full text-right text-xs">
                                     <thead className="bg-indigo-100/60 sticky top-0 z-10">
                                         <tr>
-                                            <th className="p-2 text-[9px] font-bold text-indigo-700">رقم الحصة</th>
-                                            <th className="p-2 text-[9px] font-bold text-indigo-700">تسمية الحصة</th>
-                                            <th className="p-2 text-[9px] font-bold text-indigo-700 text-center">المدة</th>
-                                            <th className="p-2 text-[9px] font-bold text-indigo-700 text-left">المبلغ الأولي</th>
-                                            <th className="p-2 text-[9px] font-bold text-indigo-700 text-left">المبلغ النهائي</th>
-                                            <th className="p-2 text-[9px] font-bold text-indigo-700 text-center">الحالة</th>
-                                            <th className="p-2 text-[9px] font-bold text-indigo-700 text-center">إجراءات</th>
+                                            <th className="p-2 text-[9px] font-bold text-indigo-700">{t('doc.lot_number')}</th>
+                                            <th className="p-2 text-[9px] font-bold text-indigo-700">{t('doc.lot_label')}</th>
+                                            <th className="p-2 text-[9px] font-bold text-indigo-700 text-center">{t('doc.duration_col')}</th>
+                                            <th className="p-2 text-[9px] font-bold text-indigo-700 text-left">{t('doc.initial_amount')}</th>
+                                            <th className="p-2 text-[9px] font-bold text-indigo-700 text-left">{t('doc.final_amount')}</th>
+                                            <th className="p-2 text-[9px] font-bold text-indigo-700 text-center">{t('col.status')}</th>
+                                            <th className="p-2 text-[9px] font-bold text-indigo-700 text-center">{t('doc.actions')}</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100">
@@ -323,9 +323,9 @@ const DocumentDetailsPage: React.FC<DocumentDetailsPageProps> = ({ navigate, cur
                                                 <td className="p-2 text-left font-semibold text-gray-700">{formatCurrency(lot.MONTANT_FINALE_LOT)}</td>
                                                 <td className="p-2 text-center">
                                                     {lot.ATTRIBUER ? (
-                                                        <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">ممنوحة</span>
+                                                        <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">{t('doc.awarded')}</span>
                                                     ) : (
-                                                        <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-bold">غير ممنوحة</span>
+                                                        <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-bold">{t('doc.not_awarded')}</span>
                                                     )}
                                                 </td>
                                                 <td className="p-2 text-center">
@@ -334,14 +334,14 @@ const DocumentDetailsPage: React.FC<DocumentDetailsPageProps> = ({ navigate, cur
                                                             <button
                                                                 onClick={() => handleEditLot(lot)}
                                                                 className="text-[10px] bg-blue-50 hover:bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded border border-blue-200 font-bold transition-colors flex items-center gap-1"
-                                                                title="تعديل الحصة"
+                                                                title={t('doc.edit_lot')}
                                                             >
                                                                 <i className="bi bi-pencil-fill"></i>
                                                             </button>
                                                             <button
                                                                 onClick={() => handleDeleteLot(lot)}
                                                                 className="text-[10px] bg-red-50 hover:bg-red-100 text-red-600 px-1.5 py-0.5 rounded border border-red-200 font-bold transition-colors flex items-center gap-1"
-                                                                title="حذف الحصة"
+                                                                title={t('doc.delete_lot')}
                                                             >
                                                                 <i className="bi bi-trash-fill"></i>
                                                             </button>
@@ -356,7 +356,7 @@ const DocumentDetailsPage: React.FC<DocumentDetailsPageProps> = ({ navigate, cur
                         ) : (
                             <div className="flex flex-col items-center justify-center py-8 text-center">
                                 <i className="bi bi-paperclip text-3xl text-gray-300 mb-2"></i>
-                                <p className="text-gray-400 text-sm font-medium">لا توجد حصص مرتبطة بهذه الوثيقة</p>
+                                <p className="text-gray-400 text-sm font-medium">{t('doc.no_linked_lots')}</p>
                             </div>
                         )}
                     </div>
@@ -366,7 +366,7 @@ const DocumentDetailsPage: React.FC<DocumentDetailsPageProps> = ({ navigate, cur
                         <div className="flex items-center justify-between px-3 py-2 bg-sky-50 border-b border-sky-100">
                             <h3 className="text-xs font-extrabold text-sky-800 flex items-center gap-2">
                                 <i className="bi bi-clipboard-check"></i>
-                                أوامر الخدمة (ODS)
+                                {t('doc.ods_title')}
                             </h3>
                             <div className="flex items-center gap-2">
                                 <span className="bg-sky-100 text-sky-700 text-[10px] px-2 py-0.5 rounded-full font-bold">
@@ -376,10 +376,10 @@ const DocumentDetailsPage: React.FC<DocumentDetailsPageProps> = ({ navigate, cur
                                     <button
                                         onClick={handleAddOds}
                                         className="bg-sky-600 hover:bg-sky-700 text-white px-2.5 py-0.5 rounded-[20px] text-[10px] font-bold transition-colors shadow-sm flex items-center gap-1"
-                                        title="إضافة أمر خدمة"
+                                        title={t('doc.add_ods')}
                                     >
                                         <i className="bi bi-plus-circle-fill"></i>
-                                        <span>إضافة أمر خدمة</span>
+                                        <span>{t('doc.add_ods')}</span>
                                     </button>
                                 )}
                             </div>
@@ -389,11 +389,11 @@ const DocumentDetailsPage: React.FC<DocumentDetailsPageProps> = ({ navigate, cur
                                 <table className="w-full text-right text-xs">
                                     <thead className="bg-sky-100/60 sticky top-0 z-10">
                                         <tr>
-                                            <th className="p-2 text-[9px] font-bold text-sky-700">الطبيعة</th>
-                                            <th className="p-2 text-[9px] font-bold text-sky-700">التاريخ</th>
-                                            <th className="p-2 text-[9px] font-bold text-sky-700">الموضوع</th>
-                                            <th className="p-2 text-[9px] font-bold text-sky-700 text-center">الحصة</th>
-                                            <th className="p-2 text-[9px] font-bold text-sky-700 text-center">إجراءات</th>
+                                            <th className="p-2 text-[9px] font-bold text-sky-700">{t('col.nature')}</th>
+                                            <th className="p-2 text-[9px] font-bold text-sky-700">{t('col.date')}</th>
+                                            <th className="p-2 text-[9px] font-bold text-sky-700">{t('doc.subject')}</th>
+                                            <th className="p-2 text-[9px] font-bold text-sky-700 text-center">{t('doc.lot')}</th>
+                                            <th className="p-2 text-[9px] font-bold text-sky-700 text-center">{t('doc.actions')}</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100">
@@ -430,14 +430,14 @@ const DocumentDetailsPage: React.FC<DocumentDetailsPageProps> = ({ navigate, cur
                                                                 <button
                                                                     onClick={() => handleEditOds(ods)}
                                                                     className="text-[10px] bg-blue-50 hover:bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded border border-blue-200 font-bold transition-colors flex items-center gap-1"
-                                                                    title="تعديل أمر الخدمة"
+                                                                    title={t('doc.edit_ods')}
                                                                 >
                                                                     <i className="bi bi-pencil-fill"></i>
                                                                 </button>
                                                                 <button
                                                                     onClick={() => handleDeleteOds(ods)}
                                                                     className="text-[10px] bg-red-50 hover:bg-red-100 text-red-600 px-1.5 py-0.5 rounded border border-red-200 font-bold transition-colors flex items-center gap-1"
-                                                                    title="حذف أمر الخدمة"
+                                                                    title={t('doc.delete_ods')}
                                                                 >
                                                                     <i className="bi bi-trash-fill"></i>
                                                                 </button>
@@ -453,7 +453,7 @@ const DocumentDetailsPage: React.FC<DocumentDetailsPageProps> = ({ navigate, cur
                         ) : (
                             <div className="flex flex-col items-center justify-center py-8 text-center">
                                 <i className="bi bi-clipboard-x text-3xl text-gray-300 mb-2"></i>
-                                <p className="text-gray-400 text-sm font-medium">لا توجد أوامر خدمة لهذه الوثيقة</p>
+                                <p className="text-gray-400 text-sm font-medium">{t('doc.no_ods')}</p>
                             </div>
                         )}
                     </div>
@@ -464,38 +464,38 @@ const DocumentDetailsPage: React.FC<DocumentDetailsPageProps> = ({ navigate, cur
                             <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs">
                                 <div className="flex items-center gap-2">
                                     <i className={`bi ${odsCalculations.isLate ? 'bi-exclamation-octagon-fill text-red-500' : 'bi-calendar-check-fill text-blue-500'}`}></i>
-                                    <span className="font-bold text-gray-600">تاريخ الانتهاء المتوقع:</span>
+                                    <span className="font-bold text-gray-600">{t('doc.expected_end_date')}</span>
                                     <span className={`font-black ${odsCalculations.isLate ? 'text-red-700' : 'text-blue-800'}`}>
                                         {normalizeDate(odsCalculations.expectedEndDate.toISOString().split('T')[0])}
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <span className="font-bold text-gray-600">الأيام المستهلكة:</span>
-                                    <span className="font-black text-indigo-700">{odsCalculations.consumedDays} يوم</span>
+                                    <span className="font-bold text-gray-600">{t('doc.consumed_days')}</span>
+                                    <span className="font-black text-indigo-700">{t('doc.day_unit', { count: odsCalculations.consumedDays })}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <span className="font-bold text-gray-600">
-                                        {odsCalculations.isLate ? 'أيام التأخير:' : 'الأيام المتبقية:'}
+                                        {odsCalculations.isLate ? t('doc.delay_days') : t('doc.remaining_days')}
                                     </span>
                                     <span className={`font-black ${odsCalculations.isLate ? 'text-red-700' : 'text-blue-800'}`}>
-                                        {odsCalculations.isLate ? `${odsCalculations.delayDays} يوم` : `${odsCalculations.remainingDays} يوم`}
+                                        {t('doc.day_unit', { count: odsCalculations.isLate ? odsCalculations.delayDays : odsCalculations.remainingDays })}
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <i className="bi bi-pause-circle-fill text-amber-500"></i>
-                                    <span className="font-bold text-gray-600">أيام التوقف:</span>
-                                    <span className="font-black text-amber-700">{odsCalculations.totalSuspensionDays} يوم</span>
+                                    <span className="font-bold text-gray-600">{t('doc.suspension_days')}</span>
+                                    <span className="font-black text-amber-700">{t('doc.day_unit', { count: odsCalculations.totalSuspensionDays })}</span>
                                 </div>
                                 {odsCalculations.isSuspended && (
                                     <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-300">
                                         <i className="bi bi-pause-circle-fill ml-1"></i>
-                                        الأشغال موقوفة حالياً ({odsCalculations.currentSuspensionDays} يوم)
+                                        {t('doc.works_suspended', { days: odsCalculations.currentSuspensionDays })}
                                     </span>
                                 )}
                                 {odsCalculations.isCompleted && (
                                     <span className="bg-green-100 text-green-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-green-300">
                                         <i className="bi bi-check-circle-fill ml-1"></i>
-                                        انتهاء أشغال المشروع
+                                        {t('doc.works_completed')}
                                     </span>
                                 )}
                             </div>
@@ -504,7 +504,7 @@ const DocumentDetailsPage: React.FC<DocumentDetailsPageProps> = ({ navigate, cur
                 </div>
             </div>
 
-            <Modal isOpen={modalState.type === 'LOT_PIECE'} onClose={() => setModalState({ type: null })} title="ربط حصة">
+            <Modal isOpen={modalState.type === 'LOT_PIECE'} onClose={() => setModalState({ type: null })} title={t('doc.link_lot')}>
                 {piece && (
                     <AddLotPieceForm
                         key={modalState.timestamp ? `lot-piece-${modalState.timestamp}` : 'add-lot-piece'}
@@ -517,7 +517,7 @@ const DocumentDetailsPage: React.FC<DocumentDetailsPageProps> = ({ navigate, cur
                     />
                 )}
             </Modal>
-            <Modal isOpen={modalState.type === 'ODS'} onClose={() => setModalState({ type: null })} title={modalState.data ? "تعديل أمر خدمة" : "إضافة أمر خدمة"}>
+            <Modal isOpen={modalState.type === 'ODS'} onClose={() => setModalState({ type: null })} title={modalState.data ? t('doc.edit_ods') : t('doc.add_ods')}>
                 {piece && (
                     <AddOdsForm
                         key={modalState.timestamp ? `ods-${modalState.timestamp}` : 'add-ods'}

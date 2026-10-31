@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react';
 import { Page } from '../types';
 import { useData } from '../context/DataContext';
 import { formatCurrency, numberToArabicWords } from '../utils/currencyUtils';
+import { useLanguage } from '../context/LanguageContext';
 
 interface PrintMandatPageProps {
     navigate: (page: Page, id?: number, tab?: string) => void;
@@ -11,6 +12,7 @@ interface PrintMandatPageProps {
 
 const PrintMandatPage: React.FC<PrintMandatPageProps> = ({ navigate, paiementId }) => {
     const { db, loading } = useData();
+    const { t } = useLanguage();
 
     const printData = useMemo(() => {
         if (loading || !paiementId) return null;
@@ -148,8 +150,8 @@ const PrintMandatPage: React.FC<PrintMandatPageProps> = ({ navigate, paiementId 
         return beneficiaryAccounts[0];
     }, [beneficiaryAccounts, selectedAccountId, printData?.account]);
 
-    if (loading) return <div className="p-8 text-center">جار تحميل البيانات...</div>;
-    if (!printData) return <div className="p-8 text-center text-red-500">لم يتم العثور على بيانات الحوالة.</div>;
+    if (loading) return <div className="p-8 text-center">{t('loading')}</div>;
+    if (!printData) return <div className="p-8 text-center text-red-500">{t('print.mandat_no_data')}</div>;
 
     const { paiement, operation, engagement, beneficiary, direction, scategorie, categorie, programme, sprogramme, montantBrut, totalDeductions, montantNet, actionCode, actionName } = printData;
     const account = activeAccount;
@@ -180,11 +182,11 @@ const PrintMandatPage: React.FC<PrintMandatPageProps> = ({ navigate, paiementId 
                 }
             `}</style>
             <div className="no-print mb-1 flex justify-between items-center bg-gray-100 p-3 rounded shadow">
-                <h2 className="text-xl font-bold">طباعة حوالة الدفع</h2>
+                <h2 className="text-xl font-bold">{t('print.mandat_print_title')}</h2>
                 <div className="flex items-center gap-4">
                     {beneficiaryAccounts.length > 0 && (
                         <div className="flex items-center gap-2 bg-sky-50 px-3 py-1.5 rounded border border-sky-200">
-                            <span className="text-sm font-semibold text-sky-800">الحساب البنكي للطباعة:</span>
+                            <span className="text-sm font-semibold text-sky-800">{t('print.declaration.bank_print')}</span>
                             <select 
                                 className="text-xs border rounded p-1 bg-white"
                                 value={activeAccount?.ID_COMPTE || ''}
@@ -199,21 +201,21 @@ const PrintMandatPage: React.FC<PrintMandatPageProps> = ({ navigate, paiementId 
                         </div>
                     )}
                     <div className="flex gap-2">
-                        <button onClick={() => navigate('OPERATION_DETAILS', operation.ID_OPERATION, `PAIEMENTS:${paiement.ID_PAIEMENT}:blue`)} className="bg-gray-600 text-white px-4 py-2 rounded">رجوع</button>
-                        <button onClick={handlePrintJS} className="bg-blue-700 text-white px-6 py-2 rounded font-bold hover:bg-blue-800 transition-colors"><i className="bi bi-printer mr-2"></i> طباعة </button>
+                        <button onClick={() => navigate('OPERATION_DETAILS', operation.ID_OPERATION, `PAIEMENTS:${paiement.ID_PAIEMENT}:blue`)} className="bg-gray-600 text-white px-4 py-2 rounded">{t('btn.back')}</button>
+                        <button onClick={handlePrintJS} className="bg-blue-700 text-white px-6 py-2 rounded font-bold hover:bg-blue-800 transition-colors"><i className="bi bi-printer mr-2"></i> {t('btn.print')} </button>
                     </div>
                 </div>
             </div>
 
             <div id="print-content" className="print-area bg-white mx-auto max-w-[288mm] text-black" dir="rtl">
                 <div className="text-center font-bold mt-1 mb-1">
-                    <p>الجمهورية الجزائرية الديمقراطية الشعبية</p>
+                    <p>{t('print.header.republic')}</p>
                     <p className="text-sm">RÉPUBLIQUE ALGÉRIENNE DÉMOCRATIQUE ET POPULAIRE</p>
                 </div>
                 <div className="text-center font-bold my-2 font-bold">
-                    <p>حــــوالة الدفــــــــــــع</p>
-                    <p className="font-bold">ع 2، ع3، ع4، ع5 وع6</p>
-                    <p className="font-bold">نفقات مقيدة في الميزانية العامة للدولة</p>
+                    <p>{t('print.title.payment_mandate')}</p>
+                    <p className="font-bold">{t('print.mandat.title_ref')}</p>
+                    <p className="font-bold">{t('print.mandat.expense_charged')}</p>
                 </div>
                 <div className="flex justify-between items-stretch text-sm gap-4 mb-1">
                     <div className="w-[66%] flex flex-col justify-between">
@@ -222,55 +224,55 @@ const PrintMandatPage: React.FC<PrintMandatPageProps> = ({ navigate, paiementId 
                                 <div className="space-y-1">
                                     <p>{direction.INT_PORTEFEUILLE}</p>
                                     <p>{direction.DIRECTION}</p>
-                                    <p><span className="font-bold">رمز الأمر بالصرف:</span> {direction.ORDONATEUR}</p>
-                                    <p><span className="font-bold">التسيير:</span> {paiement.ANNEE}</p>
-                                    <p><span className="font-bold">رقم الحوالة: </span>{paiement.N_MANDAT}</p>
-                                    <p><span className="font-bold">تاريخ الحوالة: </span></p>
-                                    <p><span className="font-bold">طريقة الدفع: </span> بنكي </p>
+                                    <p><span className="font-bold">{t('print.label.ordonnateur_code')}:</span> {direction.ORDONATEUR}</p>
+                                    <p><span className="font-bold">{t('print.label.mandate_year')}:</span> {paiement.ANNEE}</p>
+                                    <p><span className="font-bold">{t('col.mandat_no')}: </span>{paiement.N_MANDAT}</p>
+                                    <p><span className="font-bold">{t('col.mandat_date')}: </span></p>
+                                    <p><span className="font-bold">{t('print.mandat.payment_method')}</span> {t('print.mandat.bank_transfer')} </p>
                                 </div>
                             </div>
                             <div className="w-1/2 text-center pt-2">
                                 <div className="p-2 border border-black inline-block">
-                                    <p><span className="font-bold">المحاسب الممضي:</span> أمين الخزينة لولاية غليزان</p>
-                                    <p><span className="font-bold">رقم بيان التعريف المصرفي للخزينة:</span> 95 5744448001 48001 008</p>
+                                    <p><span className="font-bold">{t('print.mandat.accountant_signing')}</span> {t('print.mandat.treasury_agent')}</p>
+                                    <p><span className="font-bold">{t('print.mandat.treasury_rib')}</span> 95 5744448001 48001 008</p>
                                 </div>
                             </div>
                         </div>
                         <div className={`mt-0 flex-grow ${isLongObjet ? 'text-[10px] leading-snug' : 'text-[12px]'}`}>
-                            <p className="break-words"><span className="text-[12px] font-bold">موضوع الدفع: </span><span className="text-[11px]">{objetText}</span></p>
-                            <p><span className="text-[13px] font-bold text-center">تسمية العملية:</span><span className="text-[13px] text-center">{operation.INT_OPERATION}</span></p>				
-                            <p><span className="text-[13px] font-bold">رقم العملية: </span><span className="text-[12px]">{operation.N_OPERATION}
-                               </span><span className="text-[12px]">{operation.N_OPERATION_ANCIEN  && (<span>&nbsp;<span className="font-bold">رقم العملية القديم: </span>{operation.N_OPERATION_ANCIEN}</span>)}</span></p>
-                            <p className="mt-1 leading-none"><span className="font-bold">أحكام التدخل: </span>(T4, T5 et T6)</p>
+                            <p className="break-words"><span className="text-[12px] font-bold">{t('print.label.payment_subject')} </span><span className="text-[11px]">{objetText}</span></p>
+                            <p><span className="text-[13px] font-bold text-center">{t('print.mandat.operation_label')}</span><span className="text-[13px] text-center">{operation.INT_OPERATION}</span></p>				
+                            <p><span className="text-[13px] font-bold">{t('print.label.operation_num')} </span><span className="text-[12px]">{operation.N_OPERATION}
+                               </span><span className="text-[12px]">{operation.N_OPERATION_ANCIEN  && (<span>&nbsp;<span className="font-bold">{t('print.label.operation_old_num')}: </span>{operation.N_OPERATION_ANCIEN}</span>)}</span></p>
+                            <p className="mt-1 leading-none"><span className="font-bold">{t('print.mandat.intervention_provisions')} </span>(T4, T5 et T6)</p>
                         </div>
                     </div>
                     <div className="w-[34%]">
                         <table className="w-full border-collapse border border-black text-sm">
                             <thead>
                                 <tr className="font-bold text-center">
-                                    <td className="border border-black w-[30%]">تصنيف حسب النشاط</td>
-                                    <td className="border border-black">الرمز</td>
-                                    <td className="border border-black">التسمية</td>
+                                    <td className="border border-black w-[30%]">{t('print.label.classification_activity')}</td>
+                                    <td className="border border-black">{t('col.code')}</td>
+                                    <td className="border border-black">{t('print.label.designation')}</td>
                                 </tr>
                             </thead>
                             <tbody className="text-right">
                                 <tr>
-                                    <td className="border border-black p-1 font-bold">حافظة</td>
+                                    <td className="border border-black p-1 font-bold">{t('print.mandat.portfolio_cell')}</td>
                                     <td className="border border-black text-center">{direction.PORTEFEUILLE}</td>
                                     <td className="border border-black">{direction.INT_PORTEFEUILLE}</td>
                                 </tr>
                                 <tr>
-                                    <td className="border border-black p-1 font-bold">برنامج</td>
+                                    <td className="border border-black p-1 font-bold">{t('print.label.program')}</td>
                                     <td className="border border-black text-center">{programme?.PROGRAMME}</td>
                                     <td className="border border-black">{programme?.INT_PROGRAMME}</td>
                                 </tr>
                                 <tr>
-                                    <td className="border border-black p-1 font-bold">النشاط</td>
+                                    <td className="border border-black p-1 font-bold">{t('print.label.activity')}</td>
                                     <td className="border border-black text-center">{actionCode}</td>
                                     <td className="border border-black">{actionName}</td>
                                 </tr>
                                 <tr>
-                                    <td className="border border-black p-1 font-bold">نشاط فرعي</td>
+                                    <td className="border border-black p-1 font-bold">{t('print.mandat.subactivity_cell')}</td>
                                     <td className="border border-black text-center">{direction.SACTION}</td>
                                     <td className="border border-black">{direction.INT_SACTION || ''}</td>
                                 </tr>
@@ -282,21 +284,21 @@ const PrintMandatPage: React.FC<PrintMandatPageProps> = ({ navigate, paiementId 
                 <table className="w-full border-collapse border border-black text-sm mb-2 mt-0">
                     <thead>
                         <tr className="font-bold text-center">
-                            <th rowSpan={2} className="w-[5%] border border-black p-1 align-middle">رقم بطاقة الالتزام</th>
-                            <th rowSpan={2} className="w-[3%] border border-black p-1 align-middle">برنامج فرعي</th>
-                            <th rowSpan={2} className="w-[25%] border border-black p-1 align-middle">التقييد الميزانياتي</th>
-                            <th rowSpan={2} className="w-[10%] border border-black p-1 align-middle">المبلغ الخام</th>
-                            <th colSpan={2} className="border border-black p-1 vertical-align-middle">الاقتطاعات</th>
-                            <th colSpan={3} className="border border-black p-1 vertical-align-middle">تعيين المستفيد</th>
-                            <th rowSpan={2} className="w-[10%] border border-black p-1 align-middle">مبلغ الدفع الاجمالي</th>
-                            <th rowSpan={2} className="w-[3%] border border-black p-1 align-middle">ملاحظات</th>
+                            <th rowSpan={2} className="w-[5%] border border-black p-1 align-middle">{t('col.eng_no')}</th>
+                            <th rowSpan={2} className="w-[3%] border border-black p-1 align-middle">{t('col.sub_program')}</th>
+                            <th rowSpan={2} className="w-[25%] border border-black p-1 align-middle">{t('col.budget_imputation')}</th>
+                            <th rowSpan={2} className="w-[10%] border border-black p-1 align-middle">{t('col.gross_amount')}</th>
+                            <th colSpan={2} className="border border-black p-1 vertical-align-middle">{t('col.deductions')}</th>
+                            <th colSpan={3} className="border border-black p-1 vertical-align-middle">{t('col.beneficiary_assignment')}</th>
+                            <th rowSpan={2} className="w-[10%] border border-black p-1 align-middle">{t('col.net_payment')}</th>
+                            <th rowSpan={2} className="w-[3%] border border-black p-1 align-middle">{t('col.observation')}</th>
                         </tr>
                         <tr className="font-bold text-center">
-                            <th className="border border-black p-1 w-[5%] vertical-align-middle">الحساب</th>
-                            <th className="border border-black p-1 w-[5%] vertical-align-middle">المبلغ</th>
-                            <th className="border border-black p-1 w-[12%] vertical-align-middle">المستفيد</th>
-                            <th className="border border-black p-1 w-[13%] vertical-align-middle">حساب المستفيد</th>
-                            <th className="border border-black p-1 w-[20%] vertical-align-middle">مرجع وثيقة الدفع</th>
+                            <th className="border border-black p-1 w-[5%] vertical-align-middle">{t('col.account')}</th>
+                            <th className="border border-black p-1 w-[5%] vertical-align-middle">{t('col.amount')}</th>
+                            <th className="border border-black p-1 w-[12%] vertical-align-middle">{t('col.beneficiary')}</th>
+                            <th className="border border-black p-1 w-[13%] vertical-align-middle">{t('col.beneficiary_account')}</th>
+                            <th className="border border-black p-1 w-[20%] vertical-align-middle">{t('col.doc_reference')}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -304,8 +306,8 @@ const PrintMandatPage: React.FC<PrintMandatPageProps> = ({ navigate, paiementId 
                             <td className="border border-black align-top p-1 text-center">{engagement.N_ENG}/{engagement.ANNEE}</td>
                             <td className="border border-black align-top p-1 text-center">{sprogramme?.SPROGRAMME}</td>
                             <td className="border border-black align-top p-1 text-center text-[12px]">
-                                <p>الصنف: {categorie?.C_CATEGORIE} {categorie?.INT_CATEGORIE}</p>
-                                <p>الصنف الفرعي: {scategorie?.C_SCATEGORIE} {scategorie?.INT_SCATEGORIE}</p>
+                                <p>{t('col.categorie')}: {categorie?.C_CATEGORIE} {categorie?.INT_CATEGORIE}</p>
+                                <p>{t('col.sub_categorie')}: {scategorie?.C_SCATEGORIE} {scategorie?.INT_SCATEGORIE}</p>
                             </td>
                             <td className="border border-black align-top p-1 text-center text-[12px]">{formatCurrency(montantBrut)}</td>
                             <td className="border border-black align-top p-1 text-center"></td>
@@ -320,40 +322,40 @@ const PrintMandatPage: React.FC<PrintMandatPageProps> = ({ navigate, paiementId 
                 </table>
                 <div className="flex justify-between items-start text-sm">
                     <div className="w-2/4 p-1 space-y-1 text-right">
-                        <p>أوقفت بمبلغ (بالحروف): <span className="font-bold">{numberToArabicWords(paiement.MONTANT_PAI)}</span></p>
+                        <p>{t('print.label.stopped_at_amount')} <span className="font-bold">{numberToArabicWords(paiement.MONTANT_PAI)}</span></p>
                         <div className="text-center mt-16">
-                            <p className="mt-6">تاريخ التسوية: ..................................</p>
-                            <p className="mt-2 font-bold">الأمـــــر بالصــــــرف</p>
+                            <p className="mt-6">{t('print.label.settlement_date')} ..................................</p>
+                            <p className="mt-2 font-bold">{t('print.mandat.ordonnateur_title')}</p>
                         </div>
                     </div>
                     <div className="w-1/4 p-1">
                         <table className="border: 0 w-full text-sm">
                             <thead className="font-bold ">
-                                <tr><td colSpan={2} className="border border-black p-1 text-center">إطار مخصص للمحاسب</td></tr>
+                                <tr><td colSpan={2} className="border border-black p-1 text-center">{t('print.label.accountant_frame')}</td></tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td className="border border-black p-1 text-right w-1/2">إجمالي مبلغ الدفع:</td>
+                                    <td className="border border-black p-1 text-right w-1/2">{t('print.label.total_payment_amount')}</td>
                                     <td className="border border-black p-1 h-6 w-1/2"></td>
                                 </tr>
                                 <tr>
-                                    <td className="border border-black p-1 text-right w-1/2">الرفض</td>
+                                    <td className="border border-black p-1 text-right w-1/2">{t('print.label.rejection')}</td>
                                     <td className="border border-black p-1 h-6 w-1/2"></td>
                                 </tr>
                                 <tr>
-                                    <td className="border border-black p-1 text-right w-1/2">نفقة قابلة للدفع</td>
+                                    <td className="border border-black p-1 text-right w-1/2">{t('print.label.payable_expense')}</td>
                                     <td className="border border-black p-1 h-6 w-1/2"></td>
                                 </tr>
                                 <tr>
-                                    <td className="border border-black p-1 text-right w-1/2">اقتطاع المحاسب:</td>
+                                    <td className="border border-black p-1 text-right w-1/2">{t('print.label.accountant_deduction')}</td>
                                     <td className="border border-black p-1 h-6 w-1/2"></td>
                                 </tr>
                                 <tr>
-                                    <td className="border border-black p-1 text-right w-1/2">إجمالي صافي الدفع:</td>
+                                    <td className="border border-black p-1 text-right w-1/2">{t('print.label.total_net_payment')}</td>
                                     <td className="border border-black p-1 h-6 w-1/2"></td>
                                 </tr>
 								<tr>
-                                    <td className="border-r-0 border-l-0 border-b-0 text-right w-1/2">المحاسب العمومي الممضي:</td>
+                                    <td className="border-r-0 border-l-0 border-b-0 text-right w-1/2">{t('print.label.accountant_signature')}</td>
                                 </tr>
                             </tbody>
                         </table>

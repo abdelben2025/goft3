@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Page, Rubrique, User } from '../types';
 import { useData } from '../context/DataContext';
 import { useToast } from '../context/ToastContext';
+import { useLanguage } from '../context/LanguageContext';
 import { errorMessage } from '../utils/errorMessage';
 import PageWrapper from '../components/PageWrapper';
 import Modal from '../components/Modal';
@@ -18,6 +19,7 @@ interface RubriquePageProps {
 const RubriquePage: React.FC<RubriquePageProps> = ({ navigate, onGoBack, currentUser }) => {
     const { db, loading, addItem, updateItem, deleteItem } = useData();
     const { showToast } = useToast();
+    const { t } = useLanguage();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingRubrique, setEditingRubrique] = useState<Rubrique | undefined>(undefined);
     const [selectedRubriqueId, setSelectedRubriqueId] = useState<number | null>(null);
@@ -25,19 +27,19 @@ const RubriquePage: React.FC<RubriquePageProps> = ({ navigate, onGoBack, current
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
     const handleSaveRubrique = async (rubriqueData: Omit<Rubrique, 'ID_RUBRIQUE'> | Rubrique) => {
-        showToast('جاري حفظ البيانات...', 'loading');
+        showToast(t('rub.toast_saving'), 'loading');
         try {
             if ('ID_RUBRIQUE' in rubriqueData) {
                 await updateItem('T_RUBRIQUE', rubriqueData.ID_RUBRIQUE, rubriqueData);
-                showToast('تم تعديل الهيكل بنجاح', 'success');
+                showToast(t('rub.toast_edit_success'), 'success');
             } else {
                 await addItem('T_RUBRIQUE', rubriqueData);
-                showToast('تمت إضافة الهيكل بنجاح', 'success');
+                showToast(t('rub.toast_add_success'), 'success');
             }
             setIsModalOpen(false);
             setEditingRubrique(undefined);
         } catch (error) {
-            showToast(`حدث خطأ أثناء الحفظ — السبب: ${errorMessage(error)}`, 'error');
+            showToast(t('rub.toast_save_error', { reason: errorMessage(error) }), 'error');
         }
     };
 
@@ -49,19 +51,19 @@ const RubriquePage: React.FC<RubriquePageProps> = ({ navigate, onGoBack, current
     const confirmDeleteRubrique = async () => {
         setIsDeleteConfirmOpen(false);
         if (selectedRubriqueId === null) return;
-        showToast('جاري الحذف...', 'loading');
+        showToast(t('rub.toast_deleting'), 'loading');
         try {
             await deleteItem('T_RUBRIQUE', selectedRubriqueId);
             setSelectedRubriqueId(null);
-            showToast('تم حذف الهيكل بنجاح', 'success');
+            showToast(t('rub.toast_delete_success'), 'success');
         } catch (error) {
-            showToast(`حدث خطأ أثناء الحذف — السبب: ${errorMessage(error)}`, 'error');
+            showToast(t('rub.toast_delete_error', { reason: errorMessage(error) }), 'error');
         }
     };
 
     const openAddModal = () => {
         if (loading) {
-            alert("يجب الانتظار حتى يتم تحديث النافذة");
+            alert(t('op.alert_wait_loading'));
             return;
         }
         setEditingRubrique(undefined);
@@ -71,7 +73,7 @@ const RubriquePage: React.FC<RubriquePageProps> = ({ navigate, onGoBack, current
 
     const openEditModal = () => {
         if (loading) {
-            alert("يجب الانتظار حتى يتم تحديث النافذة");
+            alert(t('op.alert_wait_loading'));
             return;
         }
         if (selectedRubriqueId === null) return;
@@ -83,11 +85,11 @@ const RubriquePage: React.FC<RubriquePageProps> = ({ navigate, onGoBack, current
         }
     };
 
-    if (loading) return <div>جار التحميل...</div>;
+    if (loading) return <div>{t('loading')}</div>;
 
     return (
         <PageWrapper
-            title="إدارة هيكلة الكلفة"
+            title={t('page.rubrique')}
             navigate={navigate}
             onGoBack={onGoBack}
             backPage="SETTINGS"
@@ -95,13 +97,13 @@ const RubriquePage: React.FC<RubriquePageProps> = ({ navigate, onGoBack, current
             actions={
                 <div className="flex items-center gap-2">
                     <button onClick={openAddModal} className="bg-green-500 text-white px-4 py-2 rounded-lg shadow hover:bg-green-600 transition-colors">
-                        <i className="bi bi-plus-circle mr-2"></i> إضافة هيكل
+                        <i className="bi bi-plus-circle mr-2"></i> {t('rub.add_structure')}
                     </button>
                     <button onClick={openEditModal} disabled={selectedRubriqueId === null} className="bg-yellow-500 text-white px-4 py-2 rounded-lg shadow hover:bg-yellow-600 transition-colors disabled:bg-gray-400">
-                        <i className="bi bi-pencil-fill mr-2"></i> تعديل
+                        <i className="bi bi-pencil-fill mr-2"></i> {t('btn.edit')}
                     </button>
                     <button onClick={handleDeleteRubrique} disabled={selectedRubriqueId === null} className="bg-red-500 text-white px-4 py-2 rounded-lg shadow hover:bg-red-600 transition-colors disabled:bg-gray-400">
-                        <i className="bi bi-trash-fill mr-2"></i> حذف
+                        <i className="bi bi-trash-fill mr-2"></i> {t('btn.delete')}
                     </button>
                 </div>
             }
@@ -110,8 +112,8 @@ const RubriquePage: React.FC<RubriquePageProps> = ({ navigate, onGoBack, current
                 <table className="w-full text-right">
                     <thead className="bg-blue-100">
                         <tr>
-                            <th className="p-3 text-sm font-semibold text-gray-700 uppercase tracking-wider">المعرف</th>
-                            <th className="p-3 text-sm font-semibold text-gray-700 uppercase tracking-wider">العنوان</th>
+                            <th className="p-3 text-sm font-semibold text-gray-700 uppercase tracking-wider">{t('col.id')}</th>
+                            <th className="p-3 text-sm font-semibold text-gray-700 uppercase tracking-wider">{t('col.title')}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -124,13 +126,13 @@ const RubriquePage: React.FC<RubriquePageProps> = ({ navigate, onGoBack, current
                     </tbody>
                 </table>
             </div>
-             <Modal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditingRubrique(undefined); }} title={editingRubrique ? "تعديل هيكل" : "إضافة هيكل جديد"}>
+             <Modal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditingRubrique(undefined); }} title={editingRubrique ? t('rub.edit_title') : t('rub.add_title')}>
                 <AddRubriqueForm key={formKey} onClose={() => { setIsModalOpen(false); setEditingRubrique(undefined); }} onSave={handleSaveRubrique} initialData={editingRubrique} />
             </Modal>
             <ConfirmActionModal
                 isOpen={isDeleteConfirmOpen}
-                title="تأكيد حذف الهيكل"
-                message="هل أنت متأكد أنك تريد حذف هذا الهيكل؟"
+                title={t('rub.delete_confirm_title')}
+                message={t('rub.delete_confirm_message')}
                 onCancel={() => setIsDeleteConfirmOpen(false)}
                 onConfirm={confirmDeleteRubrique}
             />

@@ -2,6 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { Page, User } from '../types';
 import { useData } from '../context/DataContext';
+import { useLanguage } from '../context/LanguageContext';
 import PageWrapper from '../components/PageWrapper';
 import { exportToFormattedExcel } from '../utils/exportToCsv';
 import { formatCurrency } from '../utils/currencyUtils';
@@ -24,6 +25,7 @@ const formatCurrencyForExcel = (amount: number | null | undefined) => {
 
 const AeInsufficiencyPage: React.FC<AeInsufficiencyPageProps> = ({ navigate, onGoBack, currentUser }) => {
     const { db, loading } = useData();
+    const { t } = useLanguage();
     const [selectedOperationId, setSelectedOperationId] = useState<string>('');
 
     // Filter data: Pieces that are commitments (Contract/Convention/Addendum/Invoice) BUT NOT in T_ENGAGEMENT
@@ -124,11 +126,11 @@ const AeInsufficiencyPage: React.FC<AeInsufficiencyPageProps> = ({ navigate, onG
 
     const handleExport = () => {
         if (insufficientData.length === 0) {
-            alert('لا توجد بيانات للتصدير.');
+            alert(t('aeins.no_data_export'));
             return;
         }
 
-        const headers = ['الرقم التسلسلي', 'العملية', 'الهيكلة', 'الوثيقة', 'المبلغ'];
+        const headers = [t('col.serial'), t('col.operation'), t('aeins.col.structure'), t('col.document'), t('col.amount')];
         const styles = `<style> table, th, td { border: 1px solid black; border-collapse: collapse; text-align: right; padding: 5px; font-family: Arial, sans-serif; vertical-align: middle; } th { background-color: #DDEBF7; font-weight: bold; text-align: center; } .total { background-color: #A9D08E; font-weight: bold; } td { mso-number-format:"\\@"; } .currency { mso-number-format:"\\#\\,##0\\.00"; } </style>`;
         
         let tableHtml = `${styles}<table><thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>`;
@@ -144,7 +146,7 @@ const AeInsufficiencyPage: React.FC<AeInsufficiencyPageProps> = ({ navigate, onG
         });
 
         tableHtml += `</tbody><tfoot><tr class="total">
-            <td colspan="4" style="text-align:center;">المجموع</td>
+            <td colspan="4" style="text-align:center;">${t('lbl.total')}</td>
             <td class="currency">${formatCurrencyForExcel(totalAmount)}</td>
         </tr></tfoot></table>`;
 
@@ -163,30 +165,30 @@ const AeInsufficiencyPage: React.FC<AeInsufficiencyPageProps> = ({ navigate, onG
                 console.error("Error parsing allowed operations", e);
             }
         }
-        return [{ value: '', label: 'كل العمليات' }, ...ops.map(op => ({ value: String(op.ID_OPERATION), label: op.INT_OPERATION }))];
-    }, [db.T_OPERATION, currentUser]);
+        return [{ value: '', label: t('filter.all_operations') }, ...ops.map(op => ({ value: String(op.ID_OPERATION), label: op.INT_OPERATION }))];
+    }, [db.T_OPERATION, currentUser, t]);
 
-    if (loading) return <div>جار التحميل...</div>;
+    if (loading) return <div>{t('loading')}</div>;
 
     return (
-        <PageWrapper title="جدول نقص رخصة الالتزام حسب الهيكلة (Insuffisance d'AE sur rubrique)" navigate={navigate} onGoBack={onGoBack} backPage='FINANCIAL_STATUS' currentUser={currentUser}>
+        <PageWrapper title={t('aeins.title')} navigate={navigate} onGoBack={onGoBack} backPage='FINANCIAL_STATUS' currentUser={currentUser}>
             <div className="bg-red-100 p-4 rounded-lg shadow-md mb-6 border border-red-300">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">تصفية حسب العملية</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('filter.operation')}</label>
                         <CustomDropdown
                             options={operationOptions}
                             value={selectedOperationId}
                             onChange={setSelectedOperationId}
-                            placeholder="اختر العملية"
+                            placeholder={t('filter.select_operation')}
                         />
                     </div>
                     <div className="flex gap-2">
                         <button onClick={() => navigate('PRINT_AE_INSUFFICIENCY', selectedOperationId ? parseInt(selectedOperationId) : 0)} className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600 transition-colors w-full">
-                            <i className="bi bi-printer mr-2"></i> طباعة
+                            <i className="bi bi-printer mr-2"></i> {t('btn.print')}
                         </button>
                         <button onClick={handleExport} disabled={insufficientData.length === 0} className="bg-teal-500 text-white px-4 py-2 rounded-lg shadow hover:bg-teal-600 transition-colors w-full disabled:bg-gray-400">
-                            <i className="bi bi-file-earmark-excel mr-2"></i> تصدير
+                            <i className="bi bi-file-earmark-excel mr-2"></i> {t('btn.export')}
                         </button>
                     </div>
                 </div>
@@ -196,11 +198,11 @@ const AeInsufficiencyPage: React.FC<AeInsufficiencyPageProps> = ({ navigate, onG
                 <table className="w-full text-right min-w-[900px] relative">
                     <thead className="bg-red-200 sticky top-0 z-20 shadow-sm">
                         <tr>
-                            <th className="p-3 text-sm font-semibold text-gray-700 w-[10%] bg-red-200 sticky top-0 z-20">الرقم التسلسلي</th>
-                            <th className="p-3 text-sm font-semibold text-gray-700 w-[30%] bg-red-200 sticky top-0 z-20">العملية</th>
-                            <th className="p-3 text-sm font-semibold text-gray-700 w-[20%] bg-red-200 sticky top-0 z-20">الهيكلة</th>
-                            <th className="p-3 text-sm font-semibold text-gray-700 w-[25%] bg-red-200 sticky top-0 z-20">الوثيقة (التي تفوق الرصيد)</th>
-                            <th className="p-3 text-sm font-semibold text-gray-700 w-[15%] bg-red-200 sticky top-0 z-20">مبلغ الوثيقة</th>
+                            <th className="p-3 text-sm font-semibold text-gray-700 w-[10%] bg-red-200 sticky top-0 z-20">{t('col.serial')}</th>
+                            <th className="p-3 text-sm font-semibold text-gray-700 w-[30%] bg-red-200 sticky top-0 z-20">{t('col.operation')}</th>
+                            <th className="p-3 text-sm font-semibold text-gray-700 w-[20%] bg-red-200 sticky top-0 z-20">{t('aeins.col.structure')}</th>
+                            <th className="p-3 text-sm font-semibold text-gray-700 w-[25%] bg-red-200 sticky top-0 z-20">{t('aeins.col.document_exceeds_balance')}</th>
+                            <th className="p-3 text-sm font-semibold text-gray-700 w-[15%] bg-red-200 sticky top-0 z-20">{t('aeins.col.document_amount')}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -214,13 +216,13 @@ const AeInsufficiencyPage: React.FC<AeInsufficiencyPageProps> = ({ navigate, onG
                             </tr>
                         )) : (
                             <tr>
-                                <td colSpan={5} className="p-6 text-center text-gray-500">لا توجد وثائق تفوق رخصة الالتزام المتبقية.</td>
+                                <td colSpan={5} className="p-6 text-center text-gray-500">{t('aeins.no_data')}</td>
                             </tr>
                         )}
                     </tbody>
                     <tfoot className="bg-gray-300 font-bold text-gray-800 text-sm sticky bottom-0 z-20 shadow-[0_-2px_10px_rgba(0,0,0,0.1)]">
                         <tr>
-                            <td colSpan={4} className="p-3 text-center text-lg bg-gray-300">المجموع</td>
+                            <td colSpan={4} className="p-3 text-center text-lg bg-gray-300">{t('lbl.total')}</td>
                             <td className="p-3 text-lg bg-gray-300">{formatCurrency(totalAmount)}</td>
                         </tr>
                     </tfoot>

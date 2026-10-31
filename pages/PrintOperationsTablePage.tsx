@@ -307,15 +307,15 @@ const PrintOperationsTablePage: React.FC<PrintOperationsTablePageProps> = ({ nav
                             <p>{direction?.DIRECTION}</p>
                         </div>
                         <div className="text-left text-gray-600">
-                            <p>السنة المالية: {selectedYear}</p>
-                            {selectedStatus !== 'all' && <p>حالة العمليات: {selectedStatus}</p>}
-                            {selectedTypeOp !== 'all' && <p>نوع العمليات: {selectedTypeOp}</p>}
+                            <p>{t('print.fiscal_year', { year: selectedYear })}</p>
+                            {selectedStatus !== 'all' && <p>{t('print.operations_status_colon')} {selectedStatus}</p>}
+                            {selectedTypeOp !== 'all' && <p>{t('print.operations_type_colon')} {selectedTypeOp}</p>}
                         </div>
                     </div>
                     <h1 className="text-lg font-bold underline mt-2">{t('print.title.operations_table', {year: selectedYear})}</h1>
                     <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-2 text-xs font-semibold text-gray-700">
-                        {selectedActivity && <span>النشاط: {activities.find(a=>a.code === selectedActivity)?.name || selectedActivity}</span>}
-                        {searchQuery && <span>عبارة البحث: "{searchQuery}"</span>}
+                        {selectedActivity && <span>{t('print.activity_colon')} {activities.find(a=>a.code === selectedActivity)?.name || selectedActivity}</span>}
+                        {searchQuery && <span>{t('print.search_query', { query: searchQuery })}</span>}
                     </div>
                 </header>
 
@@ -329,8 +329,8 @@ const PrintOperationsTablePage: React.FC<PrintOperationsTablePageProps> = ({ nav
                             <th className="border border-black p-1 w-[9%]">{t('col.remaining_ae')}</th>
                             <th className="border border-black p-1 w-[10%]">{t('col.total_payments')}</th>
                             <th className="border border-black p-1 w-[10%]">{t('col.cp_year', {year: selectedYear})}</th>
-                            <th className="border border-black p-1 w-[9%]">دفع السنة</th>
-                            <th className="border border-black p-1 w-[10%]">باقي اعتماد الدفع</th>
+                            <th className="border border-black p-1 w-[9%]">{t('op.export_col_payments_year')}</th>
+                            <th className="border border-black p-1 w-[10%]">{t('op.export_col_remaining_cp')}</th>
                         </tr>
                     </thead>
                     <tbody className="text-[8.5pt]">
@@ -339,14 +339,14 @@ const PrintOperationsTablePage: React.FC<PrintOperationsTablePageProps> = ({ nav
                                 if (item.type === 'catHeader') {
                                     return (
                                         <tr key={item.id} className="bg-gray-300 font-bold">
-                                            <td colSpan={9} className="border border-black p-1 text-right">الصنف: {item.catName} ({item.catCode})</td>
+                                            <td colSpan={9} className="border border-black p-1 text-right">{t('op.export_cat_header', { name: item.catName, code: item.catCode })}</td>
                                         </tr>
                                     );
                                 }
                                 if (item.type === 'scatHeader') {
                                     return (
                                         <tr key={item.id} className="bg-gray-100 font-bold">
-                                            <td colSpan={9} className="border border-black p-1 text-right">الصنف الفرعي: {item.scatName} {item.scatCode !== 'NO_SCAT' ? `(${item.scatCode})` : ''}</td>
+                                            <td colSpan={9} className="border border-black p-1 text-right">{t('op.export_scat_header', { name: item.scatName })} {item.scatCode !== 'NO_SCAT' ? `(${item.scatCode})` : ''}</td>
                                         </tr>
                                     );
                                 }

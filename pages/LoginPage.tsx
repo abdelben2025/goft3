@@ -34,13 +34,13 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCloseApp }) => {
         
         const isDesktop = tauriDb.isAvailable();
         if (!isDbConfigured && isOnline && !isDesktop) {
-            setError('يجب إعداد قاعدة البيانات أولاً.');
+            setError(t('login.dbNotConfigured'));
             setIsConfigOpen(true);
             return;
         }
 
         if (loading || isLoggingIn) {
-            setError('جارٍ تحميل البيانات... يرجى الانتظار.');
+            setError(t('login.loadingData'));
             return;
         }
 
@@ -50,8 +50,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCloseApp }) => {
             // online on another machine, refuse the login with a clear notice.
             const targetUsername = username.trim().toLowerCase();
             if (isOnline && (onlineUsers || []).some(u => (u.username || '').trim().toLowerCase() === targetUsername)) {
-                setError(`اسم المستخدم «${username.trim()}» متصل الآن على جهاز آخر. يجب أن يخرج أولًا قبل تسجيل الدخول هنا.`);
-                showToast(`تم منع تسجيل الدخول: المستخدم «${username.trim()}» متصل الآن`, 'error');
+                setError(t('login.alreadyOnline', { name: username.trim() }));
+                showToast(t('login.onlineBlocked', { name: username.trim() }), 'error');
                 return;
             }
 
@@ -77,15 +77,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCloseApp }) => {
             } else if (result.offlineCredentialMissing) {
                 // The account exists locally, but this workstation never cached a
                 // verifiable hash for it (passwords no longer leave the server).
-                setError('لا توجد بيانات دخول محفوظة لهذا الحساب على هذا الجهاز. اتصل بالإنترنت وسجّل الدخول مرة واحدة قبل استعمال الوضع المحلي.');
+                setError(t('login.noCachedCredential'));
             } else if (!isOnline && db.T_USER.length === 0) {
-                setError('لا توجد بيانات محلية محفوظة. يجب الاتصال بالإنترنت لتسجيل الدخول لأول مرة.');
+                setError(t('login.noLocalData'));
             } else {
                 // The same wording covers a server rejection and a local one, which
                 // is exactly what makes "the user exists but cannot log in" opaque.
                 const where = result.source === 'cloud'
-                    ? `تحقق عبر السحابة (${configuredHost || 'غير مهيأ'})`
-                    : 'تحقق محلي — البيانات من نسخة الجهاز، لا من السحابة';
+                    ? t('login.checkCloud', { host: configuredHost || t('login.notConfiguredHost') })
+                    : t('login.checkLocal');
                 setError(`${t('login.error')} — ${where}`);
             }
         } catch (err) {
@@ -116,10 +116,10 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCloseApp }) => {
                         type="button"
                         onClick={onCloseApp}
                         className="absolute top-3 right-3 flex items-center gap-1.5 bg-red-100 text-red-700 hover:bg-red-200 border border-red-200 px-3 py-1 rounded-full text-xs font-bold transition-colors"
-                        title="إغلاق البرنامج"
+                        title={t('login.closeAppTitle')}
                     >
                         <i className="bi bi-x-square"></i>
-                        <span>إغلاق</span>
+                        <span>{t('login.closeApp')}</span>
                     </button>
                 )}
 
@@ -132,7 +132,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCloseApp }) => {
                     {!isOnline && (
                         <div className="mt-2 inline-flex items-center gap-2 bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-bold border border-yellow-300">
                             <i className="bi bi-wifi-off"></i>
-                            <span>وضع غير متصل (نسخة محلية)</span>
+                            <span>{t('login.offlineMode')}</span>
                         </div>
                     )}
                 </div>
@@ -174,7 +174,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCloseApp }) => {
                     {loading && (
                         <div className="text-center text-blue-700 text-sm animate-pulse font-semibold">
                             <i className="bi bi-arrow-repeat animate-spin mr-2"></i>
-                            جاري تهيئة قاعدة البيانات...
+                            {t('login.initDb')}
                         </div>
                     )}
 
@@ -188,7 +188,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCloseApp }) => {
                             type="submit"
                             disabled={loading}
                             className="w-full px-4 py-2 font-bold text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-300 shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed">
-                            {loading ? 'انتظر قليلاً...' : t('login.btn')}
+                            {loading ? t('login.wait') : t('login.btn')}
                         </button>
                     </div>
                 </form>

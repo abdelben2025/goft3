@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Page } from '../../types';
 import { useData } from '../../context/DataContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface AddUserFormProps {
     onClose: () => void;
@@ -13,28 +14,29 @@ interface AddUserFormProps {
 }
 
 const PAGE_NAMES: { [key in Page]?: string } = {
-    'HOME': 'الرئيسية',
-    'OPERATIONS': 'العمليات',
-    'DOCUMENTS': 'الوثائق',
-    'BENEFICIARIES': 'المستفيدين',
-    'FINANCIAL_STATUS': 'الوضعية المالية',
-    'FINANCIAL_STATUS_BY_STRUCTURE': 'الوضعية المالية حسب الهيكل',
-    'PROJECT_TRACKING': 'متابعة المشاريع',
-    'PAYMENT_CLAIMS': 'مطالبات الدفع',
-    'AE_INSUFFICIENCY': 'نقص اعتمادات الالتزام',
-    'CUSTOM_REPORT': 'تقرير مخصص',
-    'VISAED_ENGAGEMENTS': 'الالتزامات المؤشرة',
-    'APPENDIX_01': 'الملحق 01',
-    'SETTINGS': 'الإعدادات',
-    'USERS': 'المستخدمين',
-    'PROGRAMME': 'البرامج',
-    'CATEGORIE': 'الأصناف',
-    'DIRECTION': 'المديريات',
-    'RUBRIQUE': 'هيكلة الكلفة',
+    'HOME': 'userform.pageHome',
+    'OPERATIONS': 'userform.pageOperations',
+    'DOCUMENTS': 'userform.pageDocuments',
+    'BENEFICIARIES': 'userform.pageBeneficiaries',
+    'FINANCIAL_STATUS': 'userform.pageFinancialStatus',
+    'FINANCIAL_STATUS_BY_STRUCTURE': 'userform.pageFinancialStatusByStructure',
+    'PROJECT_TRACKING': 'userform.pageProjectTracking',
+    'PAYMENT_CLAIMS': 'userform.pagePaymentClaims',
+    'AE_INSUFFICIENCY': 'userform.pageAeInsufficiency',
+    'CUSTOM_REPORT': 'userform.pageCustomReport',
+    'VISAED_ENGAGEMENTS': 'userform.pageVisaedEngagements',
+    'APPENDIX_01': 'userform.pageAppendix01',
+    'SETTINGS': 'userform.pageSettings',
+    'USERS': 'userform.pageUsers',
+    'PROGRAMME': 'userform.pageProgramme',
+    'CATEGORIE': 'userform.pageCategorie',
+    'DIRECTION': 'userform.pageDirection',
+    'RUBRIQUE': 'userform.pageRubrique',
 };
 
 const AddUserForm: React.FC<AddUserFormProps> = ({ onClose, onSave, initialData }) => {
     const { db } = useData();
+    const { t } = useLanguage();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [role, setRole] = useState<'admin' | 'user' | 'viewer'>('user');
@@ -76,16 +78,16 @@ const AddUserForm: React.FC<AddUserFormProps> = ({ onClose, onSave, initialData 
         const trimmedPassword = password.trim();
 
         if (!username.trim()) {
-            alert('يرجى إدخال اسم المستخدم.');
+            alert(t('userform.usernameRequired'));
             return;
         }
         // Existing users keep their password when the field is left blank.
         if (!initialData && !trimmedPassword) {
-            alert('يرجى إدخال كلمة المرور.');
+            alert(t('userform.passwordRequired'));
             return;
         }
         if (trimmedPassword && trimmedPassword.length < 8) {
-            alert('كلمة المرور يجب أن تكون 8 أحرف على الأقل.');
+            alert(t('userform.passwordMinLength'));
             return;
         }
 
@@ -103,7 +105,7 @@ const AddUserForm: React.FC<AddUserFormProps> = ({ onClose, onSave, initialData 
             );
         } catch (err) {
             console.error("User save error:", err);
-            alert("خطأ في حفظ المستخدم");
+            alert(t('userform.saveError'));
             setIsSubmitting(false);
         }
     };
@@ -123,35 +125,35 @@ const AddUserForm: React.FC<AddUserFormProps> = ({ onClose, onSave, initialData 
     return (
         <form onSubmit={handleSubmit} className="flex flex-col max-h-[85vh]">
             <div className="sticky top-0 bg-white z-10 pb-2 border-b border-gray-200 flex justify-end gap-3 pt-1 mb-2">
-                <button type="button" onClick={onClose} className="px-5 py-1.5 bg-gray-200 text-gray-800 rounded-[20px] hover:bg-gray-300 transition-colors text-sm">إلغاء</button>
+                <button type="button" onClick={onClose} className="px-5 py-1.5 bg-gray-200 text-gray-800 rounded-[20px] hover:bg-gray-300 transition-colors text-sm">{t('btn.cancel')}</button>
                 <button type="submit" disabled={isSubmitting} className="px-5 py-1.5 bg-blue-600 text-white rounded-[20px] hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm">
-                    {isSubmitting ? 'جاري الحفظ...' : (initialData ? 'حفظ التغييرات' : 'إضافة')}
+                    {isSubmitting ? t('userform.saving') : (initialData ? t('userform.saveChanges') : t('btn.add'))}
                 </button>
             </div>
             <div className="space-y-4 overflow-y-auto p-1 text-right">
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 text-right">اسم المستخدم</label>
+                        <label className="block text-sm font-medium text-gray-700 text-right">{t('col.username')}</label>
                         <input type="text" value={username} onChange={e => setUsername(e.target.value)} required className="w-full px-3 py-2 mt-1 text-gray-700 bg-white border border-gray-300 rounded-[20px] focus:ring-blue-500 focus:border-blue-500 normal-case" />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 text-right">كلمة المرور</label>
-                        <input type="password" value={password} onChange={e => setPassword(e.target.value)} required={!initialData} placeholder={initialData ? 'اتركها فارغة للإبقاء على الحالية' : ''} className="w-full px-3 py-2 mt-1 text-gray-700 bg-white border border-gray-300 rounded-[20px] focus:ring-blue-500 focus:border-blue-500 normal-case" />
+                        <label className="block text-sm font-medium text-gray-700 text-right">{t('login.password')}</label>
+                        <input type="password" value={password} onChange={e => setPassword(e.target.value)} required={!initialData} placeholder={initialData ? t('userform.passwordLeaveEmpty') : ''} className="w-full px-3 py-2 mt-1 text-gray-700 bg-white border border-gray-300 rounded-[20px] focus:ring-blue-500 focus:border-blue-500 normal-case" />
                     </div>
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 text-right">الدور</label>
+                    <label className="block text-sm font-medium text-gray-700 text-right">{t('col.role')}</label>
                     <select value={role} onChange={e => setRole(e.target.value as 'admin' | 'user' | 'viewer')} required className="w-full px-3 py-2 mt-1 text-gray-700 bg-white border border-gray-300 rounded-[20px] focus:ring-blue-500 focus:border-blue-500">
-                        <option value="user">مستخدم</option>
-                        <option value="admin">مسؤول</option>
-                        <option value="viewer">ملاحظ</option>
+                        <option value="user">{t('role.user')}</option>
+                        <option value="admin">{t('role.admin')}</option>
+                        <option value="viewer">{t('role.viewer')}</option>
                     </select>
                 </div>
 
                 {role !== 'admin' && (
                     <>
                         <div className="border-t pt-4">
-                            <h3 className="text-sm font-semibold text-gray-800 mb-2">تخصيص الوحدات (الصفحات المسموحة)</h3>
+                            <h3 className="text-sm font-semibold text-gray-800 mb-2">{t('userform.customizeModules')}</h3>
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                 {(Object.entries(PAGE_NAMES) as [Page, string][]).map(([page, name]) => (
                                     <label key={page} className="flex items-center gap-2 p-2 rounded-[20px] border cursor-pointer hover:bg-gray-50 transition-colors">
@@ -161,16 +163,16 @@ const AddUserForm: React.FC<AddUserFormProps> = ({ onClose, onSave, initialData 
                                             onChange={() => togglePage(page)}
                                             className="w-4 h-4 text-blue-600 rounded-[20px] focus:ring-blue-500"
                                         />
-                                        <span className="text-xs text-gray-700">{name}</span>
+                                        <span className="text-xs text-gray-700">{t(name)}</span>
                                     </label>
                                 ))}
                             </div>
-                            <p className="text-[10px] text-gray-500 mt-1">إذا لم يتم اختيار أي صفحة، فسيتم تطبيق الصلاحيات الافتراضية للدور.</p>
+                            <p className="text-[10px] text-gray-500 mt-1">{t('userform.defaultPagePermissions')}</p>
                         </div>
 
                         <div className="border-t pt-4">
                             <div className="flex justify-between items-center mb-2">
-                                <h3 className="text-sm font-semibold text-gray-800">تخصيص العمليات المسموحة</h3>
+                                <h3 className="text-sm font-semibold text-gray-800">{t('userform.customizeOperations')}</h3>
                                 {initialData && (
                                     <button 
                                         type="button" 
@@ -180,21 +182,21 @@ const AddUserForm: React.FC<AddUserFormProps> = ({ onClose, onSave, initialData 
                                         }}
                                         className="text-[10px] bg-blue-50 text-blue-600 px-2 py-1 rounded-[20px] hover:bg-blue-100 transition-colors font-bold border border-blue-200"
                                     >
-                                        تحديد العمليات التي أضافها تلقائيا
+                                        {t('userform.selectOwnedOps')}
                                     </button>
                                 )}
                             </div>
                             <div className="max-h-60 overflow-y-auto border rounded-[20px]">
                                 {db.T_OPERATION.length === 0 ? (
-                                    <p className="p-3 text-xs text-gray-500 text-center">لا توجد عمليات مسجلة</p>
+                                    <p className="p-3 text-xs text-gray-500 text-center">{t('userform.noOperations')}</p>
                                 ) : (
                                     <table className="w-full text-right border-collapse">
                                         <thead className="bg-gray-100 text-[10px] font-bold text-gray-600 uppercase tracking-wider sticky top-0">
                                             <tr>
-                                                <th className="px-2 py-2 border-b">إختيار</th>
-                                                <th className="px-2 py-2 border-b">رقم العملية</th>
-                                                <th className="px-2 py-2 border-b">صاحب العملية</th>
-                                                <th className="px-2 py-2 border-b">تعيين العملية</th>
+                                                <th className="px-2 py-2 border-b">{t('userform.select')}</th>
+                                                <th className="px-2 py-2 border-b">{t('userform.operationNumber')}</th>
+                                                <th className="px-2 py-2 border-b">{t('userform.operationOwner')}</th>
+                                                <th className="px-2 py-2 border-b">{t('userform.operationAssignment')}</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-100">
@@ -232,7 +234,7 @@ const AddUserForm: React.FC<AddUserFormProps> = ({ onClose, onSave, initialData 
                                     </table>
                                 )}
                             </div>
-                            <p className="text-[10px] text-gray-500 mt-1">إذا لم يتم اختيار أي عملية، فسيتمكن المستخدم من رؤية جميع العمليات (حسب دوره).</p>
+                            <p className="text-[10px] text-gray-500 mt-1">{t('userform.defaultOperationPermissions')}</p>
                         </div>
                     </>
                 )}

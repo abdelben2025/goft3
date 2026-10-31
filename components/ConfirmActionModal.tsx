@@ -1,5 +1,6 @@
 import React from 'react';
 import Modal from './Modal';
+import { useLanguage } from '../context/LanguageContext';
 
 interface ConfirmActionModalProps {
     isOpen: boolean;
@@ -14,21 +15,26 @@ interface ConfirmActionModalProps {
 
 const ConfirmActionModal: React.FC<ConfirmActionModalProps> = ({
     isOpen,
-    title = 'تأكيد الحذف',
+    title,
     message,
-    confirmLabel = 'نعم، احذف',
-    cancelLabel = 'إلغاء',
+    confirmLabel,
+    cancelLabel,
     danger = true,
     onConfirm,
     onCancel,
 }) => {
+    const { t } = useLanguage();
+    const finalTitle = title ?? t('confirm.title_delete');
+    const finalConfirmLabel = confirmLabel ?? t('confirm.confirm_delete');
+    const finalCancelLabel = cancelLabel ?? t('btn.cancel');
+
     if (!isOpen) return null;
 
     return (
         <Modal
             isOpen={isOpen}
             onClose={onCancel}
-            title={title}
+            title={finalTitle}
             maxWidth="md"
             closeOnOverlay={false}
             hideCloseButton
@@ -44,7 +50,7 @@ const ConfirmActionModal: React.FC<ConfirmActionModalProps> = ({
                         onClick={onCancel}
                         className="px-5 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 text-sm font-bold transition-colors"
                     >
-                        {cancelLabel}
+                        {finalCancelLabel}
                     </button>
                     <button
                         type="button"
@@ -54,7 +60,7 @@ const ConfirmActionModal: React.FC<ConfirmActionModalProps> = ({
                             : 'bg-blue-600 hover:bg-blue-700'
                         }`}
                     >
-                        {confirmLabel}
+                        {finalConfirmLabel}
                     </button>
                 </div>
             </div>

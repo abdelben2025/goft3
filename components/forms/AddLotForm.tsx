@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { LotOperation } from '../../types';
+import { useLanguage } from '../../context/LanguageContext';
 import { formatCurrency, parseCurrency, formatAmountInput, formatCurrencyForInput } from '../../utils/currencyUtils';
 
 interface AddLotFormProps {
@@ -16,6 +17,7 @@ const AddLotForm: React.FC<AddLotFormProps> = ({ onClose, onSave, operationId, i
     const [montantInitialeStr, setMontantInitialeStr] = useState('0');
     const [montantFinaleStr, setMontantFinaleStr] = useState('0');
     const [attribuer, setAttribuer] = useState(false);
+    const { t } = useLanguage();
 
     const isDirty = useRef(false);
     const isEditLoaded = useRef(false);
@@ -60,18 +62,18 @@ const AddLotForm: React.FC<AddLotFormProps> = ({ onClose, onSave, operationId, i
     return (
         <form onSubmit={handleSubmit} className="flex flex-col max-h-[85vh]">
             <div className="sticky top-0 bg-white z-10 pb-2 border-b border-gray-200 flex justify-end gap-3 pt-1 mb-2">
-                <button type="button" onClick={onClose} className="px-5 py-1.5 bg-gray-200 text-gray-800 rounded-[20px] hover:bg-gray-300 transition-colors text-sm">إلغاء</button>
+                <button type="button" onClick={onClose} className="px-5 py-1.5 bg-gray-200 text-gray-800 rounded-[20px] hover:bg-gray-300 transition-colors text-sm">{t('btn.cancel')}</button>
                 <button type="submit" disabled={isSubmitting} className="px-5 py-1.5 bg-blue-600 text-white rounded-[20px] hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm">
-                    {isSubmitting ? 'جاري الحفظ...' : (initialData ? 'حفظ التغييرات' : 'إضافة')}
+                    {isSubmitting ? t('lotform.saving') : (initialData ? t('lotform.saveChanges') : t('btn.add'))}
                 </button>
             </div>
              <div className="space-y-3 overflow-y-auto p-1 text-right">
             <div>
-                <label htmlFor="nLot" className="block text-sm font-medium text-gray-700 text-right">رقم الحصة</label>
+                <label htmlFor="nLot" className="block text-sm font-medium text-gray-700 text-right">{t('det.colLotNo')}</label>
                 <input id="nLot" type="text" value={nLot} onChange={e => { setNLot(e.target.value.toUpperCase()); markDirty(); }} required className="w-full px-3 py-2 mt-1 text-gray-700 bg-gray-100 border border-gray-300 rounded-[20px] uppercase" />
             </div>
             <div>
-                <label htmlFor="intituleLot" className="block text-sm font-medium text-gray-700 text-right">عنوان الحصة</label>
+                <label htmlFor="intituleLot" className="block text-sm font-medium text-gray-700 text-right">{t('det.colLotTitle')}</label>
                 <textarea 
                     id="intituleLot" 
                     value={intituleLot} 
@@ -84,7 +86,7 @@ const AddLotForm: React.FC<AddLotFormProps> = ({ onClose, onSave, operationId, i
             </div>
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label htmlFor="montantInitiale" className="block text-sm font-medium text-gray-700 text-right">المبلغ الأولي</label>
+                    <label htmlFor="montantInitiale" className="block text-sm font-medium text-gray-700 text-right">{t('det.colInitialAmount')}</label>
                     <input
                         id="montantInitiale"
                         type="text"
@@ -104,7 +106,7 @@ const AddLotForm: React.FC<AddLotFormProps> = ({ onClose, onSave, operationId, i
                     />
                 </div>
                 <div>
-                    <label htmlFor="montantFinale" className="block text-sm font-medium text-gray-700 text-right">المبلغ النهائي</label>
+                    <label htmlFor="montantFinale" className="block text-sm font-medium text-gray-700 text-right">{t('det.colFinalAmount')}</label>
                     <input
                         id="montantFinale"
                         type="text"
@@ -133,7 +135,7 @@ const AddLotForm: React.FC<AddLotFormProps> = ({ onClose, onSave, operationId, i
                     className="h-4 w-4 text-blue-600 border-gray-300 rounded[20px] focus:ring-blue-500"
                 />
                 <label htmlFor="attribuer" className="mr-2 block text-sm text-gray-900">
-                    تم الإسناد
+                    {t('lotform.awarded')}
                 </label>
             </div>
             </div>

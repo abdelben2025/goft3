@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Direction } from '../../types';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface AddDirectionFormProps {
     onClose: () => void;
@@ -9,6 +10,7 @@ interface AddDirectionFormProps {
 }
 
 const AddDirectionForm: React.FC<AddDirectionFormProps> = ({ onClose, onSave, initialData }) => {
+    const { t } = useLanguage();
     const [formData, setFormData] = useState({
         DIRECTION: '',
         PORTEFEUILLE: '',
@@ -68,46 +70,46 @@ const AddDirectionForm: React.FC<AddDirectionFormProps> = ({ onClose, onSave, in
     return (
         <form onSubmit={handleSubmit} className="flex flex-col max-h-[85vh]">
             <div className="sticky top-0 bg-white z-10 pb-2 border-b border-gray-200 flex justify-end gap-3 pt-1 mb-2">
-                <button type="button" onClick={onClose} className="px-5 py-1.5 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors text-sm">إلغاء</button>
+                <button type="button" onClick={onClose} className="px-5 py-1.5 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors text-sm">{t('btn.cancel')}</button>
                 <button type="submit" disabled={isSubmitting} className="px-5 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm">
-                    {isSubmitting ? 'جاري الحفظ...' : (initialData ? 'حفظ التغييرات' : 'إضافة')}
+                    {isSubmitting ? t('op.form_saving') : (initialData ? t('op.form_save_changes') : t('btn.add'))}
                 </button>
             </div>
             <div className="space-y-3 overflow-y-auto p-1 text-right">
              <div>
-                <label className="block text-sm font-medium text-gray-700 text-right">المديرية</label>
+                <label className="block text-sm font-medium text-gray-700 text-right">{t('dir.direction')}</label>
                 <input name="DIRECTION" value={formData.DIRECTION} onChange={handleChange} required className="w-full px-3 py-2 mt-1 text-gray-700 bg-gray-100 border border-gray-300 rounded-md" />
             </div>
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 text-right">الحافظة</label>
+                    <label className="block text-sm font-medium text-gray-700 text-right">{t('dir.portfolio_label')}</label>
                     <input name="PORTEFEUILLE" value={formData.PORTEFEUILLE} onChange={handleChange} required className="w-full px-3 py-2 mt-1 text-gray-700 bg-gray-100 border border-gray-300 rounded-md" />
                 </div>
                  <div>
-                    <label className="block text-sm font-medium text-gray-700 text-right">الآمر بالصرف</label>
+                    <label className="block text-sm font-medium text-gray-700 text-right">{t('col.ordonnateur')}</label>
                     <input name="ORDONATEUR" value={formData.ORDONATEUR} onChange={handleChange} required className="w-full px-3 py-2 mt-1 text-gray-700 bg-gray-100 border border-gray-300 rounded-md" />
                 </div>
             </div>
             <div>
-                <label className="block text-sm font-medium text-gray-700 text-right">عنوان الحافظة</label>
+                <label className="block text-sm font-medium text-gray-700 text-right">{t('dir.portfolio_title_label')}</label>
                 <input name="INT_PORTEFEUILLE" value={formData.INT_PORTEFEUILLE} onChange={handleChange} required className="w-full px-3 py-2 mt-1 text-gray-700 bg-gray-100 border border-gray-300 rounded-md" />
             </div>
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 text-right">رمز النشاط</label>
+                    <label className="block text-sm font-medium text-gray-700 text-right">{t('dir.action_code')}</label>
                     <input name="ACTION" value={formData.ACTION} onChange={handleChange} required className="w-full px-3 py-2 mt-1 text-gray-700 bg-gray-100 border border-gray-300 rounded-md" />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 text-right">رمز النشاط الفرعي</label>
+                    <label className="block text-sm font-medium text-gray-700 text-right">{t('dir.subaction_code')}</label>
                     <input name="SACTION" value={formData.SACTION} onChange={handleChange} required className="w-full px-3 py-2 mt-1 text-gray-700 bg-gray-100 border border-gray-300 rounded-md" />
                 </div>
             </div>
              <div>
-                <label className="block text-sm font-medium text-gray-700 text-right">عنوان النشاط</label>
+                <label className="block text-sm font-medium text-gray-700 text-right">{t('dir.activity_title')}</label>
                 <input name="INT_ACTION" value={formData.INT_ACTION} onChange={handleChange} required className="w-full px-3 py-2 mt-1 text-gray-700 bg-gray-100 border border-gray-300 rounded-md" />
             </div>
             <div>
-                <label className="block text-sm font-medium text-gray-700 text-right">عنوان النشاط الفرعي</label>
+                <label className="block text-sm font-medium text-gray-700 text-right">{t('dir.subactivity_title')}</label>
                 <input name="INT_SACTION" value={formData.INT_SACTION} onChange={handleChange} className="w-full px-3 py-2 mt-1 text-gray-700 bg-gray-100 border border-gray-300 rounded-md" />
             </div>
 

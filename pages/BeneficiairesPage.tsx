@@ -72,7 +72,7 @@ const BeneficiairesPage: React.FC<BeneficiairesPageProps> = ({ navigate, onGoBac
     const handleSaveBeneficiary = async (data: { beneficiaryData: Omit<Beneficiaire, 'ID_BENEFICIAIRE'> | Beneficiaire; accounts: Array<{ rib: string; banque: string }> }) => {
         const { beneficiaryData, accounts } = data;
         
-        showToast('جاري حفظ البيانات...', 'loading');
+        showToast(t('settings.saving'), 'loading');
 
         try {
             await runInTransaction(async () => {
@@ -90,7 +90,7 @@ const BeneficiairesPage: React.FC<BeneficiairesPageProps> = ({ navigate, onGoBac
                     for (const acc of accounts) {
                         await addItem('T_COMPTE_BANCAIRE', { ID_BENEFICIAIRE: beneficiaryId, RIB: acc.rib, BANQUE: acc.banque });
                     }
-                    showToast('تم تعديل المستفيد بنجاح', 'success');
+                    showToast(t('bens.updatedSuccess'), 'success');
                 } else {
                     // Add new
                     const newBeneficiary = await addItem('T_BENEFICIAIRE', beneficiaryData);
@@ -99,14 +99,14 @@ const BeneficiairesPage: React.FC<BeneficiairesPageProps> = ({ navigate, onGoBac
                     for (const acc of accounts) {
                         await addItem('T_COMPTE_BANCAIRE', { ID_BENEFICIAIRE: beneficiaryId, RIB: acc.rib, BANQUE: acc.banque });
                     }
-                    showToast('تمت إضافة المستفيد بنجاح', 'success');
+                    showToast(t('bens.addedSuccess'), 'success');
                 }
             });
             
             setIsModalOpen(false);
             setEditingBeneficiary(undefined);
         } catch (error) {
-            showToast(`حدث خطأ أثناء الحفظ — السبب: ${errorMessage(error)}`, 'error');
+            showToast(t('bens.saveError', { reason: errorMessage(error) }), 'error');
         }
     };
 
@@ -118,19 +118,19 @@ const BeneficiairesPage: React.FC<BeneficiairesPageProps> = ({ navigate, onGoBac
     const confirmDeleteBeneficiary = async () => {
         setIsDeleteConfirmOpen(false);
         if (selectedBeneficiaryId === null) return;
-        showToast('جاري الحذف...', 'loading');
+        showToast(t('op.toast_deleting'), 'loading');
         try {
             await deleteItem('T_BENEFICIAIRE', selectedBeneficiaryId);
-            showToast('تم حذف المستفيد بنجاح', 'success');
+            showToast(t('bens.deletedSuccess'), 'success');
             setSelectedBeneficiaryId(null);
         } catch (error) {
-            showToast(`حدث خطأ أثناء حذف المستفيد — السبب: ${errorMessage(error)}`, 'error');
+            showToast(t('bens.deleteError', { reason: errorMessage(error) }), 'error');
         }
     };
     
     const openAddModal = () => {
         if (loading) {
-            alert("يجب الانتظار حتى يتم تحديث النافذة");
+            alert(t('op.alert_wait_loading'));
             return;
         }
         setEditingBeneficiary(undefined);
@@ -140,7 +140,7 @@ const BeneficiairesPage: React.FC<BeneficiairesPageProps> = ({ navigate, onGoBac
 
     const openEditModal = () => {
         if (loading) {
-            alert("يجب الانتظار حتى يتم تحديث النافذة");
+            alert(t('op.alert_wait_loading'));
             return;
         }
         if (selectedBeneficiaryId === null) return;
@@ -159,7 +159,7 @@ const BeneficiairesPage: React.FC<BeneficiairesPageProps> = ({ navigate, onGoBac
 
     const handleExport = () => {
         if (db.T_BENEFICIAIRE.length === 0) {
-            alert('لا توجد بيانات للتصدير.');
+            alert(t('fin.no_data_export'));
             return;
         }
     
@@ -386,7 +386,7 @@ const BeneficiairesPage: React.FC<BeneficiairesPageProps> = ({ navigate, onGoBac
                         <tr>
                             <th className="p-1 text-xs font-semibold text-gray-700 uppercase tracking-wider bg-blue-200 sticky top-0 z-20">{t('col.beneficiary')}</th>
                             <th className="p-1 text-xs font-semibold text-gray-700 uppercase tracking-wider bg-blue-200 sticky top-0 z-20">{t('col.address')}</th>
-                            <th className="p-1 text-xs font-semibold text-gray-700 uppercase tracking-wider bg-blue-200 sticky top-0 z-20">تفاصيل المستفيد</th>
+                            <th className="p-1 text-xs font-semibold text-gray-700 uppercase tracking-wider bg-blue-200 sticky top-0 z-20">{t('bens.detailsHeader')}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -413,7 +413,7 @@ const BeneficiairesPage: React.FC<BeneficiairesPageProps> = ({ navigate, onGoBac
                                         onClick={(e) => { e.stopPropagation(); setDetailsBeneficiaryId(b.ID_BENEFICIAIRE); }}
                                         className="inline-flex items-center gap-1 bg-blue-600 text-white text-[11px] font-bold px-3 py-1 rounded-full hover:bg-blue-700 transition-colors"
                                     >
-                                        <i className="bi bi-eye"></i> تفاصيل
+                                        <i className="bi bi-eye"></i> {t('col.details')}
                                     </button>
                                 </td>
                             </tr>
@@ -428,13 +428,13 @@ const BeneficiairesPage: React.FC<BeneficiairesPageProps> = ({ navigate, onGoBac
                 onClose={() => setDetailsBeneficiaryId(null)}
             />
 
-            <Modal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditingBeneficiary(undefined); }} title={editingBeneficiary ? "تعديل مستفيد" : "إضافة مستفيد"}>
+            <Modal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditingBeneficiary(undefined); }} title={editingBeneficiary ? t('bens.editTitle') : t('bens.addTitle')}>
                 <AddBeneficiaryForm key={formKey} onClose={() => { setIsModalOpen(false); setEditingBeneficiary(undefined); }} onSave={handleSaveBeneficiary} initialData={editingBeneficiary} />
             </Modal>
             <ConfirmActionModal
                 isOpen={isDeleteConfirmOpen}
-                title="تأكيد حذف المستفيد"
-                message="هل أنت متأكد أنك تريد حذف هذا المستفيد؟ سيتم حذف جميع حساباته البنكية المرتبطة به."
+                title={t('bens.deleteConfirmTitle')}
+                message={t('bens.deleteConfirmMessage')}
                 onCancel={() => setIsDeleteConfirmOpen(false)}
                 onConfirm={confirmDeleteBeneficiary}
             />

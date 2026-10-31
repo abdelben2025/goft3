@@ -2,6 +2,7 @@ import React from 'react';
 import { FileText } from 'lucide-react';
 import { Page } from '../types';
 import { formatCurrency } from '../utils/currencyUtils';
+import { useLanguage } from '../context/LanguageContext';
 
 interface OperationRowProps {
     op: any;
@@ -11,6 +12,7 @@ interface OperationRowProps {
 }
 
 const OperationRow: React.FC<OperationRowProps> = ({ op, isSelected, onSelect, navigate }) => {
+    const { t } = useLanguage();
     return (
         <tr 
             data-testid={`operation-row-${op.ID_OPERATION}`}
@@ -21,7 +23,7 @@ const OperationRow: React.FC<OperationRowProps> = ({ op, isSelected, onSelect, n
                 <button 
                     onClick={(e) => { e.stopPropagation(); navigate('OPERATION_DETAILS', op.ID_OPERATION); }}
                     className="bg-white border text-gray-600 hover:text-blue-600 hover:border-blue-300 p-1.5 rounded-lg transition-all shadow-sm group-hover:scale-110 active:scale-95"
-                    title="عرض التفاصيل"
+                    title={t('op.view_details_tooltip')}
                 >
                     <i className="bi bi-eye-fill"></i>
                 </button>
@@ -58,7 +60,7 @@ const OperationRow: React.FC<OperationRowProps> = ({ op, isSelected, onSelect, n
                                 navigate('DOCUMENTS', op.ID_OPERATION);
                             }}
                             className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-all opacity-0 group-hover:opacity-100 flex-shrink-0"
-                            title="عرض الوثائق"
+                            title={t('op.view_documents_tooltip')}
                         >
                             <FileText size={14} />
                         </button>

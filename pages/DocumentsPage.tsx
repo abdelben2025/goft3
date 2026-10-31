@@ -1181,7 +1181,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
         <PageWrapper title={t('page.documents')} navigate={navigate} onGoBack={onGoBack} currentUser={currentUser} breadcrumb={[]} actions={
             <div className="flex items-center gap-2">
                  <button onClick={handleDownloadDocumentTemplate} className="bg-gray-100 text-gray-600 px-2 py-0.5 border border-gray-200 rounded-[20px] shadow.md hover:bg-gray-300 transition-colors text-xs">
-                    <i className="bi bi-file-earmark-arrow-down mr-1"></i> نموذج
+                    <i className="bi bi-file-earmark-arrow-down mr-1"></i> {t('doc.template')}
                  </button>
                  {!isViewer && (
                     <button onClick={handleImportClick} className="bg-purple-100 text-purple-600 px-2 py-0.5 border border-purple-200 rounded-[20px] shadow.md hover:bg-purple-300 transition-colors text-xs">
@@ -1225,7 +1225,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                     <div className="flex items-center gap-2 col-span-1">
                         <i className="bi bi-exclamation-triangle-fill text-red-500 text-lg"></i>
                         <div className="text-right">
-                            <p className="font-bold text-red-800">فشل الاتصال بـ Supabase: تأكّد من اتصال الإنترنت أو إعدادات قاعدة البيانات</p>
+                            <p className="font-bold text-red-800">{t('doc.connection_failed')}</p>
                             <p className="text-red-600 mt-0.5">{connectionError}</p>
                         </div>
                     </div>
@@ -1235,7 +1235,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                         className="bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-1.5 rounded-[20px] shadow transition-colors flex items-center gap-1.5 cursor-pointer disabled:bg-gray-400"
                     >
                         <i className={`bi bi-arrow-clockwise ${isRetrying ? "animate-spin" : ""}`}></i>
-                        <span>إعادة المحاولة (Retry)</span>
+                        <span>{t('doc.retry')}</span>
                     </button>
                 </div>
             )}
@@ -1246,7 +1246,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                         <i className="bi bi-exclamation-octagon-fill text-amber-600 text-2xl mt-0.5 animate-pulse"></i>
                         <div className="text-right flex-1">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-amber-200 pb-2 mb-2">
-                                <span className="font-bold text-amber-900 text-sm">تنبيه بالسلامة المرجعية (Foreign Key Broken): تم كشف علاقات مكسورة بالبيانات</span>
+                                <span className="font-bold text-amber-900 text-sm">{t('doc.integrity_title')}</span>
                                 {integrityIssues.brokenEngagements.length > 0 && (
                                     <button
                                         onClick={handleCleanAllOrphanedEngagements}
@@ -1254,7 +1254,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                                         className="bg-amber-600 hover:bg-amber-700 text-white font-bold px-3 py-1 pb-1.5 rounded-[20px] shadow transition-colors text-xs flex items-center gap-1 cursor-pointer disabled:bg-gray-400"
                                     >
                                         <i className="bi bi-trash-fill"></i>
-                                        <span>حذف كافة الالتزامات اليتامى ({integrityIssues.brokenEngagements.length}) دفعة واحدة</span>
+                                        <span>{t('doc.delete_all_orphan_engagements', { count: integrityIssues.brokenEngagements.length })}</span>
                                     </button>
                                 )}
                             </div>
@@ -1262,18 +1262,18 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                             <div className="text-amber-800 space-y-2 leading-relaxed">
                                 {integrityIssues.brokenPieces.length > 0 && (
                                     <div>
-                                        <p className="font-bold mb-1">🛡️ الوثائق اليتامى (ترتبط بعملية/صنف غير موجود): <strong>{integrityIssues.brokenPieces.length}</strong></p>
+                                        <p className="font-bold mb-1">{t('doc.orphan_pieces_title')}<strong>{integrityIssues.brokenPieces.length}</strong></p>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-1">
                                             {integrityIssues.brokenPieces.map(bPiece => (
                                                 <div key={bPiece.id_piece} className="flex items-center justify-between gap-3 bg-white p-2 rounded border border-amber-200 text-xs shadow-sm">
-                                                    <span>وثيقة: <strong className="text-amber-950">{bPiece.piece.PIECE || '---'}</strong> - معرّف العملية المفقود: {bPiece.id_operation}</span>
+                                                    <span>{t('doc.orphan_piece_line', { name: bPiece.piece.PIECE || '---', id: bPiece.id_operation })}</span>
                                                     <button 
                                                         onClick={() => handleCleanOrphanedItem('T_PIECE', bPiece.id_piece)}
                                                         disabled={isDeleting}
                                                         className="bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 font-bold py-1 px-2 rounded-full text-[10px] flex items-center gap-1 transition-colors cursor-pointer"
                                                     >
                                                         <i className="bi bi-trash-fill"></i>
-                                                        <span>حذف وإصلاح</span>
+                                                        <span>{t('doc.delete_and_fix')}</span>
                                                     </button>
                                                 </div>
                                             ))}
@@ -1283,18 +1283,18 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                                 
                                 {integrityIssues.brokenEngagements.length > 0 && (
                                     <div className="mt-3">
-                                        <p className="font-bold mb-1">💼 الالتزامات اليتامى (ترتبط بوثيقة غير موجودة): <strong>{integrityIssues.brokenEngagements.length}</strong></p>
+                                        <p className="font-bold mb-1">{t('doc.orphan_engagements_title')}<strong>{integrityIssues.brokenEngagements.length}</strong></p>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-1">
                                             {integrityIssues.brokenEngagements.map(bEng => (
                                                 <div key={bEng.id_engagement} className="flex items-center justify-between gap-3 bg-white p-2 rounded border border-amber-200 text-xs shadow-sm">
-                                                    <span>التزام رقم: <strong className="text-amber-950">{bEng.engagement.N_ENG || '---'}</strong> - معرّف الوثيقة المفقود (ID_PIECE): {bEng.id_piece}</span>
+                                                    <span>{t('doc.orphan_engagement_line', { num: bEng.engagement.N_ENG || '---', id: bEng.id_piece })}</span>
                                                     <button 
                                                         onClick={() => handleCleanOrphanedItem('T_ENGAGEMENT', bEng.id_engagement)}
                                                         disabled={isDeleting}
                                                         className="bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 font-bold py-1 px-2 rounded-full text-[10px] flex items-center gap-1 transition-colors cursor-pointer"
                                                     >
                                                         <i className="bi bi-trash-fill"></i>
-                                                        <span>حذف وإصلاح</span>
+                                                        <span>{t('doc.delete_and_fix')}</span>
                                                     </button>
                                                 </div>
                                             ))}
@@ -1304,18 +1304,18 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                                 
                                 {integrityIssues.brokenPaiements.length > 0 && (
                                     <div className="mt-3">
-                                        <p className="font-bold mb-1">💸 الدفوعات اليتامى (ترتبط بوثيقة/عملية غير موجودة): <strong>{integrityIssues.brokenPaiements.length}</strong></p>
+                                        <p className="font-bold mb-1">{t('doc.orphan_paiements_title')}<strong>{integrityIssues.brokenPaiements.length}</strong></p>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-1">
                                             {integrityIssues.brokenPaiements.map(bPay => (
                                                 <div key={bPay.id_paiement} className="flex items-center justify-between gap-3 bg-white p-2 rounded border border-amber-200 text-xs shadow-sm">
-                                                    <span>دفع رقم: <strong className="text-amber-950">{bPay.paiement.N_PAI || '---'}</strong> - معرّف الوثيقة المفقود (ID_PIECE): {bPay.id_piece}</span>
+                                                    <span>{t('doc.orphan_paiement_line', { num: bPay.paiement.N_PAI || '---', id: bPay.id_piece })}</span>
                                                     <button 
                                                         onClick={() => handleCleanOrphanedItem('T_PAIEMENT', bPay.id_paiement)}
                                                         disabled={isDeleting}
                                                         className="bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 font-bold py-1 px-2 rounded-full text-[10px] flex items-center gap-1 transition-colors cursor-pointer"
                                                     >
                                                         <i className="bi bi-trash-fill"></i>
-                                                        <span>حذف وإصلاح</span>
+                                                        <span>{t('doc.delete_and_fix')}</span>
                                                     </button>
                                                 </div>
                                             ))}
@@ -1345,18 +1345,18 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                     </div>
                     <div className="flex-none flex items-center justify-between xl:justify-end gap-4 min-w-[120px]">
                          <div className="bg-white rounded-[20px] shadow-sm border border-blue-300 flex flex-col items-center w-11 sm:w-auto min-w-[100px] px-2 h-9 justify-center">
-                            <span className="text-[8px] text-gray-500 font-bold whitespace-nowrap">عدد الوثائق</span>
+                            <span className="text-[8px] text-gray-500 font-bold whitespace-nowrap">{t('doc.document_count')}</span>
                             <span className="text-xs font-black text-blue-700">{displayPieces.length}</span>
                          </div>
                          {selectedOperationId && remainingCPForSelectedOp !== null && (
                             <div className="bg-white rounded-[20px] shadow-sm border border-blue-300 flex flex-col items-center w-11 sm:w-auto min-w-[120px] px-2 h-9 justify-center">
-                                <span className="text-[8px] text-gray-500 font-bold whitespace-nowrap">الإعتمادات المتبقية (CP)</span>
+                                <span className="text-[8px] text-gray-500 font-bold whitespace-nowrap">{t('doc.remaining_cp')}</span>
                                 <span className="text-[10px] font-black text-green-700">{formatCurrency(remainingCPForSelectedOp)}</span>
                             </div>
                          )}
                          {selectedOperationId && remainingAEForSelectedOp !== null && (
                             <div className="bg-white rounded-[20px] shadow-sm border border-blue-300 flex flex-col items-center w-11 sm:w-auto min-w-[120px] px-2 h-9 justify-center">
-                                <span className="text-[8px] text-gray-500 font-bold whitespace-nowrap">رخصة AE المتبقية</span>
+                                <span className="text-[8px] text-gray-500 font-bold whitespace-nowrap">{t('doc.remaining_ae')}</span>
                                 <span className="text-[10px] font-black text-indigo-700">{formatCurrency(remainingAEForSelectedOp)}</span>
                             </div>
                          )}
@@ -1372,12 +1372,12 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                                 <thead className="bg-sky-100 sticky top-0 z-10 border-b shadow-sm">
                                     <tr>
                                         <th className="p-1 text-center text-[8px] font-bold text-gray-500 uppercase tracking-wider w-8">#</th>
-                                        <th className="p-1 text-center text-[9px] font-bold text-gray-500 uppercase tracking-wider w-16">تفاصيل</th>
+                                        <th className="p-1 text-center text-[9px] font-bold text-gray-500 uppercase tracking-wider w-16">{t('col.details')}</th>
                                         <th className="p-1 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">
                                             <SearchHeader 
                                                 title={t('col.document')}
                                                 isActive={!!searchPieceName}
-                                                tooltip="بحث بالاسم"
+                                                tooltip={t('doc.search_by_name_tooltip')}
                                             >
                                                 <div className="relative">
                                                      <input
@@ -1398,9 +1398,9 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                                         </th>
                                         <th className="p-1 text-center text-[9px] font-bold text-gray-500 uppercase tracking-wider">
                                             <SearchHeader 
-                                                title="الطبيعة"
+                                                title={t('col.nature')}
                                                 isActive={!!selectedPieceType}
-                                                tooltip="تصفية الطبيعة"
+                                                tooltip={t('doc.filter_nature_tooltip')}
                                             >
                                                 <div className="relative">
                                                     <select
@@ -1408,7 +1408,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                                                         value={selectedPieceType}
                                                         onChange={(e) => setSelectedPieceType(e.target.value)}
                                                     >
-                                                        <option value="">الكل</option>
+                                                        <option value="">{t('doc.all')}</option>
                                                         {uniquePieceTypes.map(type => (
                                                             <option key={type} value={type}>{type}</option>
                                                         ))}
@@ -1418,9 +1418,9 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                                         </th>
                                         <th className="p-1 text-center text-[9px] font-bold text-gray-500 uppercase tracking-wider w-24">
                                             <SearchHeader 
-                                                title="الحالة"
+                                                title={t('col.status')}
                                                 isActive={!!selectedSaiEng || !!selectedSaiPai}
-                                                tooltip="تصفية الحالة"
+                                                tooltip={t('doc.filter_status_tooltip')}
                                             >
                                                 <div className="flex flex-col gap-1 p-1 bg-white border border-blue-200 rounded-[20px] shadow-sm">
                                                     <select
@@ -1428,27 +1428,27 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                                                         value={selectedSaiEng}
                                                         onChange={(e) => setSelectedSaiEng(e.target.value)}
                                                     >
-                                                        <option value="">(الالتزام) الكل</option>
-                                                        <option value="true">مسجل للالتزام</option>
-                                                        <option value="false">غير مسجل للالتزام</option>
+                                                        <option value="">{t('doc.eng_all')}</option>
+                                                        <option value="true">{t('doc.eng_registered')}</option>
+                                                        <option value="false">{t('doc.eng_unregistered')}</option>
                                                     </select>
                                                     <select
                                                         className="w-full h-5 px-1 bg-white border border-gray-200 rounded-[20px] text-[8px] outline-none"
                                                         value={selectedSaiPai}
                                                         onChange={(e) => setSelectedSaiPai(e.target.value)}
                                                     >
-                                                        <option value="">(الدفع) الكل</option>
-                                                        <option value="true">مسجل للدفع</option>
-                                                        <option value="false">غير مسجل للدفع</option>
+                                                        <option value="">{t('doc.pai_all')}</option>
+                                                        <option value="true">{t('doc.pai_registered')}</option>
+                                                        <option value="false">{t('doc.pai_unregistered')}</option>
                                                     </select>
                                                 </div>
                                             </SearchHeader>
                                         </th>
                                         <th className="p-1 text-center text-[9px] font-bold text-gray-500 uppercase tracking-wider">
                                             <SearchHeader 
-                                                title="تفصيل الهيكلة"
+                                                title={t('col.structure')}
                                                 isActive={!!selectedStructureDetail}
-                                                tooltip="تصفية الهيكلة"
+                                                tooltip={t('doc.filter_structure_tooltip')}
                                             >
                                                 <div className="relative">
                                                     <select
@@ -1456,7 +1456,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                                                         value={selectedStructureDetail}
                                                         onChange={(e) => setSelectedStructureDetail(e.target.value)}
                                                     >
-                                                        <option value="">الكل</option>
+                                                        <option value="">{t('doc.all')}</option>
                                                         {uniqueRubrics.map(rub => (
                                                             <option key={rub.ID_RUBRIQUE} value={String(rub.ID_RUBRIQUE)}>{rub.RUBRIQUE}</option>
                                                         ))}
@@ -1468,7 +1468,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                                             <SearchHeader 
                                                 title={t('col.beneficiary')}
                                                 isActive={!!selectedBeneficiaireId}
-                                                tooltip="بحث بالمستفيذ"
+                                                tooltip={t('doc.search_beneficiary_tooltip')}
                                             >
                                                 <div className="relative">
                                                     <input
@@ -1516,9 +1516,9 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                                                         <td colSpan={8} className="p-1 text-right text-[9px] border border-black-200">
                                                             <div className="flex items-center gap-1.5 justify-end">
                                                                 <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-sm"></span>
-                                                                <span className="px-1 rounded-[20px] bg-blue-50 border border-blue-200"> مجموع الالتزام = {formatCurrency(totalCommitment)} </span>
+                                                                <span className="px-1 rounded-[20px] bg-blue-50 border border-blue-200"> {t('doc.total_commitment', { amount: formatCurrency(totalCommitment) })} </span>
                                                                 <span className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-sm"></span>
-                                                                <span className="px-1 rounded-[20px] bg-green-50 border border-green-200"> مجموع الدفع  = {formatCurrency(totalPayment)} </span>
+                                                                <span className="px-1 rounded-[20px] bg-green-50 border border-green-200"> {t('doc.total_payment', { amount: formatCurrency(totalPayment) })} </span>
                                                                 
                                                             </div>
                                                         </td>
@@ -1555,8 +1555,8 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                             </table>
                             {visibleCount < flattenedRows.length && (
                                 <div className="flex items-center justify-center gap-3 px-4 py-2 bg-gray-50 border-t border-gray-200">
-                                    <span className="text-xs text-gray-500">عرض {Math.min(visibleCount, flattenedRows.length)} من {flattenedRows.length} صف</span>
-                                    <button onClick={() => setVisibleCount(c => c + 500)} className="px-4 py-1.5 rounded-full bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition-colors">عرض المزيد</button>
+                                    <span className="text-xs text-gray-500">{t('doc.showing_rows', { shown: Math.min(visibleCount, flattenedRows.length), total: flattenedRows.length })}</span>
+                                    <button onClick={() => setVisibleCount(c => c + 500)} className="px-4 py-1.5 rounded-full bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition-colors">{t('doc.show_more')}</button>
                                 </div>
                             )}
                         </div>
@@ -1565,7 +1565,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
 
             </div>
 
-            <Modal isOpen={modalState.type === 'DOCUMENT'} onClose={() => setModalState({ type: null })} title={modalState.data ? "تعديل وثيقة" : "إضافة وثيقة جديدة"} maxWidth="2xl">
+            <Modal isOpen={modalState.type === 'DOCUMENT'} onClose={() => setModalState({ type: null })} title={modalState.data ? t('doc.edit_doc_title') : t('doc.add_doc_title')} maxWidth="2xl">
                 <AddDocumentForm
                     key={modalState.timestamp ? `doc-${modalState.timestamp}` : 'add-doc'}
                     onClose={() => setModalState({ type: null })}
@@ -1590,7 +1590,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
             </Modal>
             
             {/* New Modals for Immediate Engagement/Payment */}
-            <Modal isOpen={modalState.type === 'ENGAGEMENT'} onClose={() => setModalState({ type: null })} title="إضافة التزام للوثيقة">
+            <Modal isOpen={modalState.type === 'ENGAGEMENT'} onClose={() => setModalState({ type: null })} title={t('doc.add_engagement_title')}>
                 {dataForEngagementForm && (
                     <AddEngagementForm
                         key={`add-eng-direct-${modalState.timestamp}`}
@@ -1606,7 +1606,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                 )}
             </Modal>
             
-            <Modal isOpen={modalState.type === 'PAIEMENT'} onClose={() => setModalState({ type: null })} title="إضافة دفع للوثيقة">
+            <Modal isOpen={modalState.type === 'PAIEMENT'} onClose={() => setModalState({ type: null })} title={t('doc.add_payment_title')}>
                 {dataForPaiementForm && (
                     <AddPaiementForm
                         key={`add-pai-direct-${modalState.timestamp}`}
@@ -1624,8 +1624,8 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
             </Modal>
             <ConfirmActionModal
                 isOpen={!!pendingDelete}
-                title={pendingDelete?.kind === 'item' ? 'تأكيد الحذف' : 'إصلاح سلامة البيانات'}
-                message={pendingDelete?.message || 'هل أنت متأكد أنك تريد حذف هذا العنصر؟'}
+                title={pendingDelete?.kind === 'item' ? t('doc.confirm_delete_title') : t('doc.fix_integrity_title')}
+                message={pendingDelete?.message || t('doc.confirm_delete_message')}
                 onCancel={() => setPendingDelete(null)}
                 onConfirm={confirmPendingDelete}
             />

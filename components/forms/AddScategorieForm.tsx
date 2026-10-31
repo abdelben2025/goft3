@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Scategorie, Categorie } from '../../types';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface AddScategorieFormProps {
     onClose: () => void;
@@ -11,6 +12,7 @@ interface AddScategorieFormProps {
 }
 
 const AddScategorieForm: React.FC<AddScategorieFormProps> = ({ onClose, onSave, initialData, categories, selectedCategorieId }) => {
+    const { t } = useLanguage();
     const [scategorieCode, setScategorieCode] = useState('');
     const [scategorieName, setScategorieName] = useState('');
     const [idCategorie, setIdCategorie] = useState<number | ''>(categories[0]?.ID_CATEGORIE || '');
@@ -34,7 +36,7 @@ const AddScategorieForm: React.FC<AddScategorieFormProps> = ({ onClose, onSave, 
         if (isSubmitting) return;
 
         if (!idCategorie) {
-            alert('الرجاء تحديد صنف رئيسي.');
+            alert(t('cat.select_parent_required'));
             return;
         }
         
@@ -55,10 +57,10 @@ const AddScategorieForm: React.FC<AddScategorieFormProps> = ({ onClose, onSave, 
     if (categories.length === 0) {
         return (
             <div className="p-4 bg-yellow-100 text-yellow-800 rounded-md text-right">
-                <p className="font-bold">لا يمكن إضافة صنف فرعي.</p>
-                <p>يجب عليك أولاً إضافة صنف رئيسي واحد على الأقل.</p>
+                <p className="font-bold">{t('cat.no_categories_title')}</p>
+                <p>{t('cat.no_categories_message')}</p>
                 <div className="flex justify-end mt-4">
-                     <button type="button" onClick={onClose} className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors">إغلاق</button>
+                     <button type="button" onClick={onClose} className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors">{t('op.form_close')}</button>
                 </div>
             </div>
         );
@@ -67,14 +69,14 @@ const AddScategorieForm: React.FC<AddScategorieFormProps> = ({ onClose, onSave, 
     return (
         <form onSubmit={handleSubmit} className="flex flex-col max-h-[85vh]">
             <div className="sticky top-0 bg-white z-10 pb-2 border-b border-gray-200 flex justify-end gap-3 pt-1 mb-2">
-                <button type="button" onClick={onClose} className="px-5 py-1.5 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors text-sm">إلغاء</button>
+                <button type="button" onClick={onClose} className="px-5 py-1.5 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors text-sm">{t('btn.cancel')}</button>
                 <button type="submit" disabled={isSubmitting} className="px-5 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm">
-                    {isSubmitting ? 'جاري الحفظ...' : (initialData ? 'حفظ التغييرات' : 'إضافة')}
+                    {isSubmitting ? t('op.form_saving') : (initialData ? t('op.form_save_changes') : t('btn.add'))}
                 </button>
             </div>
             <div className="space-y-3 overflow-y-auto p-1 text-right">
             <div>
-                <label htmlFor="idCategorie" className="block text-sm font-medium text-gray-700 text-right">الصنف الرئيسي</label>
+                <label htmlFor="idCategorie" className="block text-sm font-medium text-gray-700 text-right">{t('cat.parent_label')}</label>
                 <select
                     id="idCategorie"
                     value={idCategorie}
@@ -82,7 +84,7 @@ const AddScategorieForm: React.FC<AddScategorieFormProps> = ({ onClose, onSave, 
                     required
                     className="w-full px-3 py-2 mt-1 text-gray-700 bg-gray-100 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                     <option value="">-- اختر صنف رئيسي --</option>
+                     <option value="">{t('cat.select_parent_placeholder')}</option>
                     {categories.map(c => (
                         <option key={c.ID_CATEGORIE} value={c.ID_CATEGORIE}>
                             {c.INT_CATEGORIE}
@@ -91,7 +93,7 @@ const AddScategorieForm: React.FC<AddScategorieFormProps> = ({ onClose, onSave, 
                 </select>
             </div>
             <div>
-                <label htmlFor="scategorieCode" className="block text-sm font-medium text-gray-700 text-right">رمز الصنف الفرعي</label>
+                <label htmlFor="scategorieCode" className="block text-sm font-medium text-gray-700 text-right">{t('cat.scat_code_label')}</label>
                 <input
                     id="scategorieCode"
                     type="text"
@@ -102,7 +104,7 @@ const AddScategorieForm: React.FC<AddScategorieFormProps> = ({ onClose, onSave, 
                 />
             </div>
             <div>
-                <label htmlFor="scategorieName" className="block text-sm font-medium text-gray-700 text-right">عنوان الصنف الفرعي</label>
+                <label htmlFor="scategorieName" className="block text-sm font-medium text-gray-700 text-right">{t('cat.scat_title_label')}</label>
                 <input
                     id="scategorieName"
                     type="text"

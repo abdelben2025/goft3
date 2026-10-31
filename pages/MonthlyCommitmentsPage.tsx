@@ -8,6 +8,7 @@ import { formatCurrency } from '../utils/currencyUtils';
 import { normalizeDate } from '../utils/dateUtils';
 import ExcelJS from 'exceljs';
 import { saveWorkbook } from '../utils/exportXlsx';
+import { useLanguage } from '../context/LanguageContext';
 
 interface MonthlyCommitmentsPageProps {
     navigate: (page: Page) => void;
@@ -17,6 +18,7 @@ interface MonthlyCommitmentsPageProps {
 
 const MonthlyCommitmentsPage: React.FC<MonthlyCommitmentsPageProps> = ({ navigate, onGoBack }) => {
     const { db } = useData();
+    const { t } = useLanguage();
     const engagements = db.T_ENGAGEMENT;
     const operations = db.T_OPERATION;
     const pieces = db.T_PIECE;
@@ -49,19 +51,19 @@ const MonthlyCommitmentsPage: React.FC<MonthlyCommitmentsPageProps> = ({ navigat
     };
 
     const months = [
-        { value: 'ALL', label: 'كل الأشهر' },
-        { value: '01', label: 'جانفي' },
-        { value: '02', label: 'فيفري' },
-        { value: '03', label: 'مارس' },
-        { value: '04', label: 'أفريل' },
-        { value: '05', label: 'ماي' },
-        { value: '06', label: 'جوان' },
-        { value: '07', label: 'جويلية' },
-        { value: '08', label: 'أوت' },
-        { value: '09', label: 'سبتمبر' },
-        { value: '10', label: 'أكتوبر' },
-        { value: '11', label: 'نوفمبر' },
-        { value: '12', label: 'ديسمبر' },
+        { value: 'ALL', label: t('mcommit.all_months') },
+        { value: '01', label: t('month.1') },
+        { value: '02', label: t('month.2') },
+        { value: '03', label: t('month.3') },
+        { value: '04', label: t('month.4') },
+        { value: '05', label: t('month.5') },
+        { value: '06', label: t('month.6') },
+        { value: '07', label: t('month.7') },
+        { value: '08', label: t('month.8') },
+        { value: '09', label: t('month.9') },
+        { value: '10', label: t('month.10') },
+        { value: '11', label: t('month.11') },
+        { value: '12', label: t('month.12') },
     ];
 
     const years = useMemo(() => {
@@ -117,8 +119,8 @@ const MonthlyCommitmentsPage: React.FC<MonthlyCommitmentsPageProps> = ({ navigat
                 
                 return {
                     ...e,
-                    opName: op ? `${op.N_OPERATION} - ${op.INT_OPERATION}` : 'غير معروف',
-                    pieceName: piece ? piece.PIECE : 'غير معروف',
+                    opName: op ? `${op.N_OPERATION} - ${op.INT_OPERATION}` : t('mcommit.unknown'),
+                    pieceName: piece ? piece.PIECE : t('mcommit.unknown'),
                     beneficiaryName: ben ? ben.BENEFICIAIRE : '---',
                     isVisaed: !!(e.N_VISA_CB && e.DATE_VISA_CB)
                 };
@@ -134,7 +136,7 @@ const MonthlyCommitmentsPage: React.FC<MonthlyCommitmentsPageProps> = ({ navigat
                 const dateB = b.DATE_VISA_CB || b.DATE_ENG || '';
                 return dateA.localeCompare(dateB);
             });
-    }, [engagements, operations, pieces, beneficiaries, selectedYear, selectedMonth, statusFilter, selectedAction, searchTerm]);
+    }, [engagements, operations, pieces, beneficiaries, selectedYear, selectedMonth, statusFilter, selectedAction, searchTerm, t]);
 
     const totalAmount = useMemo(() => {
         return filteredData.reduce((sum: number, item: any) => {
@@ -156,20 +158,20 @@ const MonthlyCommitmentsPage: React.FC<MonthlyCommitmentsPageProps> = ({ navigat
         if (filteredData.length === 0) return;
 
         const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('التزامات الشهر');
+        const worksheet = workbook.addWorksheet(t('mcommit.sheet_name'));
         
         worksheet.views = [{ rightToLeft: true }];
 
         worksheet.columns = [
             { header: '#', key: 'index', width: 5 },
-            { header: 'رقم وعنوان العملية', key: 'op', width: 40 },
-            { header: 'رقم الالتزام', key: 'n_eng', width: 15 },
-            { header: 'السنة', key: 'annee', width: 10 },
-            { header: 'تاريخ التأشيرة/الالتزام', key: 'date', width: 15 },
-            { header: 'الوثيقة', key: 'piece', width: 25 },
-            { header: 'المستفيذ', key: 'ben', width: 30 },
-            { header: 'الحالة', key: 'status', width: 15 },
-            { header: 'المبلغ', key: 'amount', width: 20 },
+            { header: t('col.operation_info'), key: 'op', width: 40 },
+            { header: t('mcommit.eng_no'), key: 'n_eng', width: 15 },
+            { header: t('col.year'), key: 'annee', width: 10 },
+            { header: t('mcommit.visa_date_label'), key: 'date', width: 15 },
+            { header: t('col.document'), key: 'piece', width: 25 },
+            { header: t('mcommit.beneficiary'), key: 'ben', width: 30 },
+            { header: t('col.status'), key: 'status', width: 15 },
+            { header: t('col.amount'), key: 'amount', width: 20 },
         ];
 
         filteredData.forEach((item, index) => {
@@ -182,7 +184,7 @@ const MonthlyCommitmentsPage: React.FC<MonthlyCommitmentsPageProps> = ({ navigat
                 date: item.isVisaed ? normalizeDate(item.DATE_VISA_CB) : normalizeDate(item.DATE_ENG),
                 piece: item.pieceName,
                 ben: item.beneficiaryName,
-                status: item.isVisaed ? 'مؤشرة' : 'غير مؤشرة',
+                status: item.isVisaed ? t('mcommit.visaed') : t('mcommit.not_visaed'),
                 amount: amount
             });
         });
@@ -196,7 +198,7 @@ const MonthlyCommitmentsPage: React.FC<MonthlyCommitmentsPageProps> = ({ navigat
     };
 
     return (
-        <PageWrapper title="جدول الالتزامات حسب الشهر" navigate={navigate} onGoBack={onGoBack}>
+        <PageWrapper title={t('mcommit.title')} navigate={navigate} onGoBack={onGoBack}>
             <div className="w-full px-4 py-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 no-print gap-4">
                     <div className="flex items-center gap-4">
@@ -207,8 +209,8 @@ const MonthlyCommitmentsPage: React.FC<MonthlyCommitmentsPageProps> = ({ navigat
                             <ArrowRight className="w-6 h-6 text-gray-600" />
                         </button>
                         <div>
-                            <h1 className="text-2xl font-black text-gray-800">جدول الالتزامات حسب الشهر</h1>
-                            <p className="text-sm text-gray-500 font-bold">عرض الالتزامات المؤشرة خلال فترة زمنية محددة</p>
+                            <h1 className="text-2xl font-black text-gray-800">{t('mcommit.title')}</h1>
+                            <p className="text-sm text-gray-500 font-bold">{t('mcommit.subtitle')}</p>
                         </div>
                     </div>
 
@@ -219,7 +221,7 @@ const MonthlyCommitmentsPage: React.FC<MonthlyCommitmentsPageProps> = ({ navigat
                             className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-emerald-700 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <Download className="w-4 h-4" />
-                            تصدير Excel
+                            {t('mcommit.export_excel')}
                         </button>
                         <button 
                             onClick={handlePrint}
@@ -227,7 +229,7 @@ const MonthlyCommitmentsPage: React.FC<MonthlyCommitmentsPageProps> = ({ navigat
                             className="flex items-center gap-2 bg-white border border-gray-300 px-4 py-2 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <Printer className="w-4 h-4" />
-                            طباعة الجدول
+                            {t('mcommit.print_table')}
                         </button>
                     </div>
                 </div>
@@ -236,7 +238,7 @@ const MonthlyCommitmentsPage: React.FC<MonthlyCommitmentsPageProps> = ({ navigat
                     <div className="p-6 bg-gradient-to-r from-blue-600 to-indigo-700">
                         <div className="grid grid-cols-1 md:grid-cols-5 gap-5">
                             <div>
-                                <label className="block text-[10px] font-bold text-blue-100 mb-1 mr-2">السنة المالية</label>
+                                <label className="block text-[10px] font-bold text-blue-100 mb-1 mr-2">{t('mcommit.fiscal_year')}</label>
                                 <div className="relative">
                                     <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-300" />
                                     <select 
@@ -249,7 +251,7 @@ const MonthlyCommitmentsPage: React.FC<MonthlyCommitmentsPageProps> = ({ navigat
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-[10px] font-bold text-blue-100 mb-1 mr-2">الشهر</label>
+                                <label className="block text-[10px] font-bold text-blue-100 mb-1 mr-2">{t('filter.month')}</label>
                                 <div className="relative">
                                     <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-300" />
                                     <select 
@@ -262,38 +264,38 @@ const MonthlyCommitmentsPage: React.FC<MonthlyCommitmentsPageProps> = ({ navigat
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-[10px] font-bold text-blue-100 mb-1 mr-2">حالة الالتزام</label>
+                                <label className="block text-[10px] font-bold text-blue-100 mb-1 mr-2">{t('mcommit.status_label')}</label>
                                 <div className="relative">
                                     <select 
                                         value={statusFilter}
                                         onChange={(e) => setStatusFilter(e.target.value as any)}
                                         className="w-full bg-white/10 border border-white/20 rounded-xl py-2 px-4 text-white font-bold focus:outline-none focus:ring-2 focus:ring-white/30 appearance-none text-right"
                                     >
-                                        <option value="ALL" className="text-gray-800">الكل (مؤشرة وغير مؤشرة)</option>
-                                        <option value="VISAED" className="text-gray-800">مؤشرة فقط</option>
-                                        <option value="NOT_VISAED" className="text-gray-800">غير مؤشرة فقط</option>
+                                        <option value="ALL" className="text-gray-800">{t('mcommit.status_all')}</option>
+                                        <option value="VISAED" className="text-gray-800">{t('mcommit.status_visaed_only')}</option>
+                                        <option value="NOT_VISAED" className="text-gray-800">{t('mcommit.status_not_visaed_only')}</option>
                                     </select>
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-[10px] font-bold text-blue-100 mb-1 mr-2">تصفية حسب النشاط</label>
-								<div className="relative">
+                                <label className="block text-[10px] font-bold text-blue-100 mb-1 mr-2">{t('filter.activity')}</label>
+ 								<div className="relative">
                                 <CustomDropdown
-                                    options={[{ value: '', label: 'كل النشاطات' }, ...activities]}
+                                    options={[{ value: '', label: t('mcommit.all_activities') }, ...activities]}
                                     value={selectedAction}
                                     onChange={setSelectedAction}
-                                    placeholder="اختر النشاط"
+                                    placeholder={t('filter.select_activity')}
                                     className="w-full"
                                 />
 								</div>
                             </div>
                             <div className="md:col-span-2">
-                                <label className="block text-[10px] font-bold text-blue-100 mb-1 mr-2">بحث سريع</label>
+                                <label className="block text-[10px] font-bold text-blue-100 mb-1 mr-2">{t('mcommit.quick_search')}</label>
                                 <div className="relative">
                                     <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-300" />
                                     <input 
                                         type="text"
-                                        placeholder="رقم العملية، اسم المستفيذ، رقم الالتزام..."
+                                        placeholder={t('mcommit.search_placeholder')}
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                         className="w-full bg-white/10 border border-white/20 rounded-xl py-2 px-10 text-white font-bold placeholder:text-blue-200/50 focus:outline-none focus:ring-2 focus:ring-white/30"
@@ -310,12 +312,12 @@ const MonthlyCommitmentsPage: React.FC<MonthlyCommitmentsPageProps> = ({ navigat
                             <thead>
                                 <tr className="bg-gray-50 border-b border-gray-200">
                                     <th className="px-4 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider border-l border-gray-100">#</th>
-                                    <th className="px-4 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider border-l border-gray-100">رقم وعنوان العملية</th>
-                                    <th className="px-4 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider border-l border-gray-100">رقم/سنة الالتزام</th>
-                                    <th className="px-4 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider border-l border-gray-100">الوثيقة</th>
-                                    <th className="px-4 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider border-l border-gray-100">المستفيذ</th>
-                                    <th className="px-4 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider border-l border-gray-100">الحالة</th>
-                                    <th className="px-4 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider border-l border-gray-100 text-left">المبلغ</th>
+                                    <th className="px-4 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider border-l border-gray-100">{t('col.operation_info')}</th>
+                                    <th className="px-4 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider border-l border-gray-100">{t('mcommit.eng_year')}</th>
+                                    <th className="px-4 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider border-l border-gray-100">{t('col.document')}</th>
+                                    <th className="px-4 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider border-l border-gray-100">{t('mcommit.beneficiary')}</th>
+                                    <th className="px-4 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider border-l border-gray-100">{t('col.status')}</th>
+                                    <th className="px-4 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider border-l border-gray-100 text-left">{t('col.amount')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
@@ -330,9 +332,9 @@ const MonthlyCommitmentsPage: React.FC<MonthlyCommitmentsPageProps> = ({ navigat
                                                 <div className="flex flex-col">
                                                     <span className={`text-[11px] font-black ${item.isVisaed ? 'text-blue-700' : 'text-amber-700'}`}>{item.N_ENG} / {item.ANNEE}</span>
                                                     {item.isVisaed ? (
-                                                        <span className="text-[9px] font-bold text-emerald-600 italic">مؤشرة في: {normalizeDate(item.DATE_VISA_CB)}</span>
+                                                        <span className="text-[9px] font-bold text-emerald-600 italic">{t('mcommit.visaed_on', {date: normalizeDate(item.DATE_VISA_CB)})}</span>
                                                     ) : (
-                                                        <span className="text-[9px] font-bold text-amber-600 italic">بتاريخ: {normalizeDate(item.DATE_ENG)}</span>
+                                                        <span className="text-[9px] font-bold text-amber-600 italic">{t('mcommit.dated', {date: normalizeDate(item.DATE_ENG)})}</span>
                                                     )}
                                                 </div>
                                             </td>
@@ -346,12 +348,12 @@ const MonthlyCommitmentsPage: React.FC<MonthlyCommitmentsPageProps> = ({ navigat
                                                 {item.isVisaed ? (
                                                     <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-100 px-2 py-1 rounded-full text-[10px] font-black">
                                                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                                        مؤشرة
+                                                        {t('mcommit.visaed')}
                                                     </span>
                                                 ) : (
                                                     <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-100 px-2 py-1 rounded-full text-[10px] font-black">
                                                         <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                                                        غير مؤشرة
+                                                        {t('mcommit.not_visaed')}
                                                     </span>
                                                 )}
                                             </td>
@@ -367,7 +369,7 @@ const MonthlyCommitmentsPage: React.FC<MonthlyCommitmentsPageProps> = ({ navigat
                                                 <div className="p-4 bg-gray-50 rounded-full">
                                                     <FileText className="w-8 h-8 text-gray-300" />
                                                 </div>
-                                                <p className="text-gray-400 font-bold">لا توجد التزامات مسجلة في هذا الشهر</p>
+                                                <p className="text-gray-400 font-bold">{t('mcommit.empty_no_commitments')}</p>
                                             </div>
                                         </td>
                                     </tr>
@@ -376,7 +378,7 @@ const MonthlyCommitmentsPage: React.FC<MonthlyCommitmentsPageProps> = ({ navigat
                             {filteredData.length > 0 && (
                                 <tfoot className="bg-blue-900 text-white">
                                     <tr>
-                                        <td colSpan={6} className="px-4 py-4 text-sm font-black text-right uppercase">إجمالي الالتزامات في هذا الشهر</td>
+                                        <td colSpan={6} className="px-4 py-4 text-sm font-black text-right uppercase">{t('mcommit.total_this_month')}</td>
                                         <td className="px-4 py-4 text-sm font-black text-left">{formatCurrency(totalAmount)}</td>
                                     </tr>
                                 </tfoot>

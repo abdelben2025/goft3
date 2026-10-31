@@ -120,9 +120,9 @@ const PrintFinancialStatusByStructureCommitmentPage: React.FC<PrintFinancialStat
     if (!printData || 'error' in printData) {
         let errorMsg = t('no_data');
         if (printData && 'error' in printData) {
-            if (printData.error === 'missing_id') errorMsg = "يرجى اختيار العملية أولاً";
-            if (printData.error === 'operation_not_found') errorMsg = "العملية المختارة غير موجودة";
-            if (printData.error === 'direction_not_found') errorMsg = "يرجى ملء معلومات المديرية في الإعدادات أولاً";
+            if (printData.error === 'missing_id') errorMsg = t('print.err_select_operation');
+            if (printData.error === 'operation_not_found') errorMsg = t('print.err_operation_not_found');
+            if (printData.error === 'direction_not_found') errorMsg = t('print.err_direction_not_set');
         }
         return <div className="p-8 text-center text-red-500 font-bold">{errorMsg}</div>;
     }
@@ -153,10 +153,10 @@ const PrintFinancialStatusByStructureCommitmentPage: React.FC<PrintFinancialStat
                 }
             `}</style>
             <div className="no-print mb-4 flex justify-between items-center bg-gray-100 p-3 rounded shadow">
-                <h2 className="text-xl font-bold">معاينة طباعة الوضعية المالية حسب الهيكلة (الالتزام)</h2>
+                <h2 className="text-xl font-bold">{t('print.struct_commitment_preview')}</h2>
                 <div className="flex gap-2">
-                    <button onClick={() => navigate('FINANCIAL_STATUS_BY_STRUCTURE')} className="bg-gray-600 text-white px-4 py-2 rounded">رجوع</button>
-                    <button onClick={handlePrintJS} className="bg-blue-700 text-white px-6 py-2 rounded font-bold hover:bg-blue-800 transition-colors"><i className="bi bi-printer mr-2"></i> طباعة </button>
+                    <button onClick={() => navigate('FINANCIAL_STATUS_BY_STRUCTURE')} className="bg-gray-600 text-white px-4 py-2 rounded">{t('btn.back')}</button>
+                    <button onClick={handlePrintJS} className="bg-blue-700 text-white px-6 py-2 rounded font-bold hover:bg-blue-800 transition-colors"><i className="bi bi-printer mr-2"></i> {t('btn.print')} </button>
                 </div>
             </div>
 
@@ -168,7 +168,7 @@ const PrintFinancialStatusByStructureCommitmentPage: React.FC<PrintFinancialStat
                 </header>
                 
                 <div className="text-center font-bold mb-6">
-                    <h1 className="text-xl underline"> الوضعية المالية الموقوفة في: {currentDate}</h1>
+                    <h1 className="text-xl underline"> {t('print.label.stopped_at', {date: currentDate})}</h1>
                 </div>
 
                 <div className="text-center space-y-2 text-base mb-6">
@@ -179,11 +179,11 @@ const PrintFinancialStatusByStructureCommitmentPage: React.FC<PrintFinancialStat
                 <table className="w-full border: 0 text-center text-base">
                     <thead className="font-bold bg-gray-100">
                         <tr>
-                            <th className="border border-black p-2 w-[35%]">هيكلة الكلفة</th>
-                            <th className="border border-black p-2">رخصة الالتزام الأولي</th>
-                            <th className="border border-black p-2">رخصة الالتزام النهائي</th>
-                            <th className="border border-black p-2">الالتزام</th>
-                            <th className="border border-black p-2">باقي رخصة الالتزام</th>
+                            <th className="border border-black p-2 w-[35%]">{t('print.rubrique_structure')}</th>
+                            <th className="border border-black p-2">{t('col.initial_auth')}</th>
+                            <th className="border border-black p-2">{t('col.final_auth')}</th>
+                            <th className="border border-black p-2">{t('col.commitment')}</th>
+                            <th className="border border-black p-2">{t('col.remaining_ae')}</th>
                         </tr>
                     </thead>
                     <tbody>

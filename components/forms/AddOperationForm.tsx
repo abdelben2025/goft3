@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Operation, Categorie, Scategorie, Rubrique } from '../../types';
 import { formatCurrency, parseCurrency, formatAmountInput, formatCurrencyForInput } from '../../utils/currencyUtils';
 import { Plus, Trash2 } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface AddOperationFormProps {
     onClose: () => void;
@@ -18,6 +19,7 @@ interface AddOperationFormProps {
 }
 
 const AddOperationForm: React.FC<AddOperationFormProps> = ({ onClose, onSave, categories, scategories, rubriques, initialData }) => {
+    const { t } = useLanguage();
     const [nOperation, setNOperation] = useState('');
     const [nOperationAncien, setNOperationAncien] = useState('');
     const [intOperation, setIntOperation] = useState('');
@@ -57,17 +59,17 @@ const AddOperationForm: React.FC<AddOperationFormProps> = ({ onClose, onSave, ca
         let error = '';
         switch (name) {
             case 'nOperation':
-                if (!value) error = 'رقم العملية مطلوب';
-                else if (value.length < 25) error = 'رقم العملية غير مكتمل (يجب أن يكون 25 رمزا)';
+                if (!value) error = t('op.err_op_number_required');
+                else if (value.length < 25) error = t('op.err_op_number_incomplete');
                 break;
             case 'intOperation':
-                if (!value || value.trim().length === 0) error = 'عنوان العملية مطلوب';
+                if (!value || value.trim().length === 0) error = t('op.err_op_title_required');
                 break;
             case 'idCategorie':
-                if (!value) error = 'الصنف مطلوب';
+                if (!value) error = t('op.err_cat_required');
                 break;
             case 'idScatOperation':
-                if (!value) error = 'الصنف الفرعي مطلوب';
+                if (!value) error = t('op.err_scat_required');
                 break;
         }
         setErrors(prev => ({ ...prev, [name]: error }));
@@ -296,10 +298,10 @@ const AddOperationForm: React.FC<AddOperationFormProps> = ({ onClose, onSave, ca
     if (categories.length === 0 && !initialData) {
         return (
             <div className="p-4 bg-yellow-100 text-yellow-800 rounded-[20px] text-center">
-                <p className="font-bold">لا يمكن إضافة عملية.</p>
-                <p>يجب عليك أولاً إضافة صنف واحد على الأقل من صفحة <span className="font-semibold">الإعدادات ← إدارة الأصناف</span>.</p>
+                <p className="font-bold">{t('op.form_no_cat_title')}</p>
+                <p>{t('op.form_no_cat_message')}</p>
                 <div className="flex justify-end mt-1">
-                    <button type="button" onClick={onClose} className="px-6 py-2 bg-gray-200 text-gray-800 rounded-[20px] hover:bg-gray-300 transition-colors">إغلاق</button>
+                    <button type="button" onClick={onClose} className="px-6 py-2 bg-gray-200 text-gray-800 rounded-[20px] hover:bg-gray-300 transition-colors">{t('op.form_close')}</button>
                 </div>
             </div>
         );
@@ -308,16 +310,16 @@ const AddOperationForm: React.FC<AddOperationFormProps> = ({ onClose, onSave, ca
     return (
         <form onSubmit={handleSubmit} className="flex flex-col max-h-[80vh] overflow-hidden">
             <div className="sticky top-0 bg-white z-10 pb-2 border-b border-gray-200 flex justify-end gap-3 pt-1 mb-1 shrink-0">
-                <button type="button" onClick={onClose} className="px-4 py-1.5 bg-gray-200 text-gray-800 rounded-[20px] hover:bg-gray-300 transition-colors text-xs">إلغاء</button>
+                <button type="button" onClick={onClose} className="px-4 py-1.5 bg-gray-200 text-gray-800 rounded-[20px] hover:bg-gray-300 transition-colors text-xs">{t('btn.cancel')}</button>
                 <button type="submit" disabled={isSubmitting} className="px-4 py-1.5 bg-blue-600 text-white rounded-[20px] hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-xs font-bold">
-                    {isSubmitting ? 'جاري الحفظ...' : (initialData ? 'حفظ التغييرات' : 'إضافة')}
+                    {isSubmitting ? t('op.form_saving') : (initialData ? t('op.form_save_changes') : t('btn.add'))}
                 </button>
             </div>
 
             <div className="space-y-4 overflow-y-auto px-1 pb-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
                     <div>
-                        <label htmlFor="nOperation" className="block text-[8px] font-bold text-gray-500 text-center uppercase">رقم العملية</label>
+                        <label htmlFor="nOperation" className="block text-[8px] font-bold text-gray-500 text-center uppercase">{t('op.lbl_op_number')}</label>
                         <input
                             id="nOperation"
                             type="text"
@@ -332,7 +334,7 @@ const AddOperationForm: React.FC<AddOperationFormProps> = ({ onClose, onSave, ca
                         {errors.nOperation && <p className="text-red-500 text-[8px] mt-1 text-center font-medium">{errors.nOperation}</p>}
                     </div>
                     <div>
-                        <label htmlFor="nOperationAncien" className="block text-[8px] font-bold text-gray-500 text-center uppercase">رقم العملية القديم</label>
+                        <label htmlFor="nOperationAncien" className="block text-[8px] font-bold text-gray-500 text-center uppercase">{t('op.lbl_op_old_number')}</label>
                         <input
                             id="nOperationAncien"
                             type="text"
@@ -344,7 +346,7 @@ const AddOperationForm: React.FC<AddOperationFormProps> = ({ onClose, onSave, ca
                 </div>
 
                 <div>
-                    <label htmlFor="intOperation" className="block text-[9px] font-bold text-gray-500 text-center text-[9px] uppercase">عنوان العملية</label>
+                    <label htmlFor="intOperation" className="block text-[9px] font-bold text-gray-500 text-center text-[9px] uppercase">{t('op.lbl_op_title')}</label>
                     <textarea
                         id="intOperation"
                         value={intOperation}
@@ -364,7 +366,7 @@ const AddOperationForm: React.FC<AddOperationFormProps> = ({ onClose, onSave, ca
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                        <label htmlFor="idCategorie" className="block text-[8px] font-bold text-gray-500 text-center uppercase">الصنف</label>
+                        <label htmlFor="idCategorie" className="block text-[8px] font-bold text-gray-500 text-center uppercase">{t('col.categorie')}</label>
                         <select
                             id="idCategorie"
                             value={idCategorie}
@@ -387,7 +389,7 @@ const AddOperationForm: React.FC<AddOperationFormProps> = ({ onClose, onSave, ca
                         {errors.idCategorie && <p className="text-red-500 text-[9px] mt-1 text-center font-medium">{errors.idCategorie}</p>}
                     </div>
                     <div>
-                        <label htmlFor="idScatOperation" className="block text-[8px] font-bold text-gray-500 text-center uppercase">الصنف الفرعي</label>
+                        <label htmlFor="idScatOperation" className="block text-[8px] font-bold text-gray-500 text-center uppercase">{t('col.sub_categorie')}</label>
                         <select
                             id="idScatOperation"
                             value={idScatOperation}
@@ -401,7 +403,7 @@ const AddOperationForm: React.FC<AddOperationFormProps> = ({ onClose, onSave, ca
                             required
                             className={`w-full px-2 py-1.5 mt-1 text-[10px] text-gray-700 bg-gray-50 border ${errors.idScatOperation ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-300'} rounded-[20px] focus:outline-none focus:ring-2 ${errors.idScatOperation ? 'focus:ring-red-500' : 'focus:ring-blue-500'}`}
                         >
-                            <option value="">-- اختر صنف فرعي --</option>
+                            <option value="">{t('op.select_subcat_placeholder')}</option>
                             {availableScategories.map(scat => (
                                 <option key={scat.ID_SCATEGORIE} value={scat.ID_SCATEGORIE}>
                                     {scat.INT_SCATEGORIE}
@@ -414,7 +416,7 @@ const AddOperationForm: React.FC<AddOperationFormProps> = ({ onClose, onSave, ca
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div className="col-span-1 md:col-span-2">
-                        <label htmlFor="typeOp" className="block text-[8px] font-bold text-gray-500 text-center uppercase">نوع العملية</label>
+                        <label htmlFor="typeOp" className="block text-[8px] font-bold text-gray-500 text-center uppercase">{t('op.filter_type_op')}</label>
                         <div className="flex gap-1 items-center mt-1 relative">
                             {!isTypeEditable ? (
                                 <>
@@ -427,7 +429,7 @@ const AddOperationForm: React.FC<AddOperationFormProps> = ({ onClose, onSave, ca
                                         }}
                                         className="flex-1 px-2 py-1.5 text-[10px] text-gray-700 bg-gray-50 border border-gray-300 rounded-[20px] focus:outline-none focus:ring-2 focus:ring-blue-500 h-8"
                                     >
-                                        <option value="">-- اختر نوع العملية --</option>
+                                        <option value="">{t('op.select_type_op_placeholder')}</option>
                                         {customTypes.map(t => (
                                             <option key={t} value={t}>{t}</option>
                                         ))}
@@ -440,7 +442,7 @@ const AddOperationForm: React.FC<AddOperationFormProps> = ({ onClose, onSave, ca
                                             markDirty();
                                         }}
                                         className="p-1.5 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-full transition-colors shadow-sm cursor-pointer"
-                                        title="إضافة نوع مخصص"
+                                        title={t('op.add_custom_type_tooltip')}
                                     >
                                         <Plus size={14} />
                                     </button>
@@ -456,7 +458,7 @@ const AddOperationForm: React.FC<AddOperationFormProps> = ({ onClose, onSave, ca
                                                 setTypeOp(e.target.value);
                                                 markDirty();
                                             }}
-                                            placeholder="اكتب نوع العملية هنا..."
+                                            placeholder={t('op.type_here_placeholder')}
                                             className="flex-1 px-3 py-1 text-[10px] text-gray-700 bg-white border border-blue-400 rounded-[20px] focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold h-8"
                                         />
                                         <button
@@ -470,7 +472,7 @@ const AddOperationForm: React.FC<AddOperationFormProps> = ({ onClose, onSave, ca
                                             }}
                                             className="px-3 py-1 bg-green-600 text-white rounded-[20px] text-[9px] font-bold hover:bg-green-700 transition cursor-pointer h-8"
                                         >
-                                            حفظ
+                                            {t('btn.save')}
                                         </button>
                                         <button
                                             type="button"
@@ -480,13 +482,13 @@ const AddOperationForm: React.FC<AddOperationFormProps> = ({ onClose, onSave, ca
                                             }}
                                             className="px-3 py-1 bg-gray-300 text-gray-700 rounded-[20px] text-[9px] font-bold hover:bg-gray-400 transition cursor-pointer h-8"
                                         >
-                                            إلغاء
+                                            {t('btn.cancel')}
                                         </button>
                                     </div>
                                     
                                     {showTypeConfirmPopup && (
                                         <div className="absolute top-9 right-0 left-0 bg-white border border-blue-200 p-2.5 rounded-[15px] shadow-lg z-50 text-center animate-slide-up">
-                                            <p className="text-[10px] font-bold text-gray-700 mb-2">هل تريد حفظ "{tempTypeInput}" كخيار دائم في القائمة؟</p>
+                                            <p className="text-[10px] font-bold text-gray-700 mb-2">{t('op.confirm_save_type', { type: tempTypeInput })}</p>
                                             <div className="flex justify-center gap-2">
                                                 <button
                                                     type="button"
@@ -503,7 +505,7 @@ const AddOperationForm: React.FC<AddOperationFormProps> = ({ onClose, onSave, ca
                                                     }}
                                                     className="px-3 py-1 bg-blue-600 text-white rounded-[15px] text-[9px] font-bold hover:bg-blue-700 cursor-pointer"
                                                 >
-                                                    نعم
+                                                    {t('op.yes')}
                                                 </button>
                                                 <button
                                                     type="button"
@@ -515,7 +517,7 @@ const AddOperationForm: React.FC<AddOperationFormProps> = ({ onClose, onSave, ca
                                                     }}
                                                     className="px-3 py-1 bg-yellow-500 text-white rounded-[15px] text-[9px] font-bold hover:bg-yellow-600 cursor-pointer"
                                                 >
-                                                    لا، كقيمة مؤقتة
+                                                    {t('op.no_temporary')}
                                                 </button>
                                                 <button
                                                     type="button"
@@ -524,7 +526,7 @@ const AddOperationForm: React.FC<AddOperationFormProps> = ({ onClose, onSave, ca
                                                     }}
                                                     className="px-3 py-1 bg-gray-200 text-gray-700 rounded-[15px] text-[9px] hover:bg-gray-300 cursor-pointer"
                                                 >
-                                                    إلغاء
+                                                    {t('btn.cancel')}
                                                 </button>
                                             </div>
                                         </div>
@@ -534,7 +536,7 @@ const AddOperationForm: React.FC<AddOperationFormProps> = ({ onClose, onSave, ca
                         </div>
                     </div>
                     <div>
-                        <label htmlFor="status" className="block text-[8px] font-bold text-gray-500 text-center uppercase">الحالة</label>
+                        <label htmlFor="status" className="block text-[8px] font-bold text-gray-500 text-center uppercase">{t('col.status')}</label>
                         <select
                             id="status"
                             value={status}
@@ -542,8 +544,8 @@ const AddOperationForm: React.FC<AddOperationFormProps> = ({ onClose, onSave, ca
                             required
                             className="w-full px-2 py-1.5 mt-1 text-[10px] text-gray-700 bg-gray-50 border border-gray-300 rounded-[20px] focus:outline-none focus:ring-2 focus:ring-blue-500 h-8 text-center font-bold"
                         >
-                            <option value="جارية">جارية</option>
-                            <option value="مغلقة">مغلقة</option>
+                            <option value="جارية">{t('op.status_ongoing')}</option>
+                            <option value="مغلقة">{t('op.status_closed')}</option>
                         </select>
                     </div>
                 </div>
@@ -557,17 +559,17 @@ const AddOperationForm: React.FC<AddOperationFormProps> = ({ onClose, onSave, ca
                                 className="flex items-center gap-1.5 px-3 py-1 bg-blue-600 text-white rounded-[20px] text-[10px] font-bold hover:bg-blue-700 transition-colors"
                             >
                                 <Plus size={12} />
-                                إضافة هيكلة
+                                {t('op.add_structure')}
                             </button>
-                            <h4 className="text-xs font-bold text-blue-800 uppercase tracking-tight">هيكلة العملية (المدونات)</h4>
+                            <h4 className="text-xs font-bold text-blue-800 uppercase tracking-tight">{t('op.structure_title')}</h4>
                         </div>
                         
                         {structureRows.length > 0 ? (
                             <table className="w-full border-collapse">
                                 <thead>
                                     <tr className="border-b border-blue-200">
-                                        <th className="p-2 text-right text-[8px] font-bold text-gray-600">المدونة</th>
-                                        <th className="p-2 text-right text-[8px] font-bold text-gray-600 w-32">المبلغ</th>
+                                        <th className="p-2 text-right text-[8px] font-bold text-gray-600">{t('op.col_rubrique')}</th>
+                                        <th className="p-2 text-right text-[8px] font-bold text-gray-600 w-32">{t('col.amount')}</th>
                                         <th className="w-8"></th>
                                     </tr>
                                 </thead>
@@ -581,7 +583,7 @@ const AddOperationForm: React.FC<AddOperationFormProps> = ({ onClose, onSave, ca
                                                     className="w-full bg-white border border-gray-200 rounded-[20px] px-2 py-1 text-xs focus:ring-1 focus:ring-blue-500 outline-none"
                                                     required
                                                 >
-                                                    <option value="">-- اختر مدونة --</option>
+                                                    <option value="">{t('op.select_rubrique_placeholder')}</option>
                                                     {rubriques.map(rub => (
                                                         <option key={rub.ID_RUBRIQUE} value={rub.ID_RUBRIQUE}>
                                                             {rub.RUBRIQUE}
@@ -621,7 +623,7 @@ const AddOperationForm: React.FC<AddOperationFormProps> = ({ onClose, onSave, ca
                             </table>
                         ) : (
                             <div className="text-center py-4 border-2 border-dashed border-blue-200 rounded-[20px] bg-white">
-                                <p className="text-[8px] text-gray-400 font-medium">لم يتم إضافة أي هيكلة بعد</p>
+                                <p className="text-[8px] text-gray-400 font-medium">{t('op.no_structure_yet')}</p>
                             </div>
                         )}
                     </div>

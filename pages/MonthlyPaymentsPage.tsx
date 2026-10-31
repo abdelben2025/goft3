@@ -8,6 +8,7 @@ import { formatCurrency } from '../utils/currencyUtils';
 import { normalizeDate } from '../utils/dateUtils';
 import ExcelJS from 'exceljs';
 import { saveWorkbook } from '../utils/exportXlsx';
+import { useLanguage } from '../context/LanguageContext';
 
 interface MonthlyPaymentsPageProps {
     navigate: (page: Page) => void;
@@ -17,6 +18,7 @@ interface MonthlyPaymentsPageProps {
 
 const MonthlyPaymentsPage: React.FC<MonthlyPaymentsPageProps> = ({ navigate, onGoBack }) => {
     const { db } = useData();
+    const { t } = useLanguage();
     const paiements = db.T_PAIEMENT;
     const operations = db.T_OPERATION;
     const pieces = db.T_PIECE;
@@ -50,19 +52,19 @@ const MonthlyPaymentsPage: React.FC<MonthlyPaymentsPageProps> = ({ navigate, onG
     };
 
     const months = [
-        { value: 'ALL', label: 'كل الأشهر' },
-        { value: '01', label: 'جانفي' },
-        { value: '02', label: 'فيفري' },
-        { value: '03', label: 'مارس' },
-        { value: '04', label: 'أفريل' },
-        { value: '05', label: 'ماي' },
-        { value: '06', label: 'جوان' },
-        { value: '07', label: 'جويلية' },
-        { value: '08', label: 'أوت' },
-        { value: '09', label: 'سبتمبر' },
-        { value: '10', label: 'أكتوبر' },
-        { value: '11', label: 'نوفمبر' },
-        { value: '12', label: 'ديسمبر' },
+        { value: 'ALL', label: t('mpay.all_months') },
+        { value: '01', label: t('month.1') },
+        { value: '02', label: t('month.2') },
+        { value: '03', label: t('month.3') },
+        { value: '04', label: t('month.4') },
+        { value: '05', label: t('month.5') },
+        { value: '06', label: t('month.6') },
+        { value: '07', label: t('month.7') },
+        { value: '08', label: t('month.8') },
+        { value: '09', label: t('month.9') },
+        { value: '10', label: t('month.10') },
+        { value: '11', label: t('month.11') },
+        { value: '12', label: t('month.12') },
     ];
 
     const years = useMemo(() => {
@@ -116,8 +118,8 @@ const MonthlyPaymentsPage: React.FC<MonthlyPaymentsPageProps> = ({ navigate, onG
 
                 return {
                     ...p,
-                    opName: op ? `${op.N_OPERATION} - ${op.INT_OPERATION}` : 'غير معروف',
-                    pieceName: piece ? piece.PIECE : 'غير معروف',
+                    opName: op ? `${op.N_OPERATION} - ${op.INT_OPERATION}` : t('mpay.unknown'),
+                    pieceName: piece ? piece.PIECE : t('mpay.unknown'),
                     engRef: eng ? `${eng.N_ENG} / ${eng.ANNEE}` : '---',
                     beneficiaryName: ben ? ben.BENEFICIAIRE : '---',
                     isAccepted: !!p.DATE_ADMIS
@@ -133,7 +135,7 @@ const MonthlyPaymentsPage: React.FC<MonthlyPaymentsPageProps> = ({ navigate, onG
             .sort((a: any, b: any) => {
                 return (a.DATE_PAI || '').localeCompare(b.DATE_PAI || '');
             });
-    }, [paiements, operations, pieces, beneficiaries, engagements, selectedYear, selectedMonth, statusFilter, selectedAction, searchTerm]);
+    }, [paiements, operations, pieces, beneficiaries, engagements, selectedYear, selectedMonth, statusFilter, selectedAction, searchTerm, t]);
 
     const totalAmount = useMemo(() => {
         return filteredData.reduce((sum: number, item: any) => sum + item.MONTANT_PAI, 0);
@@ -152,23 +154,23 @@ const MonthlyPaymentsPage: React.FC<MonthlyPaymentsPageProps> = ({ navigate, onG
         if (filteredData.length === 0) return;
 
         const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('دفوعات الشهر');
+        const worksheet = workbook.addWorksheet(t('mpay.sheet_name'));
         
         worksheet.views = [{ rightToLeft: true }];
 
         worksheet.columns = [
             { header: '#', key: 'index', width: 5 },
-            { header: 'رقم وعنوان العملية', key: 'op', width: 40 },
-            { header: 'رقم بطاقة الدفع', key: 'n_pai', width: 15 },
-            { header: 'السنة', key: 'annee', width: 10 },
-            { header: 'تاريخ الدفع', key: 'date', width: 15 },
-            { header: 'رقم الحوالة', key: 'n_mandat', width: 15 },
-            { header: 'تاريخ الحوالة', key: 'date_mandat', width: 15 },
-            { header: 'الوثيقة', key: 'piece', width: 25 },
-            { header: 'الالتزام', key: 'eng', width: 20 },
-            { header: 'المستفيذ', key: 'ben', width: 30 },
-            { header: 'الحالة', key: 'status', width: 15 },
-            { header: 'المبلغ', key: 'amount', width: 20 },
+            { header: t('col.operation_info'), key: 'op', width: 40 },
+            { header: t('mpay.card_no'), key: 'n_pai', width: 15 },
+            { header: t('col.year'), key: 'annee', width: 10 },
+            { header: t('mpay.payment_date'), key: 'date', width: 15 },
+            { header: t('col.mandat_no'), key: 'n_mandat', width: 15 },
+            { header: t('col.mandat_date'), key: 'date_mandat', width: 15 },
+            { header: t('col.document'), key: 'piece', width: 25 },
+            { header: t('col.commitment'), key: 'eng', width: 20 },
+            { header: t('mpay.beneficiary'), key: 'ben', width: 30 },
+            { header: t('col.status'), key: 'status', width: 15 },
+            { header: t('col.amount'), key: 'amount', width: 20 },
         ];
 
         filteredData.forEach((item, index) => {
@@ -183,7 +185,7 @@ const MonthlyPaymentsPage: React.FC<MonthlyPaymentsPageProps> = ({ navigate, onG
                 piece: item.pieceName,
                 eng: item.engRef,
                 ben: item.beneficiaryName,
-                status: item.isAccepted ? `مقبولة (${normalizeDate(item.DATE_ADMIS)})` : 'غير مقبولة',
+                status: item.isAccepted ? `${t('mpay.accepted')} (${normalizeDate(item.DATE_ADMIS)})` : t('mpay.not_accepted'),
                 amount: item.MONTANT_PAI
             });
         });
@@ -197,7 +199,7 @@ const MonthlyPaymentsPage: React.FC<MonthlyPaymentsPageProps> = ({ navigate, onG
     };
 
     return (
-        <PageWrapper title="جدول الدفوعات حسب الشهر" navigate={navigate} onGoBack={onGoBack}>
+        <PageWrapper title={t('mpay.title')} navigate={navigate} onGoBack={onGoBack}>
             <div className="w-full px-4 py-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 no-print gap-4">
                     <div className="flex items-center gap-4">
@@ -208,8 +210,8 @@ const MonthlyPaymentsPage: React.FC<MonthlyPaymentsPageProps> = ({ navigate, onG
                             <ArrowRight className="w-6 h-6 text-gray-600" />
                         </button>
                         <div>
-                            <h1 className="text-2xl font-black text-gray-800">جدول الدفوعات حسب الشهر</h1>
-                            <p className="text-sm text-gray-500 font-bold">عرض الدفوعات المسجلة خلال فترة زمنية محددة</p>
+                            <h1 className="text-2xl font-black text-gray-800">{t('mpay.title')}</h1>
+                            <p className="text-sm text-gray-500 font-bold">{t('mpay.subtitle')}</p>
                         </div>
                     </div>
 
@@ -220,7 +222,7 @@ const MonthlyPaymentsPage: React.FC<MonthlyPaymentsPageProps> = ({ navigate, onG
                             className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-emerald-700 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <Download className="w-4 h-4" />
-                            تصدير Excel
+                            {t('mpay.export_excel')}
                         </button>
                         <button 
                             onClick={handlePrint}
@@ -228,7 +230,7 @@ const MonthlyPaymentsPage: React.FC<MonthlyPaymentsPageProps> = ({ navigate, onG
                             className="flex items-center gap-2 bg-white border border-gray-300 px-4 py-2 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <Printer className="w-4 h-4" />
-                            طباعة الجدول
+                            {t('mpay.print_table')}
                         </button>
                     </div>
                 </div>
@@ -237,7 +239,7 @@ const MonthlyPaymentsPage: React.FC<MonthlyPaymentsPageProps> = ({ navigate, onG
                     <div className="p-6 bg-gradient-to-r from-emerald-600 to-teal-700">
                         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                             <div>
-                                <label className="block text-[10px] font-bold text-emerald-100 mb-1 mr-2">السنة المالية</label>
+                                <label className="block text-[10px] font-bold text-emerald-100 mb-1 mr-2">{t('mpay.fiscal_year')}</label>
                                 <div className="relative">
                                     <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-300" />
                                     <select 
@@ -250,7 +252,7 @@ const MonthlyPaymentsPage: React.FC<MonthlyPaymentsPageProps> = ({ navigate, onG
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-[10px] font-bold text-emerald-100 mb-1 mr-2">الشهر</label>
+                                <label className="block text-[10px] font-bold text-emerald-100 mb-1 mr-2">{t('filter.month')}</label>
                                 <div className="relative">
                                     <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-300" />
                                     <select 
@@ -263,38 +265,38 @@ const MonthlyPaymentsPage: React.FC<MonthlyPaymentsPageProps> = ({ navigate, onG
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-[10px] font-bold text-emerald-100 mb-1 mr-2">حالة الدفع</label>
+                                <label className="block text-[10px] font-bold text-emerald-100 mb-1 mr-2">{t('mpay.status_label')}</label>
                                 <div className="relative">
                                     <select 
                                         value={statusFilter}
                                         onChange={(e) => setStatusFilter(e.target.value as any)}
                                         className="w-full bg-white/10 border border-white/20 rounded-xl py-2 px-4 text-white font-bold focus:outline-none focus:ring-2 focus:ring-white/30 appearance-none text-right"
                                     >
-                                        <option value="ALL" className="text-gray-800">الكل (مقبولة وغير مقبولة)</option>
-                                        <option value="ACCEPTED" className="text-gray-800">مقبولة فقط</option>
-                                        <option value="NOT_ACCEPTED" className="text-gray-800">غير مقبولة فقط</option>
+                                        <option value="ALL" className="text-gray-800">{t('mpay.status_all')}</option>
+                                        <option value="ACCEPTED" className="text-gray-800">{t('mpay.status_accepted_only')}</option>
+                                        <option value="NOT_ACCEPTED" className="text-gray-800">{t('mpay.status_not_accepted_only')}</option>
                                     </select>
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-[10px] font-bold text-emerald-100 mb-1 mr-2">تصفية حسب النشاط</label>
-								<div className="relative">
+                                <label className="block text-[10px] font-bold text-emerald-100 mb-1 mr-2">{t('filter.activity')}</label>
+ 								<div className="relative">
                                 <CustomDropdown
-                                    options={[{ value: '', label: 'كل النشاطات' }, ...activities]}
+                                    options={[{ value: '', label: t('mpay.all_activities') }, ...activities]}
                                     value={selectedAction}
                                     onChange={setSelectedAction}
-                                    placeholder="اختر النشاط"
+                                    placeholder={t('filter.select_activity')}
                                     className="w-full"
                                 />
 								</div>
                             </div>
                             <div className="md:col-span-2">
-                                <label className="block text-[10px] font-bold text-emerald-100 mb-1 mr-2">بحث سريع</label>
+                                <label className="block text-[10px] font-bold text-emerald-100 mb-1 mr-2">{t('mpay.quick_search')}</label>
                                 <div className="relative">
                                     <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-300" />
                                     <input 
                                         type="text"
-                                        placeholder="رقم الحوالة، اسم المستفيذ، رقم الدفع..."
+                                        placeholder={t('mpay.search_placeholder')}
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                         className="w-full bg-white/10 border border-white/20 rounded-xl py-2 px-10 text-white font-bold placeholder:text-emerald-200/50 focus:outline-none focus:ring-2 focus:ring-white/30"
@@ -311,13 +313,13 @@ const MonthlyPaymentsPage: React.FC<MonthlyPaymentsPageProps> = ({ navigate, onG
                             <thead>
                                 <tr className="bg-gray-50 border-b border-gray-200">
                                     <th className="px-4 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider border-l border-gray-100">#</th>
-                                    <th className="px-4 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider border-l border-gray-100">رقم وعنوان العملية</th>
-                                    <th className="px-4 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider border-l border-gray-100">رقم/سنة بطاقة الدفع</th>
-                                    <th className="px-4 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider border-l border-gray-100">رقم وتاريخ الحوالة</th>
-                                    <th className="px-4 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider border-l border-gray-100">الوثيقة</th>
-                                    <th className="px-4 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider border-l border-gray-100">المستفيذ</th>
-                                    <th className="px-4 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider border-l border-gray-100">الحالة</th>
-                                    <th className="px-4 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider border-l border-gray-100 text-left">المبلغ</th>
+                                    <th className="px-4 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider border-l border-gray-100">{t('col.operation_info')}</th>
+                                    <th className="px-4 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider border-l border-gray-100">{t('mpay.card_year_header')}</th>
+                                    <th className="px-4 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider border-l border-gray-100">{t('mpay.mandate_header')}</th>
+                                    <th className="px-4 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider border-l border-gray-100">{t('col.document')}</th>
+                                    <th className="px-4 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider border-l border-gray-100">{t('mpay.beneficiary')}</th>
+                                    <th className="px-4 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider border-l border-gray-100">{t('col.status')}</th>
+                                    <th className="px-4 py-4 text-[10px] font-black text-gray-500 uppercase tracking-wider border-l border-gray-100 text-left">{t('col.amount')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
@@ -331,14 +333,14 @@ const MonthlyPaymentsPage: React.FC<MonthlyPaymentsPageProps> = ({ navigate, onG
                                             <td className="px-4 py-4 whitespace-nowrap">
                                                 <div className="flex flex-col">
                                                     <span className={`text-[11px] font-black ${item.isAccepted ? 'text-emerald-700' : 'text-amber-700'}`}>{item.N_PAI} / {item.ANNEE}</span>
-                                                    <span className="text-[9px] font-bold text-gray-400 italic">في: {normalizeDate(item.DATE_PAI)}</span>
+                                                    <span className="text-[9px] font-bold text-gray-400 italic">{t('mpay.on_date', {date: normalizeDate(item.DATE_PAI)})}</span>
                                                 </div>
                                             </td>
                                             <td className="px-4 py-4 whitespace-nowrap">
                                                 {item.N_MANDAT ? (
                                                     <div className="flex flex-col">
-                                                        <span className="text-[11px] font-black text-gray-700">حوالة رقم: {item.N_MANDAT}</span>
-                                                        <span className="text-[9px] font-bold text-gray-400 italic">بتاريخ: {normalizeDate(item.DATE_MANDAT || '')}</span>
+                                                        <span className="text-[11px] font-black text-gray-700">{t('mpay.mandate_no', {number: item.N_MANDAT})}</span>
+                                                        <span className="text-[9px] font-bold text-gray-400 italic">{t('mpay.dated', {date: normalizeDate(item.DATE_MANDAT || '')})}</span>
                                                     </div>
                                                 ) : <span className="text-[10px] text-gray-300 font-bold">---</span>}
                                             </td>
@@ -355,12 +357,12 @@ const MonthlyPaymentsPage: React.FC<MonthlyPaymentsPageProps> = ({ navigate, onG
                                                 {item.isAccepted ? (
                                                     <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-100 px-2 py-1 rounded-full text-[10px] font-black">
                                                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                                        مقبولة في: {normalizeDate(item.DATE_ADMIS)}
+                                                        {t('mpay.accepted_on', {date: normalizeDate(item.DATE_ADMIS)})}
                                                     </span>
                                                 ) : (
                                                     <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-100 px-2 py-1 rounded-full text-[10px] font-black">
                                                         <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                                                        غير مقبولة (قيد الانتظار)
+                                                        {t('mpay.not_accepted_pending')}
                                                     </span>
                                                 )}
                                             </td>
@@ -376,7 +378,7 @@ const MonthlyPaymentsPage: React.FC<MonthlyPaymentsPageProps> = ({ navigate, onG
                                                 <div className="p-4 bg-gray-50 rounded-full">
                                                     <CreditCard className="w-8 h-8 text-gray-300" />
                                                 </div>
-                                                <p className="text-gray-400 font-bold">لا توجد دفوعات مسجلة في هذا الشهر</p>
+                                                <p className="text-gray-400 font-bold">{t('mpay.empty_no_payments')}</p>
                                             </div>
                                         </td>
                                     </tr>
@@ -385,7 +387,7 @@ const MonthlyPaymentsPage: React.FC<MonthlyPaymentsPageProps> = ({ navigate, onG
                             {filteredData.length > 0 && (
                                 <tfoot className="bg-emerald-900 text-white">
                                     <tr>
-                                        <td colSpan={7} className="px-4 py-4 text-sm font-black text-right uppercase">إجمالي الدفوعات في هذا الشهر</td>
+                                        <td colSpan={7} className="px-4 py-4 text-sm font-black text-right uppercase">{t('mpay.total_this_month')}</td>
                                         <td className="px-4 py-4 text-sm font-black text-left">{formatCurrency(totalAmount)}</td>
                                     </tr>
                                 </tfoot>

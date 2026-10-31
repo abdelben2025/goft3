@@ -153,8 +153,8 @@ const PrintCertificatPage: React.FC<PrintCertificatPageProps> = ({ navigate, pai
             <div className="no-print mb-4 flex justify-between items-center bg-gray-100 p-3 rounded shadow">
                 <h2 className="text-xl font-bold">{t('print.title.payment_certificate')}</h2>
                  <div className="flex gap-2">
-                    <button onClick={() => navigate('OPERATION_DETAILS', operation.ID_OPERATION, `PAIEMENTS:${paiement.ID_PAIEMENT}:blue`)} className="bg-gray-600 text-white px-4 py-2 rounded">رجوع</button>
-                    <button onClick={handlePrintJS} className="bg-blue-700 text-white px-6 py-2 rounded font-bold hover:bg-blue-800 transition-colors"><i className="bi bi-printer mr-2"></i> طباعة </button>
+                    <button onClick={() => navigate('OPERATION_DETAILS', operation.ID_OPERATION, `PAIEMENTS:${paiement.ID_PAIEMENT}:blue`)} className="bg-gray-600 text-white px-4 py-2 rounded">{t('btn.back')}</button>
+                    <button onClick={handlePrintJS} className="bg-blue-700 text-white px-6 py-2 rounded font-bold hover:bg-blue-800 transition-colors"><i className="bi bi-printer mr-2"></i> {t('btn.print')} </button>
                 </div>
             </div>
 
@@ -190,7 +190,7 @@ const PrintCertificatPage: React.FC<PrintCertificatPageProps> = ({ navigate, pai
                     {lots && lots.length > 0 && lots.map((l) => (
                         <p key={l.ID_LOT}>
                             {/^\d+$/.test(l.N_LOT.trim()) ? (
-                                <><span className="text-[12px]">الحصة رقم: {l.N_LOT}</span><span className="text-[12px]">{l.INTITULE_LOT}</span></>
+                                <><span className="text-[12px]">{t('print.label.lot_num')} {l.N_LOT}</span><span className="text-[12px]">{l.INTITULE_LOT}</span></>
                             ) : (
                                 <span className="text-[12px]">{l.INTITULE_LOT}</span>
                             )}
@@ -204,7 +204,7 @@ const PrintCertificatPage: React.FC<PrintCertificatPageProps> = ({ navigate, pai
                     <div className="w-[45%]">
                         <table className="w-full border-collapse text-sm mt-5">
                             <thead>
-							      <tr><td colSpan={3} className="border border-black p-1 font-bold text-center mt-4">شهادة صادرة عن الصناديق بجميع أنواعها للسنوات السابقة والحالية</td></tr>
+							      <tr><td colSpan={3} className="border border-black p-1 font-bold text-center mt-4">{t('print.certificat.by_funds')}</td></tr>
 							     <tr>
 								    <th className="border border-black p-1 text-center font-bold">{t('col.year')}</th>
                                     <th className="border border-black p-1 text-center font-bold">{t('col.fund_type')}</th>
@@ -229,15 +229,15 @@ const PrintCertificatPage: React.FC<PrintCertificatPageProps> = ({ navigate, pai
                                     <td className="border border-black p-1 text-center">{formatCurrency(previousPaymentsTotal)}</td>
 								</tr>
                                  <tr>								
-									<td colSpan={2} className="border border-black p-1 ltr:text-left rtl:text-right">مبلغ الشهادة الحالية</td>
+									<td colSpan={2} className="border border-black p-1 ltr:text-left rtl:text-right">{t('print.certificat.current_cert_amount')}</td>
                                     <td className="border border-black p-1 text-center">{formatCurrency(paiement.MONTANT_PAI)}</td>
                                 </tr>
 								<tr>
-                                        <td colSpan={2} className="border border-black p-1 ltr:text-left rtl:text-right">المقاول تحصل سابقا على</td>
+                                        <td colSpan={2} className="border border-black p-1 ltr:text-left rtl:text-right">{t('print.certificat.contractor_previously_got')}</td>
                                         <td className="p-1 border border-black text-center">{formatCurrency(previousPaymentsTotal)}</td>
                                </tr>
                                <tr>
-                                        <td colSpan={2} className="border border-black p-1 ltr:text-left rtl:text-right w-full">مصاريف مستحقة الدفع تصل الى</td>
+                                        <td colSpan={2} className="border border-black p-1 ltr:text-left rtl:text-right w-full">{t('print.certificat.expenses_due')}</td>
                                         <td className="p-1 border border-black text-center">{formatCurrency(totalPaymentsIncludingCurrent)}</td>
                               </tr>
 							
@@ -253,7 +253,7 @@ const PrintCertificatPage: React.FC<PrintCertificatPageProps> = ({ navigate, pai
                         <div className="flex justify-between pr-4"><p>{t('print.label.deduction_guarantee')} .</p> <span className="dotted-line flex-grow mx-2"></span> <p>{formatCurrency(paiement.RETENUE_GARANTIE)}</p></div>
                         <div className="flex justify-between pr-4"><p>{t('print.label.deduction_excess')} .</p> <span className="dotted-line flex-grow mx-2"></span> <p>{formatCurrency(paiement.AUTRE_DEDUCTION)}</p></div>
                         <div className="flex justify-between pr-4"><p>{t('print.label.penalty_delay')}.</p> <span className="dotted-line flex-grow mx-2"></span> <p>{formatCurrency(paiement.PENALITE_RETARD)}</p></div>
-                         <p className="font-bold mt-2">تسديد التسبيقات</p>
+                         <p className="font-bold mt-2">{t('print.certificat.repay_advances')}</p>
                         <div className="flex justify-between pr-4"><p>{t('print.label.repay_flat')} .</p> <span className="dotted-line flex-grow mx-2"></span> <p>{formatCurrency(paiement.REMBOURSEMENT_AVANCE_FORFAITAIRE)}</p></div>
                         <div className="flex justify-between pr-4"><p>{t('print.label.repay_supply')} .</p> <span className="dotted-line flex-grow mx-2"></span> <p>{formatCurrency(paiement.REMBOURSEMENT_AVANCE_APPROVISIONNEMENT)}</p></div>
                         <div className="flex justify-between pt-2"><p>{t('print.label.remaining_from')} .</p> <span className="dotted-line flex-grow mx-2"></span> <p>{formatCurrency(montantRestant)}</p></div>
@@ -269,7 +269,7 @@ const PrintCertificatPage: React.FC<PrintCertificatPageProps> = ({ navigate, pai
 
                 <footer className="mt-1 flex justify-end">
                      <div className=" mx-4 text-center">
-                        <p>غليزان في: ..................</p>
+                        <p>{t('print.relizane_in')}</p>
                         <p className="font-bold mt-1 font-size: 12pt">{t('print.footer.director')}</p>
                     </div>
                 </footer>

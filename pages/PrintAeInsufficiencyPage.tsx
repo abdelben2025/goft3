@@ -195,12 +195,12 @@ const PrintAeInsufficiencyPage: React.FC<PrintAeInsufficiencyPageProps> = ({ nav
             <div className="no-print mb-4 flex flex-col md:flex-row gap-4 justify-between items-start md:items-center bg-white p-4 rounded shadow border border-gray-100 font-sans">
                 <div className="flex flex-col gap-1">
                     <h2 className="text-lg font-bold text-gray-800">{t('btn.print')} - {t('print.title.ae_insufficiency')}</h2>
-                    <p className="text-xs text-gray-500">يمكنك تعديل أسطر الجدول لضبط الطباعة على الصفحات بشكل مثالي:</p>
+                    <p className="text-xs text-gray-500">{t('print.ae_insuff.adjust_hint')}</p>
                 </div>
                 
                 <div className="flex flex-wrap items-center gap-4 bg-gray-50 p-2 rounded-lg border border-gray-200">
                     <div className="flex items-center gap-2">
-                        <label className="text-xs font-semibold text-gray-700">الصفحة الأولى:</label>
+                        <label className="text-xs font-semibold text-gray-700">{t('print.first_page')}</label>
                         <input 
                             type="number" 
                             min="1" 
@@ -211,7 +211,7 @@ const PrintAeInsufficiencyPage: React.FC<PrintAeInsufficiencyPageProps> = ({ nav
                         />
                     </div>
                     <div className="flex items-center gap-2 border-r pr-4 border-gray-300">
-                        <label className="text-xs font-semibold text-gray-700">الصفحات الأخرى:</label>
+                        <label className="text-xs font-semibold text-gray-700">{t('print.other_pages')}</label>
                         <input 
                             type="number" 
                             min="1" 
@@ -254,7 +254,7 @@ const PrintAeInsufficiencyPage: React.FC<PrintAeInsufficiencyPageProps> = ({ nav
                             <header className="flex justify-between items-center border-b pb-2 mb-4 text-xs text-gray-500 font-sans" dir="rtl">
                                 <span>{t('print.title.ae_insufficiency')}</span>
                                 <span className="ltr:font-sans">{t('print.label.date')} {currentDate}</span>
-                                <span>صفحة {page.pageNumber} من {pages.length}</span>
+                                <span>{t('print.page_of', { page: page.pageNumber, total: pages.length })}</span>
                             </header>
                         )}
 
@@ -301,7 +301,7 @@ const PrintAeInsufficiencyPage: React.FC<PrintAeInsufficiencyPageProps> = ({ nav
                                     /* Multi-page, non-last page: show only page subtotal */
                                     <tr>
                                         <td colSpan={!operationId ? 4 : 3} className="border border-black p-2 text-center text-sm text-gray-800">
-                                            المجموع الفرعي للصفحة
+                                                {t('print.page_subtotal')}
                                         </td>
                                         <td className="border border-black p-2 text-sm text-gray-800">
                                             {formatCurrency(page.pageSubtotal)}
@@ -312,7 +312,7 @@ const PrintAeInsufficiencyPage: React.FC<PrintAeInsufficiencyPageProps> = ({ nav
                                     <>
                                         <tr className="bg-gray-100 text-gray-700">
                                             <td colSpan={!operationId ? 4 : 3} className="border border-black p-2 text-center text-sm">
-                                                المجموع الفرعي للصفحة
+                                            {t('print.page_subtotal')}
                                             </td>
                                             <td className="border border-black p-2 text-sm font-medium">
                                                 {formatCurrency(page.pageSubtotal)}

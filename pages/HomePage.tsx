@@ -188,20 +188,20 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, currentUser }) => {
 
     const getNotificationTypeLabel = (type: string) => {
         switch (type) {
-            case 'financial_alert': return 'تنبيه مالي';
-            case 'overdue': return 'تأخير متجاوز';
-            case 'upcoming': return 'استحقاق قريب';
-            case 'unapproved_engagement': return 'التزام غير مؤشر';
-            case 'unaccepted_payment': return 'دفع غير مقبول';
-            case 'overdue_service_order': return 'تأخر تنفيذ ODS';
-            case 'approaching_service_order': return 'اقتراب موعد ODS';
-            case 'missing_bordereau': return 'جدول إرسال ناقص';
-            case 'consumption_alert': return 'تنبيه استهلاك';
-            case 'long_delays': return 'تأخر إداري';
-            case 'payment_claim_alert': return 'مستحقات > CP';
-            case 'ae_structure_insufficiency': return 'نقص AE هيكلة';
-            case 'unregistered_document': return 'وثيقة غير مسجلة';
-            default: return 'تنبيه';
+            case 'financial_alert': return t('home.label_financial');
+            case 'overdue': return t('home.label_overdue');
+            case 'upcoming': return t('home.label_upcoming');
+            case 'unapproved_engagement': return t('notif.unapproved_engagement');
+            case 'unaccepted_payment': return t('home.label_unaccepted');
+            case 'overdue_service_order': return t('home.label_overdue_service_order');
+            case 'approaching_service_order': return t('home.label_approaching_service_order');
+            case 'missing_bordereau': return t('home.label_missing_bordereau');
+            case 'consumption_alert': return t('home.label_consumption');
+            case 'long_delays': return t('home.label_long_delays');
+            case 'payment_claim_alert': return t('home.label_payment_claim');
+            case 'ae_structure_insufficiency': return t('home.label_ae_insufficiency');
+            case 'unregistered_document': return t('notif.unregistered_document');
+            default: return t('home.label_notification');
         }
     };
 
@@ -243,7 +243,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, currentUser }) => {
                     <button 
                         onClick={() => window.dispatchEvent(new CustomEvent('open-global-search'))}
                         className="bg-white text-gray-400 border border-gray-200 p-2 md:p-3 rounded-xl shadow-sm hover:bg-blue-50 hover:text-blue-600 transition-all duration-100 flex items-center justify-center group flex-shrink-0"
-                        title="بحث شامل (Ctrl+K)"
+                        title={t('home.search_title')}
                     >
                         <i className="bi bi-search text-lg md:text-xl group-hover:scale-110 transfrom transition-transform"></i>
                     </button>
@@ -287,7 +287,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, currentUser }) => {
             >
                 <div onClick={() => setSelectedFilter(selectedFilter === 'financial' ? null : 'financial')} className="cursor-pointer transition-transform hover:scale-102">
                     <Card 
-                        title="تنبيهات مالية" 
+                        title={t('home.kpi_financial')}
                         value={alertStats.financial.toString()} 
                         icon="bi-exclamation-octagon-fill" 
                         color={selectedFilter === 'financial' ? "bg-red-700 ring-4 ring-red-100" : (alertStats.financial > 0 ? "bg-red-600" : "bg-gray-400")} 
@@ -296,7 +296,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, currentUser }) => {
                 </div>
                 <div onClick={() => setSelectedFilter(selectedFilter === 'aeInsufficiency' ? null : 'aeInsufficiency')} className="cursor-pointer transition-transform hover:scale-102">
                     <Card 
-                        title="نقص رخصة الالتزام" 
+                        title={t('notif.ae_structure_insufficiency')}
                         value={alertStats.aeInsufficiency.toString()} 
                         icon="bi-shield-exclamation" 
                         color={selectedFilter === 'aeInsufficiency' ? "bg-purple-700 ring-4 ring-purple-100" : (alertStats.aeInsufficiency > 0 ? "bg-purple-600" : "bg-gray-400")} 
@@ -305,7 +305,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, currentUser }) => {
                 </div>
                 <div onClick={() => setSelectedFilter(selectedFilter === 'unapproved' ? null : 'unapproved')} className="cursor-pointer transition-transform hover:scale-102">
                     <Card 
-                        title="التزامات غير مؤشرة" 
+                        title={t('home.kpi_unapproved')}
                         value={alertStats.unapproved.toString()} 
                         icon="bi-file-earmark-lock2-fill" 
                         color={selectedFilter === 'unapproved' ? "bg-amber-700 ring-4 ring-amber-100" : (alertStats.unapproved > 0 ? "bg-amber-600" : "bg-gray-400")} 
@@ -314,7 +314,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, currentUser }) => {
                 </div>
                 <div onClick={() => setSelectedFilter(selectedFilter === 'unaccepted' ? null : 'unaccepted')} className="cursor-pointer transition-transform hover:scale-102">
                     <Card 
-                        title="دفعات غير مقبولة" 
+                        title={t('home.kpi_unaccepted')}
                         value={alertStats.unaccepted.toString()} 
                         icon="bi-cash-stack" 
                         color={selectedFilter === 'unaccepted' ? "bg-amber-700 ring-4 ring-amber-100" : (alertStats.unaccepted > 0 ? "bg-amber-600" : "bg-gray-400")} 
@@ -323,7 +323,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, currentUser }) => {
                 </div>
                 <div onClick={() => setSelectedFilter(selectedFilter === 'unregistered' ? null : 'unregistered')} className="cursor-pointer transition-transform hover:scale-102">
                     <Card 
-                        title="وثائق غير مسجلة" 
+                        title={t('home.kpi_unregistered')}
                         value={alertStats.unregistered.toString()} 
                         icon="bi-file-earmark-plus-fill" 
                         color={selectedFilter === 'unregistered' ? "bg-indigo-700 ring-4 ring-indigo-100" : (alertStats.unregistered > 0 ? "bg-indigo-600" : "bg-gray-400")} 
@@ -332,7 +332,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, currentUser }) => {
                 </div>
                 <div onClick={() => setSelectedFilter(selectedFilter === 'delayed' ? null : 'delayed')} className="cursor-pointer transition-transform hover:scale-102">
                     <Card 
-                        title="آجال متجاوزة" 
+                        title={t('home.kpi_delayed')}
                         value={alertStats.delayed.toString()} 
                         icon="bi-calendar-x-fill" 
                         color={selectedFilter === 'delayed' ? "bg-orange-700 ring-4 ring-orange-100" : (alertStats.delayed > 0 ? "bg-orange-600" : "bg-gray-400")} 
@@ -341,7 +341,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, currentUser }) => {
                 </div>
                 <div onClick={() => setSelectedFilter(selectedFilter === 'upcoming' ? null : 'upcoming')} className="cursor-pointer transition-transform hover:scale-102">
                     <Card 
-                        title="آجال قريبة" 
+                        title={t('home.kpi_upcoming')}
                         value={alertStats.upcoming.toString()} 
                         icon="bi-clock-fill" 
                         color={selectedFilter === 'upcoming' ? "bg-blue-700 ring-4 ring-blue-100" : (alertStats.upcoming > 0 ? "bg-blue-600" : "bg-gray-400")} 
@@ -358,7 +358,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, currentUser }) => {
                     className="w-full flex items-center justify-center gap-2 text-gray-400 text-sm mt-2 mb-4 select-none"
                 >
                     <i className="bi bi-hand-index-thumb-fill text-base animate-bounce"></i>
-                    <span>اضغط على أحد أزرار التنبيهات لعرض تفاصيلها</span>
+                    <span>{t('home.click_hint')}</span>
                 </motion.div>
             )}
 
@@ -369,7 +369,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, currentUser }) => {
                     className="w-full flex items-center justify-center gap-2 text-gray-400 text-sm mt-4 mb-4"
                 >
                     <i className="bi bi-check-circle-fill text-green-400 text-base"></i>
-                    <span>لا توجد تنبيهات في هذه الفئة</span>
+                    <span>{t('home.no_notifs_in_category')}</span>
                 </motion.div>
             )}
 
@@ -387,14 +387,14 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, currentUser }) => {
                             </div>
                             <h2 className="text-xl font-bold text-gray-800">
                                 {selectedFilter ? (
-                                    selectedFilter === 'financial' ? 'تنبيهات مالية' :
-                                    selectedFilter === 'aeInsufficiency' ? 'نقص رخصة الالتزام' :
-                                    selectedFilter === 'unapproved' ? 'التزامات غير مؤشرة' :
-                                    selectedFilter === 'unaccepted' ? 'دفعات غير مقبولة' :
-                                    selectedFilter === 'unregistered' ? 'وثائق غير مسجلة' :
-                                    selectedFilter === 'delayed' ? 'آجال متجاوزة' :
-                                    selectedFilter === 'upcoming' ? 'آجال قريبة' :
-                                    'تنبيهات'
+                                    selectedFilter === 'financial' ? t('home.kpi_financial') :
+                                    selectedFilter === 'aeInsufficiency' ? t('notif.ae_structure_insufficiency') :
+                                    selectedFilter === 'unapproved' ? t('home.kpi_unapproved') :
+                                    selectedFilter === 'unaccepted' ? t('home.kpi_unaccepted') :
+                                    selectedFilter === 'unregistered' ? t('home.kpi_unregistered') :
+                                    selectedFilter === 'delayed' ? t('home.kpi_delayed') :
+                                    selectedFilter === 'upcoming' ? t('home.kpi_upcoming') :
+                                    t('home.label_notification')
                                 ) : t('home.notifications')}
                             </h2>
                             {selectedFilter && (
@@ -402,7 +402,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, currentUser }) => {
                                     onClick={() => setSelectedFilter(null)}
                                     className="text-[10px] bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1 rounded transition-colors font-bold"
                                 >
-                                    غلق العرض 
+                                    {t('home.close_view')} 
                                 </button>
                             )}
                         </div>
@@ -512,16 +512,16 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, currentUser }) => {
 				{/* Shortcuts hint */}
 					<div className="w-full max-w-none mt-8  text-center text-[10px] text-gray-800 font-medium leading-relaxed select-none">
 						<span className="inline-flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
-							<span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+O</kbd> العمليات</span>
-							<span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+D</kbd> الوثائق</span>
-							<span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+B</kbd> المستفيدين</span>
-							<span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+S</kbd> الإعدادات</span>
-							<span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+H</kbd> الرئيسية</span>
-							<span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+F</kbd> الوضعية المالية</span>
-							<span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+P</kbd> البرامج</span>
-							<span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Alt+C</kbd> الأصناف</span>
-							<span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+K</kbd> البحث</span>
-							<span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Alt+←</kbd> رجوع</span>
+							<span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+O</kbd> {t('menu.operations')}</span>
+							<span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+D</kbd> {t('menu.documents')}</span>
+							<span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+B</kbd> {t('menu.beneficiaries')}</span>
+							<span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+S</kbd> {t('menu.settings')}</span>
+							<span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+H</kbd> {t('home.shortcut_home')}</span>
+							<span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+F</kbd> {t('menu.financial_status')}</span>
+							<span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+P</kbd> {t('home.shortcut_programmes')}</span>
+							<span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Alt+C</kbd> {t('home.shortcut_categories')}</span>
+							<span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Ctrl+K</kbd> {t('home.shortcut_search')}</span>
+							<span><kbd className="border border-gray-300 bg-gray-100 rounded px-1 py-0.5 text-[9px] shadow-sm">Alt+←</kbd> {t('home.shortcut_back')}</span>
 						</span>
 					</div>
             

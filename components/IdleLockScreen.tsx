@@ -5,6 +5,7 @@ import { errorMessage } from '../utils/errorMessage';
 import { useData } from '../context/DataContext';
 import { tauriDb } from '../services/tauriService';
 import { signIn } from '../services/authService';
+import { useLanguage } from '../context/LanguageContext';
 
 interface IdleLockScreenProps {
     user: User;
@@ -13,6 +14,7 @@ interface IdleLockScreenProps {
 
 const IdleLockScreen: React.FC<IdleLockScreenProps> = ({ user, onUnlock }) => {
     const { isOnline } = useData();
+    const { t } = useLanguage();
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [busy, setBusy] = useState(false);
@@ -39,9 +41,9 @@ const IdleLockScreen: React.FC<IdleLockScreenProps> = ({ user, onUnlock }) => {
                 setPassword('');
                 onUnlock();
             } else if (result.offlineCredentialMissing) {
-                setError('لا توجد بيانات دخول محفوظة لهذا الحساب على هذا الجهاز. اتصل بالإنترنت للمتابعة.');
+                setError(t('lock.noCachedCredential'));
             } else {
-                setError('كلمة المرور غير صحيحة');
+                setError(t('lock.wrongPassword'));
             }
         } catch (err) {
             // Cloud unreachable: fall back to the hash cached on this workstation.
@@ -53,7 +55,7 @@ const IdleLockScreen: React.FC<IdleLockScreenProps> = ({ user, onUnlock }) => {
                         onUnlock();
                         return;
                     }
-                    setError('كلمة المرور غير صحيحة');
+                    setError(t('lock.wrongPassword'));
                     return;
                 } catch {
                     // fall through to the transport error below
@@ -72,10 +74,9 @@ const IdleLockScreen: React.FC<IdleLockScreenProps> = ({ user, onUnlock }) => {
                 className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm text-center border-t-4 border-blue-600"
             >
                 <img src={logoDataUrl} alt="GOFT3" className="w-14 h-14 mx-auto mb-3" />
-                <h2 className="font-bold text-gray-900 text-lg mb-1">الجلسة مقفلة</h2>
+                <h2 className="font-bold text-gray-900 text-lg mb-1">{t('lock.title')}</h2>
                 <p className="text-xs text-gray-500 mb-3 leading-relaxed">
-                    تم قفل الجلسة تلقائيًا بعد فترة من عدم النشاط لحماية البيانات المالية.
-                    أدخل كلمة المرور للمتابعة.
+                    {t('lock.description')}
                 </p>
                 <div className="inline-flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-full mb-3">
                     <i className="bi bi-person-circle text-blue-600"></i>
@@ -86,7 +87,7 @@ const IdleLockScreen: React.FC<IdleLockScreenProps> = ({ user, onUnlock }) => {
                     type="password"
                     value={password}
                     onChange={e => { setPassword(e.target.value); setError(''); }}
-                    placeholder="كلمة المرور"
+                    placeholder={t('login.password')}
                     autoComplete="current-password"
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -96,9 +97,9 @@ const IdleLockScreen: React.FC<IdleLockScreenProps> = ({ user, onUnlock }) => {
                     disabled={busy || !password}
                     className="w-full bg-blue-600 text-white font-bold rounded-lg py-2 text-sm hover:bg-blue-700 disabled:opacity-50 transition-colors"
                 >
-                    {busy ? 'جارٍ التحقق...' : 'فتح'}
+                    {busy ? t('lock.checking') : t('lock.unlock')}
                 </button>
-                <p className="text-[10px] text-gray-400 mt-3">GOFT3 — وضع الأمان</p>
+                <p className="text-[10px] text-gray-400 mt-3">{t('lock.securityMode')}</p>
             </form>
         </div>
     );

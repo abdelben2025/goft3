@@ -1,5 +1,6 @@
 import React from 'react';
 import { formatCurrency } from '../utils/currencyUtils';
+import { useLanguage } from '../context/LanguageContext';
 
 export interface DocumentRowProps {
     piece: any;
@@ -25,6 +26,7 @@ const DocumentRow = React.memo<DocumentRowProps>(({
     isConcernedWithEngagement, isConcernedWithPaiement, isViewer,
     isChild = false
 }) => {
+    const { t } = useLanguage();
     const getIcon = () => {
         if (['صفقة', 'اتفاقية'].includes(piece.NAT_PIECE)) return <i className="bi bi-file-earmark-text font-bold text-sky-600"></i>;
         if (['وضعية الأشغال', 'وضعية التسبيق الجزافي', 'وضعية التسبيق على التموين', 'فاتورة','حكم قضائي'].includes(piece.NAT_PIECE)) return <i className="text-green-600">.</i>;
@@ -50,10 +52,10 @@ const DocumentRow = React.memo<DocumentRowProps>(({
                 <button
                     onClick={(e) => { e.stopPropagation(); onShowDetails(piece); }}
                     className="inline-flex items-center gap-1 bg-sky-50 hover:bg-sky-100 text-sky-700 px-1.5 py-0.5 rounded border border-sky-200 font-bold transition-colors text-[8px] shadow-sm select-none"
-                    title="تفاصيل الوثيقة"
+                    title={t('doc.details_title')}
                 >
                     <i className="bi bi-eye-fill text-[8px]"></i>
-                    <span>تفاصيل</span>
+                    <span>{t('col.details')}</span>
                 </button>
             </td>
             <td className="p-1 text-right">
@@ -70,7 +72,7 @@ const DocumentRow = React.memo<DocumentRowProps>(({
             <td className="p-1 text-center">
                 {piece.isContextOnly ? (
                     <span className="inline-flex items-center px-1 py-0.5 rounded text-[8px] font-bold bg-gray-100 text-gray-500 border border-gray-200">
-                        {piece.NAT_PIECE} (مرجع)
+                        {piece.NAT_PIECE} ({t('doc.reference')})
                     </span>
                 ) : (
                     <span className={`inline-flex items-center px-1 py-0.5 rounded text-[8px] font-bold ${
@@ -96,10 +98,10 @@ const DocumentRow = React.memo<DocumentRowProps>(({
                                 onNavigate('ENG', piece);
                             }}
                             className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 cursor-pointer px-1.5 py-0.5 rounded border border-blue-100 transition-colors"
-                            title="انتقل إلى الالتزام"
+                            title={t('doc.navigate_commitment')}
                         >
                             <span className="w-1 h-1 rounded-full bg-blue-500 shadow-sm"></span>
-                            <span className="text-[8px] font-bold text-blue-700">ملتزم</span>
+                            <span className="text-[8px] font-bold text-blue-700">{t('doc.committed')}</span>
                         </div>
                     ) : (
                         !isViewer && isConcernedWithEngagement(piece) && (
@@ -109,10 +111,10 @@ const DocumentRow = React.memo<DocumentRowProps>(({
                                     onAction('ENG', piece.ID_PIECE);
                                 }}
                                 className="flex items-center gap-1 bg-amber-50 hover:bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded border border-amber-200 transition-all font-bold text-[8px] shadow-sm select-none"
-                                title="إضافة التزام مباشر لهذا المستند"
+                                title={t('doc.add_commitment_direct')}
                             >
                                 <i className="bi bi-plus-square-fill text-[8px]"></i>
-                                <span>التزام</span>
+                                <span>{t('doc.commitment')}</span>
                             </button>
                         )
                     )}
@@ -123,10 +125,10 @@ const DocumentRow = React.memo<DocumentRowProps>(({
                                 onNavigate('PAI', piece);
                             }}
                             className="flex items-center gap-1 bg-green-50 hover:bg-green-100 cursor-pointer px-1.5 py-0.5 rounded border border-green-100 transition-colors"
-                            title="انتقل إلى الدفع"
+                            title={t('doc.navigate_payment')}
                         >
                             <span className="w-1 h-1 rounded-full bg-green-500 shadow-sm"></span>
-                            <span className="text-[8px] font-bold text-green-700">مسدد</span>
+                            <span className="text-[8px] font-bold text-green-700">{t('doc.paid')}</span>
                         </div>
                     ) : (
                         !isViewer && isConcernedWithPaiement(piece) && (
@@ -136,10 +138,10 @@ const DocumentRow = React.memo<DocumentRowProps>(({
                                     onAction('PAI', piece.ID_PIECE);
                                 }}
                                 className="flex items-center gap-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded border border-indigo-200 transition-all font-bold text-[8px] shadow-sm select-none"
-                                title="إضافة دفع مباشر لهذا المستند"
+                                title={t('doc.add_payment_direct')}
                              >
                                 <i className="bi bi-plus-circle-fill text-[8px]"></i>
-                                <span>دفع</span>
+                                <span>{t('doc.payment')}</span>
                             </button>
                         )
                     )}

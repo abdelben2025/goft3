@@ -4,6 +4,7 @@ import { normalizeDate, parseDate, getEffectiveDurationDays, isFinancialDuration
 import { DateInputField } from '../DateInputField';
 import { formatCurrency, parseCurrency, formatAmountInput, formatCurrencyForInput } from '../../utils/currencyUtils';
 import CustomDropdown from '../CustomDropdown';
+import { useLanguage } from '../../context/LanguageContext';
 
 
 interface AddDocumentFormProps {
@@ -30,6 +31,7 @@ interface AddDocumentFormProps {
 const pieceTypes = ["مقرر", "اتفاقية", "صفقة", "ملحق", "قرار فسخ", "وضعية الأشغال", "فاتورة", "وضعية التسبيق الجزافي", "وضعية التسبيق على التموين", "قرار", "حكم قضائي", "رفع اليد عن الضمان", "أخرى"];
 
 const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, operations, beneficiaires, comptesBancaires, pieces, engagements, paiements, cps, rubriques, rubriqueOps, scategories, scategorieOps, initialData, lots, lotPieces, ods = [], selectedOperationId }) => {
+    const { t } = useLanguage();
     // Basic fields state
     const [natPiece, setNatPiece] = useState(pieceTypes[0]);
     const [idOperation, setIdOperation] = useState<number | ''>('');
@@ -982,25 +984,25 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
                     <div className="space-y-4 p-4 border border-gray-200 rounded-md bg-gray-50">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                                <label htmlFor="delaiExVal" className="block text-xs font-medium text-gray-700 text-right">مدة الإنجاز</label>
+                                <label htmlFor="delaiExVal" className="block text-xs font-medium text-gray-700 text-right">{t('col.duration')}</label>
                                 <input id="delaiExVal" type="text" value={delaiExVal} onChange={e => { setDelaiExVal(e.target.value); markDirty(); }} className="w-full h-9 text-sm px-3 py-1 mt-1 text-gray-700 text-center bg-white border border-gray-300 rounded-[20px] focus:outline-none focus:ring-2 focus:ring-blue-500" />
                             </div>
                             <div>
-                                <label htmlFor="delaiExUnit" className="block text-xs font-medium text-gray-700 text-right">الوحدة</label>
+                                <label htmlFor="delaiExUnit" className="block text-xs font-medium text-gray-700 text-right">{t('docform.unit')}</label>
                                 <select id="delaiExUnit" value={delaiExUnit} onChange={e => { setDelaiExUnit(e.target.value as any); markDirty(); }} className="w-full h-9 text-sm px-3 py-1 mt-1 text-gray-700 text-center bg-white border border-gray-300 rounded-[20px] focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                    <option value="days">أيام</option>
-                                    <option value="months">شهر</option>
+                                    <option value="days">{t('docform.days')}</option>
+                                    <option value="months">{t('docform.month')}</option>
                                 </select>
                             </div>
                             <div>
-                                <label htmlFor="caution" className="block text-xs font-medium text-gray-700 text-right">ضمان حسن التنفيذ (%)</label>
+                                <label htmlFor="caution" className="block text-xs font-medium text-gray-700 text-right">{t('docform.warranty_pct')}</label>
                                 <select 
                                     id="caution" 
                                     value={caution} 
                                     onChange={e => { setCaution(e.target.value); markDirty(); }} 
                                     className="w-full h-9 px-3 py-1 mt-1 text-sm text-gray-700 text-center bg-white border border-gray-300 rounded-[20px] focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 >
-                                    <option value="">-- بدون --</option>
+                                    <option value="">{t('docform.none')}</option>
                                     {[...Array(10)].map((_, i) => (
                                         <option key={i + 1} value={`${i + 1}%`}>{i + 1}%</option>
                                     ))}
@@ -1008,15 +1010,15 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
                             </div>
                             {caution && (
                                 <div>
-                                    <label htmlFor="cautionType" className="block text-xs font-medium text-gray-700 text-right">نوع الضمان</label>
+                                    <label htmlFor="cautionType" className="block text-xs font-medium text-gray-700 text-right">{t('docform.warranty_type')}</label>
                                     <select
                                         id="cautionType"
                                         value={cautionType}
                                         onChange={e => { setCautionType(e.target.value); markDirty(); }}
                                         className="w-full h-9 px-3 py-1 mt-1 text-sm text-gray-700 text-center bg-white border border-gray-300 rounded-[20px] focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     >
-                                        <option value="BANK">كفالة بنكية</option>
-                                        <option value="RETENTION">اقتطاع ضمان</option>
+                                        <option value="BANK">{t('docform.bank_guarantee')}</option>
+                                        <option value="RETENTION">{t('docform.warranty_retention')}</option>
                                     </select>
                                 </div>
                             )}
@@ -1024,13 +1026,13 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
                         {natPiece === 'صفقة' && (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label htmlFor="nVisaCm" className="block text-sm font-medium text-gray-700 text-center">رقم تأشيرة لجنة الصفقات</label>
+                                    <label htmlFor="nVisaCm" className="block text-sm font-medium text-gray-700 text-center">{t('docform.cm_visa_number')}</label>
                                     <input id="nVisaCm" type="text" value={nVisaCm} onChange={e => { setNVisaCm(e.target.value); markDirty(); }} className="w-full h-9 px-3 py-1 mt-1 text-center text-gray-700 bg-white border border-gray-300 rounded-[20px] focus:outline-none focus:ring-2 focus:ring-blue-500" />
                                 </div>
                                 <div>
                                     <DateInputField
                                         id="dateVisaCm"
-                                        label="تاريخ تأشيرة لجنة الصفقات"
+                                        label={t('docform.cm_visa_date')}
                                         value={dateVisaCm}
                                         onChange={(val) => { setDateVisaCm(val); markDirty(); }}
                                         className="w-full h-9 px-3 py-1 mt-1 text-gray-700 text-center bg-white border border-gray-300 rounded-[20px] focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -1046,13 +1048,13 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
                         <div className="space-y-4 p-4 border border-gray-200 rounded-md bg-gray-50">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label htmlFor="nVisaCm" className="block text-sm font-medium text-gray-700 text-center">رقم تأشيرة لجنة الصفقات</label>
+                                    <label htmlFor="nVisaCm" className="block text-sm font-medium text-gray-700 text-center">{t('docform.cm_visa_number')}</label>
                                     <input id="nVisaCm" type="text" value={nVisaCm} onChange={e => { setNVisaCm(e.target.value); markDirty(); }} className="w-full h-9 px-3 py-1 mt-1 text-center text-gray-700 bg-white border border-gray-300 rounded-[20px] focus:outline-none focus:ring-2 focus:ring-blue-500" />
                                 </div>
                                 <div>
                                     <DateInputField
                                         id="dateVisaCm"
-                                        label="تاريخ تأشيرة لجنة الصفقات"
+                                        label={t('docform.cm_visa_date')}
                                         value={dateVisaCm}
                                         onChange={(val) => { setDateVisaCm(val); markDirty(); }}
                                         className="w-full h-9 px-3 py-1 mt-1 text-gray-700 text-center bg-white border border-gray-300 rounded-[20px] focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -1071,16 +1073,16 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
     return (
         <form onSubmit={handleSubmit} className="flex flex-col max-h-[85vh]">
             <div className="sticky top-0 bg-white z-10 pb-2 border-b border-gray-200 flex justify-end gap-3 pt-1 mb-2">
-                <button type="button" onClick={onClose} className="px-5 py-1.5 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors text-sm">إلغاء</button>
+                <button type="button" onClick={onClose} className="px-5 py-1.5 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors text-sm">{t('btn.cancel')}</button>
                 <button type="submit" disabled={isSubmitting} className="px-5 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm">
-                    {isSubmitting ? 'جاري الحفظ...' : (initialData ? 'حفظ التغيرات' : 'إضافة')}
+                    {isSubmitting ? t('docform.saving') : (initialData ? t('docform.save_changes') : t('btn.add'))}
                 </button>
             </div>
 
             <div className="space-y-3 overflow-y-auto p-1">
                 {/* 1. العملية (Operation) */}
                 <div>
-                    <label htmlFor="operation" className="block text-sm font-medium text-gray-700 text-right">العملية</label>
+                    <label htmlFor="operation" className="block text-sm font-medium text-gray-700 text-right">{t('col.operation')}</label>
                     <select 
                         id="operation" 
                         value={idOperation} 
@@ -1092,14 +1094,14 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
                         required 
                         className="w-full h-10 px-1 py-1 mt-1 text-center text-[11px] text-gray-700 bg-gray-100 border border-gray-300 rounded-[20px] focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                        <option value="">-- اختر عملية --</option>
+                        <option value="">{t('docform.select_operation')}</option>
                         {operations.map(op => <option key={op.ID_OPERATION} value={op.ID_OPERATION}>{op.INT_OPERATION}</option>)}
                     </select>
                 </div>
 
                 {/* 2. طبيعة الوثيقة (Nature of document) */}
                 <div>
-                    <label htmlFor="natPiece" className="block text-sm font-medium text-gray-700 text-right">طبيعة الوثيقة</label>
+                    <label htmlFor="natPiece" className="block text-sm font-medium text-gray-700 text-right">{t('docform.nature')}</label>
                     <select id="natPiece" value={natPiece} onChange={e => handleNatPieceChange(e.target.value)} required className="w-full h-9 px-3 py-1 mt-1 text-center text-xs text-gray-700 bg-gray-100 border border-gray-300 rounded-[20px] focus:outline-none focus:ring-2 focus:ring-blue-500">
                         {pieceTypes.map(type => <option key={type} value={type}>{type}</option>)}
                     </select>
@@ -1108,7 +1110,7 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
                 {/* 3. الوثيقة المرتبط بها (Linked Document) */}
                 {(natPiece === 'ملحق' || natPiece === 'قرار فسخ' || natPiece === 'وضعية الأشغال' || natPiece === 'وضعية التسبيق الجزافي' || natPiece === 'وضعية التسبيق على التموين' || natPiece === 'رفع اليد عن الضمان') && (
                     <div className="p-2 border border-gray-200 rounded-md bg-gray-50">
-                        <label htmlFor="idPieceInit" className="block text-sm font-medium text-gray-700 text-right">الوثيقة المرتبط بها</label>
+                        <label htmlFor="idPieceInit" className="block text-sm font-medium text-gray-700 text-right">{t('docform.linked_document')}</label>
                         <select id="idPieceInit" value={idPieceInit ?? ''} onChange={e => { 
                             const val = e.target.value ? Number(e.target.value) : null;
                             setIdPieceInit(val); 
@@ -1118,12 +1120,12 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
                                 setMontantPieceStr(formatCurrency(termAmount));
                             }
                         }} required className="w-full h-9 px-3 py-1 mt-1 text-xs text-center text-gray-700 bg-white border border-gray-300 rounded-[20px] focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="">-- اختر وثيقة --</option>
+                            <option value="">{t('docform.select_linked_document')}</option>
                             {relatedPieces.map(p => {
                                 const ben = beneficiaires.find(b => b.ID_BENEFICIAIRE === p.ID_BENEFICIAIRE);
                                 return (
                                     <option key={p.ID_PIECE} value={p.ID_PIECE}>
-                                        {p.PIECE} {ben ? ` - (المستفيد: ${ben.BENEFICIAIRE})` : ''}
+                                        {p.PIECE} {ben ? t('docform.beneficiary_suffix', { name: ben.BENEFICIAIRE }) : ''}
                                     </option>
                                 );
                             })}
@@ -1139,7 +1141,7 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
                             {pieceValidationMessage}
                         </div>
                     )}
-                    <label htmlFor="piece" className="block text-sm font-medium text-gray-700 text-right">موضوع الوثيقة</label>
+                    <label htmlFor="piece" className="block text-sm font-medium text-gray-700 text-right">{t('docform.subject')}</label>
                     <input 
                         id="piece" 
                         value={piece} 
@@ -1153,13 +1155,13 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
                         }}
                     />
                     {natPiece !== 'أخرى' && piece.trim() && !(natPiece === 'قرار فسخ' ? (piece.trim().startsWith('قرار فسخ') || piece.trim().startsWith('قرار الفسخ')) : piece.trim().startsWith(natPiece)) && (
-                        <p className="text-[10px] text-red-600 mt-1 text-right">يجب أن يبدأ الموضوع بكلمة "{natPiece === 'قرار فسخ' ? 'قرار فسخ أو قرار الفسخ' : natPiece}"</p>
+                        <p className="text-[10px] text-red-600 mt-1 text-right">{t('docform.subject_must_start', { term: natPiece === 'قرار فسخ' ? 'قرار فسخ أو قرار الفسخ' : natPiece })}</p>
                     )}
                 </div>
 
                 {/* 5. المبلغ (Amount) */}
                 <div>
-                    <label htmlFor="montant" className="block text-sm font-medium text-gray-700 text-right">المبلغ</label>
+                    <label htmlFor="montant" className="block text-sm font-medium text-gray-700 text-right">{t('col.amount')}</label>
                     <input
                         id="montant"
                         type="text"
@@ -1181,13 +1183,13 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
 
                 {natPiece !== 'مقرر' && (
                     <div>
-                        <label htmlFor="beneficiaire" className="block text-sm font-medium text-gray-700 text-center">المستفيد</label>
+                        <label htmlFor="beneficiaire" className="block text-sm font-medium text-gray-700 text-center">{t('col.beneficiary')}</label>
                         <CustomDropdown
                             options={beneficiaryOptions}
                             value={idBeneficiaire ?? ''}
                             onChange={(val) => { setIdBeneficiaire(val ? Number(val) : null); markDirty(); }}
                             
-                            placeholder="-- اختر مستفيد --"
+                            placeholder={t('docform.select_beneficiary')}
                             disabled={isFieldsLocked}
                             className="mt-1 text-center"
                         />
@@ -1196,7 +1198,7 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
 
                 {shouldShowAccountDropdown && (
                     <div className="p-2 border border-yellow-300 bg-yellow-50 rounded-md">
-                        <label htmlFor="idCompte" className="block text-sm font-medium text-yellow-800 text-right uppercase text-center text-[10px]">الحساب البنكي</label>
+                        <label htmlFor="idCompte" className="block text-sm font-medium text-yellow-800 text-right uppercase text-center text-[10px]">{t('docform.bank_account')}</label>
                         <select
                             id="idCompte"
                             value={idCompte ?? ''}
@@ -1205,7 +1207,7 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
                             className="w-full h-9 px-3 py-1 mt-1 text-center text-xs text-gray-700 bg-white border border-gray-300 rounded-[20px] focus:outline-none focus:ring-2 focus:ring-blue-500"
                             disabled={isFieldsLocked && !!idPieceInit && !!pieces.find(p => p.ID_PIECE === idPieceInit)?.ID_COMPTE}
                         >
-                            <option value="">-- يرجى اختيار حساب --</option>
+                            <option value="">{t('docform.select_account')}</option>
                             {availableAccounts.map(acc => (
                                 <option key={acc.ID_COMPTE} value={acc.ID_COMPTE}>
                                     {acc.BANQUE} - {acc.RIB}
@@ -1217,7 +1219,7 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                        <label htmlFor="idScat" className="block text-sm font-medium text-gray-700 text-right">الصنف الفرعي</label>
+                        <label htmlFor="idScat" className="block text-sm font-medium text-gray-700 text-right">{t('col.sub_categorie')}</label>
                         <select
                             id="idScat"
                             value={idScat ?? ''}
@@ -1226,7 +1228,7 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
                             className="w-full h-9 px-3 py-1 mt-1 text-center text-xs text-gray-700 bg-gray-100 border border-gray-300 rounded-[20px] disabled:bg-gray-200"
                             disabled={isFieldsLocked}
                         >
-                            <option value="">-- اختر صنف فرعي --</option>
+                            <option value="">{t('docform.select_subcategory')}</option>
                             {availableScategoriesForOperation.map(s => (
                                 <option key={s.ID_SCATEGORIE} value={s.ID_SCATEGORIE}>
                                     {s.C_SCATEGORIE} / {s.INT_SCATEGORIE}
@@ -1235,7 +1237,7 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
                         </select>
                     </div>
                     <div>
-                        <label htmlFor="idRubrique" className="block text-sm font-medium text-gray-700 text-right">تفصيل الهيكلة</label>
+                        <label htmlFor="idRubrique" className="block text-sm font-medium text-gray-700 text-right">{t('col.structure')}</label>
                         <select
                             id="idRubrique"
                             value={idRubrique ?? ''}
@@ -1243,7 +1245,7 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
                             className="w-full h-9 px-3 py-1 mt-1 text-center text-xs text-gray-700 bg-gray-100 border border-gray-300 rounded-[20px] disabled:bg-gray-200"
                             disabled={isFieldsLocked}
                         >
-                            <option value="">-- اختر --</option>
+                            <option value="">{t('docform.select')}</option>
                             {availableRubriquesForOperation.map(r => (
                                 <option key={r.ID_RUBRIQUE} value={r.ID_RUBRIQUE}>
                                     {r.RUBRIQUE}
@@ -1257,7 +1259,7 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
 
                 <div className="grid grid-cols-2 gap-3 p-2 bg-blue-50 rounded-lg border border-blue-100">
                     <div className="flex items-center justify-end gap-2 opacity-80">
-                        <label htmlFor="saiEng" className="text-xs font-medium text-gray-700">تم تسجيلها بجدول الالتزام (آلي)</label>
+                        <label htmlFor="saiEng" className="text-xs font-medium text-gray-700">{t('docform.registered_commitment')}</label>
                         <input
                             id="saiEng"
                             type="checkbox"
@@ -1267,7 +1269,7 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
                         />
                     </div>
                     <div className="flex items-center justify-end gap-2 opacity-80">
-                        <label htmlFor="saiPai" className="text-xs font-medium text-gray-700">تم تسجيلها بجدول الدفع (آلي)</label>
+                        <label htmlFor="saiPai" className="text-xs font-medium text-gray-700">{t('docform.registered_payment')}</label>
                         <input
                             id="saiPai"
                             type="checkbox"

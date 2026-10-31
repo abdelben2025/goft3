@@ -144,8 +144,8 @@ const ProjectTrackingPage: React.FC<ProjectTrackingPageProps> = ({ navigate, onG
 
     const getBeneficiaireName = useMemo(() => (id: number | null) => {
         if (!id) return '---';
-        return db.T_BENEFICIAIRE.find(b => safeId(b.ID_BENEFICIAIRE) === safeId(id))?.BENEFICIAIRE || 'غير معروف';
-    }, [db.T_BENEFICIAIRE]);
+        return db.T_BENEFICIAIRE.find(b => safeId(b.ID_BENEFICIAIRE) === safeId(id))?.BENEFICIAIRE || t('proj.unknown');
+    }, [db.T_BENEFICIAIRE, t]);
 
     const availableProjects = useMemo(() => {
         if (!selectedOpId) return [];
@@ -266,9 +266,9 @@ const ProjectTrackingPage: React.FC<ProjectTrackingPageProps> = ({ navigate, onG
                 const dur = projectPiece.DELAI_EX_JOURS.toLowerCase();
                 if (isFinancialDuration(dur)) {
                    const num = parseInt(dur, 10);
-                   displayDuration = `${num} شهر`;
+                   displayDuration = `${t('proj.months', { num })}`;
                 } else {
-                   displayDuration = `${dur} يوم`;
+                   displayDuration = `${t('proj.days', { dur })}`;
                 }
             }
 
@@ -290,7 +290,7 @@ const ProjectTrackingPage: React.FC<ProjectTrackingPageProps> = ({ navigate, onG
                 cfVisaInfo
             };
         });
-    }, [db, selectedOpId, getBeneficiaireName, filterProjectId, filterBeneficiaryId]);
+    }, [db, selectedOpId, getBeneficiaireName, filterProjectId, filterBeneficiaryId, t]);
 
     const projectTrackingTotals = useMemo(() => {
         return projectTrackingData.reduce((acc, curr) => ({
@@ -337,13 +337,13 @@ const ProjectTrackingPage: React.FC<ProjectTrackingPageProps> = ({ navigate, onG
 
     const handleExportProjectTracking = () => {
         if (!projectTrackingData || projectTrackingData.length === 0) {
-            alert('لا توجد بيانات لتصديرها.');
+            alert(t('proj.no_data_to_export'));
             return;
         }
         
         const headers = [
             t('col.project'), t('col.beneficiary'), t('col.duration'), t('col.work_start_date'), t('col.cf_visa'), t('col.budget_visa'), t('col.lot_final_commitment'), t('col.final_commitment'),
-            t('col.payment_amount'), t('col.remaining_progress'), 'نسبة الإنجاز (%)', t('col.completion_date'), t('col.handover_date')
+            t('col.payment_amount'), t('col.remaining_progress'), t('proj.completion_percentage'), t('col.completion_date'), t('col.handover_date')
         ];
         
         const styles = `
@@ -488,7 +488,7 @@ const ProjectTrackingPage: React.FC<ProjectTrackingPageProps> = ({ navigate, onG
                                             {project.lots.length > 0 && (
                                                 <div className="text-[9px] text-gray-500 font-normal pt-1 pr-2">
                                                     {project.lots.map(l => (
-                                                        <div key={l.ID_LOT}>- حصة {l.N_LOT}: {l.INTITULE_LOT}</div>
+                                                        <div key={l.ID_LOT}>- {t('proj.share', {num: l.N_LOT})}: {l.INTITULE_LOT}</div>
                                                     ))}
                                                 </div>
                                             )}
@@ -533,7 +533,7 @@ const ProjectTrackingPage: React.FC<ProjectTrackingPageProps> = ({ navigate, onG
                         <table className="w-full text-right min-w-[300px] relative">
                             <thead className="bg-blue-100 sticky top-0 z-10 shadow-sm">
                                 <tr>
-                                    <th className="p-1 text-xs font-semibold bg-blue-100 text-gray-700 uppercase sticky top-0 z-10">رقم و تاريخ الأمر</th>
+                                    <th className="p-1 text-xs font-semibold bg-blue-100 text-gray-700 uppercase sticky top-0 z-10">{t('proj.ods_number_date')}</th>
                                     <th className="p-1 text-xs font-semibold bg-blue-100 text-gray-700 uppercase sticky top-0 z-10">{t('col.nature')}</th>
                                     <th className="p-1 text-xs font-semibold bg-blue-100 text-gray-700 uppercase sticky top-0 z-10">{t('col.scope')}</th>
                                     <th className="p-1 text-xs font-semibold bg-blue-100 text-gray-700 uppercase sticky top-0 z-10">{t('col.date')}</th>
@@ -546,7 +546,7 @@ const ProjectTrackingPage: React.FC<ProjectTrackingPageProps> = ({ navigate, onG
                                         <tr key={ods.ID_ODS} className="border-b text-xs">
                                             <td className="p-1 text-gray-800">{ods.OBJET_ODS}</td>
                                             <td className="p-1 text-gray-700">{ods.NATURE_ODS}</td>
-                                            <td className="p-1 text-gray-700">{lot ? `حصة ${lot.N_LOT}` : 'عام'}</td>
+                                            <td className="p-1 text-gray-700">{lot ? t('proj.share', {num: lot.N_LOT}) : t('proj.general')}</td>
                                             <td className="p-1 text-gray-700">{normalizeDate(ods.DATE_ODS)}</td>
                                         </tr>
                                     );
@@ -557,7 +557,7 @@ const ProjectTrackingPage: React.FC<ProjectTrackingPageProps> = ({ navigate, onG
                             <p className="text-center p-2 text-xs text-gray-500">{t('lbl.no_data')}</p>
                         )
                     ) : (
-                        <p className="text-center p-2 text-xs text-gray-500">الرجاء تحديد مشروع من جدول المشاريع أعلاه.</p>
+                            <p className="text-center p-2 text-xs text-gray-500">{t('proj.select_project_prompt')}</p>
                     )}
                 </div>
 
@@ -569,7 +569,7 @@ const ProjectTrackingPage: React.FC<ProjectTrackingPageProps> = ({ navigate, onG
                             <table className="w-full text-right min-w-[300px] relative">
                                 <thead className="bg-blue-100 sticky top-0 z-10 shadow-sm">
                                     <tr>
-                                        <th className="p-1 text-xs font-semibold bg-blue-100 text-gray-700 uppercase sticky top-0 z-10">موضوع الملحق</th>
+                                        <th className="p-1 text-xs font-semibold bg-blue-100 text-gray-700 uppercase sticky top-0 z-10">{t('proj.amendment_subject')}</th>
                                         <th className="p-1 text-xs font-semibold bg-blue-100 text-gray-700 uppercase sticky top-0 z-10">{t('col.amount')}</th>
                                     </tr>
                                 </thead>
@@ -592,7 +592,7 @@ const ProjectTrackingPage: React.FC<ProjectTrackingPageProps> = ({ navigate, onG
                                 <p className="text-center p-2 text-xs text-gray-500">{t('lbl.no_data')}</p>
                             )
                         ) : (
-                            <p className="text-center p-2 text-xs text-gray-500">الرجاء تحديد مشروع لعرض الملاحق.</p>
+                            <p className="text-center p-2 text-xs text-gray-500">{t('proj.select_project_amendments')}</p>
                         )}
                     </div>
 
@@ -603,8 +603,8 @@ const ProjectTrackingPage: React.FC<ProjectTrackingPageProps> = ({ navigate, onG
                             <table className="w-full text-right min-w-[300px] relative">
                                 <thead className="bg-blue-100 sticky top-0 z-10 shadow-sm">
                                     <tr>
-                                        <th className="p-1 text-xs font-semibold bg-blue-100 text-gray-700 uppercase sticky top-0 z-10">وثيقة وضعية الأشغال</th>
-                                        <th className="p-1 text-xs font-semibold bg-blue-100 text-gray-700 uppercase sticky top-0 z-10">مبلغ الوضعية</th>
+                                        <th className="p-1 text-xs font-semibold bg-blue-100 text-gray-700 uppercase sticky top-0 z-10">{t('proj.work_statement_doc')}</th>
+                                        <th className="p-1 text-xs font-semibold bg-blue-100 text-gray-700 uppercase sticky top-0 z-10">{t('proj.work_statement_amount')}</th>
                                         <th className="p-1 text-xs font-semibold bg-blue-100 text-gray-700 uppercase sticky top-0 z-10">{t('col.payment_date_accepted')}</th>
                                     </tr>
                                 </thead>
@@ -629,7 +629,7 @@ const ProjectTrackingPage: React.FC<ProjectTrackingPageProps> = ({ navigate, onG
                                 <p className="text-center p-2 text-xs text-gray-500">{t('lbl.no_data')}</p>
                             )
                         ) : (
-                            <p className="text-center p-2 text-xs text-gray-500">الرجاء تحديد مشروع لعرض وضعيات الأشغال.</p>
+                            <p className="text-center p-2 text-xs text-gray-500">{t('proj.select_project_work_statements')}</p>
                         )}
                     </div>
                 </div>

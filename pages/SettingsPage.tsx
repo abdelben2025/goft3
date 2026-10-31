@@ -57,7 +57,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
 
     // User Actions
     const handleSaveUser = async (userData: Omit<User, 'ID_USER' | 'PASSWORD'> | User, plainPassword?: string) => {
-        showToast('جاري حفظ البيانات...', 'loading');
+        showToast(t('settings.saving'), 'loading');
         try {
             // Same split as UsersPage: cloud rows are written first and the
             // password set afterwards, while the local SQLite row carries its
@@ -74,7 +74,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
                 if (cloud && plainPassword) {
                     await setUserPassword(userData, plainPassword);
                 }
-                showToast('تم تعديل المستخدم بنجاح', 'success');
+                showToast(t('settings.userUpdated'), 'success');
             } else {
                 // Cloud rows must go straight to Supabase: addItem falls back to
                 // the local SQLite on any error, returning a workstation-only
@@ -91,20 +91,20 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
                 if (cloud) {
                     refreshData({ silent: true }).catch(() => { /* list refreshes on next tick */ });
                 }
-                showToast('تمت إضافة المستخدم بنجاح', 'success');
+                showToast(t('settings.userAdded'), 'success');
             }
             setIsUserModalOpen(false);
             setEditingUser(undefined);
         } catch (error: any) {
             console.error("Error saving user:", error);
-            let errorMessage = "حدث خطأ أثناء حفظ المستخدم.";
+            let errorMessage = t('settings.saveError');
             if (error && typeof error === 'object') {
-                if (error.code === '23505') errorMessage = "اسم المستخدم موجود بالفعل.";
-                else if (error.code === '23514') errorMessage = "تنبيه: قاعدة البيانات ترفض إضافة دور 'ملاحظ'. يرجى تحديث SQL.";
+                if (error.code === '23505') errorMessage = t('settings.usernameExists');
+                else if (error.code === '23514') errorMessage = t('settings.roleViewerRejected');
                 else if (error.code === CLOUD_USER_MISSING || error.message === CLOUD_USER_MISSING) {
-                    errorMessage = 'هذا المستخدم موجود في نسخة هذا الجهاز وليس في السحابة، لذلك لا يمكن حفظ كلمة مروره هناك. احذفه من القائمة ثم أضفه من جديد ليُسجّل في السحابة.';
+                    errorMessage = t('settings.cloudUserMissing');
                 }
-                else if (error.message) errorMessage += ` التفاصيل: ${error.message}`;
+                else if (error.message) errorMessage += ' ' + t('settings.errorDetails', { message: error.message });
             }
             showToast(errorMessage, 'error');
         }
@@ -115,7 +115,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
         const userToDelete = db.T_USER.find(u => u.ID_USER === selectedUserId);
         const adminCount = db.T_USER.filter(u => u.ROLE === 'admin').length;
         if (userToDelete?.ROLE === 'admin' && adminCount <= 1) {
-            alert('لا يمكن حذف آخر مسؤول في النظام.');
+            alert(t('settings.cannotDeleteLastAdmin'));
             return;
         }
         setIsDeleteConfirmOpen(true);
@@ -124,13 +124,13 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
     const confirmDeleteUser = async () => {
         setIsDeleteConfirmOpen(false);
         if (selectedUserId === null) return;
-        showToast('جاري الحذف...', 'loading');
+        showToast(t('settings.deleting'), 'loading');
         try {
             await deleteItem('T_USER', selectedUserId);
-            showToast('تم حذف المستخدم بنجاح', 'success');
+            showToast(t('settings.userDeleted'), 'success');
             setSelectedUserId(null);
         } catch (error) {
-            showToast(`حدث خطأ أثناء حذف المستخدم — السبب: ${errorMessage(error)}`, 'error');
+            showToast(t('settings.deleteError', { reason: errorMessage(error) }), 'error');
         }
     };
 
@@ -153,9 +153,9 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
 
     const getRoleName = (role: string) => {
         switch (role) {
-            case 'admin': return 'مسؤول';
-            case 'viewer': return 'ملاحظ';
-            default: return 'مستخدم';
+            case 'admin': return t('role.admin');
+            case 'viewer': return t('role.viewer');
+            default: return t('role.user');
         }
     };
 
@@ -165,33 +165,33 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
         try {
             const updateInfo = await checkForUpdates();
             if (!updateInfo) {
-                showToast('تعذر التحقق من التحديثات حاليًا.', 'error');
+                showToast(t('settings.checkUpdateFailed'), 'error');
             } else if (updateInfo.notSupported) {
-                showToast(`التحديث التلقائي متاح فقط في تطبيق سطح المكتب (Tauri). إصدارك الحالي: ${updateInfo.latestVersion}`, 'info');
+                showToast(t('settings.autoUpdateDesktopOnly', { version: updateInfo.latestVersion }), 'info');
             } else if (updateInfo.offline) {
-                showToast('لا يوجد اتصال بالإنترنت للتحقق من التحديثات.', 'error');
+                showToast(t('settings.noInternetCheckUpdate'), 'error');
             } else if (updateInfo.checkFailed) {
                 if (updateInfo.noReleases) {
-                    showToast('لا توجد إصدارات منشورة بعد. انشر إصدارًا لتفعيل التحديث التلقائي.', 'info');
+                    showToast(t('settings.noReleases'), 'info');
                 } else {
-                    showToast('تعذر الوصول لخادم التحديثات. تحقق من الاتصال ثم أعد المحاولة.', 'error');
+                    showToast(t('settings.cannotReachServer'), 'error');
                 }
             } else if (updateInfo.hasUpdate) {
-                if (window.confirm(`يوجد إصدار جديد متاح (${updateInfo.latestVersion}). هل تريد تنزيله وتطبيقه الآن؟ سيتم إعادة تشغيل التطبيق.`)) {
+                if (window.confirm(t('settings.newUpdateConfirm', { version: updateInfo.latestVersion }))) {
                     setDownloadProgress(0);
-                    showToast('جارٍ تنزيل التحديث وتطبيقه...', 'loading');
+                    showToast(t('settings.downloadingUpdate'), 'loading');
                     try {
                         await performUpdate((pct) => setDownloadProgress(pct));
                     } catch (updErr) {
                         setDownloadProgress(null);
-                        showToast(`تعذر التحديث — السبب: ${errorMessage(updErr)}`, 'error');
+                        showToast(t('settings.updateError', { reason: errorMessage(updErr) }), 'error');
                     }
                 }
             } else {
-                showToast(`أنت تستخدم أحدث إصدار حالياً (${updateInfo.latestVersion})`, 'success');
+                showToast(t('settings.upToDate', { version: updateInfo.latestVersion }), 'success');
             }
         } catch (checkErr) {
-            showToast(`فشل التحقق من التحديثات — السبب: ${errorMessage(checkErr)}`, 'error');
+            showToast(t('settings.checkFailedReason', { reason: errorMessage(checkErr) }), 'error');
         } finally {
             setCheckingUpdate(false);
         }
@@ -207,9 +207,9 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
     const applyImportedJson = async (json: any) => {
         try {
             await importDatabase(json);
-            showToast("تم استيراد قاعدة البيانات بنجاح", 'success');
+            showToast(t('settings.dbImported'), 'success');
         } catch (impErr) {
-            showToast(`فشل استيراد قاعدة البيانات — السبب: ${errorMessage(impErr)}`, 'error');
+            showToast(t('settings.importError', { reason: errorMessage(impErr) }), 'error');
         }
     };
 
@@ -223,7 +223,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
                 const path = await save({
                     defaultPath: fileName,
                     filters: [{ name: 'نسخة احتياطية مشفّرة GOFT3', extensions: ['goft3bak', 'json'] }],
-                    title: 'حفظ نسخة احتياطية مشفّرة من قاعدة البيانات',
+                    title: t('settings.saveEncryptedBackupTitle'),
                 });
                 if (!path) return; // user cancelled
                 setPass1('');
@@ -232,7 +232,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
                 setPassModal({ mode: 'export', path, data: dataStr });
             } catch (err: any) {
                 console.error('Tauri export failed:', err);
-                showToast(`فشل تصدير قاعدة البيانات — السبب: ${errorMessage(err)}`, 'error');
+                showToast(t('settings.exportError', { reason: errorMessage(err) }), 'error');
             }
             return;
         }
@@ -247,7 +247,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
         link.click();
         document.body.removeChild(link);
         setTimeout(() => URL.revokeObjectURL(url), 1500);
-        showToast("تم تصدير قاعدة البيانات بنجاح", 'success');
+        showToast(t('settings.dbExported'), 'success');
     };
 
     const handleImport = async (event?: React.ChangeEvent<HTMLInputElement>) => {
@@ -257,7 +257,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
                 const selected = await open({
                     multiple: false,
                     filters: [{ name: 'نسخة احتياطية GOFT3', extensions: ['goft3bak', 'json'] }],
-                    title: 'اختيار ملف استيراد قاعدة البيانات',
+                    title: t('settings.importPickFileTitle'),
                 });
                 const path = typeof selected === 'string' ? selected : selected?.[0];
                 if (!path) return; // user cancelled
@@ -280,10 +280,10 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
                 console.error('Tauri import failed:', err);
                 const msg = errorMessage(err);
                 if (msg === 'WRONG_PASSPHRASE') {
-                    showToast('كلمة المرور غير صحيحة — لم يتم فتح النسخة الاحتياطية', 'error');
+                    showToast(t('settings.wrongPassphrase'), 'error');
                     return;
                 }
-                showToast(`فشل قراءة ملف الاستيراد. تأكد من أنه ملف نسخة احتياطية صالح — السبب: ${msg}`, 'error');
+                showToast(t('settings.readImportError', { reason: msg }), 'error');
             }
             return;
         }
@@ -295,7 +295,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
             const text = await file.text();
             await applyImportedJson(JSON.parse(text));
         } catch (parseErr) {
-            showToast(`فشل استيراد الملف. تأكد من أنه ملف JSON صالح — السبب: ${errorMessage(parseErr)}`, 'error');
+            showToast(t('settings.jsonParseError', { reason: errorMessage(parseErr) }), 'error');
         } finally {
             if (event?.target) event.target.value = '';
         }
@@ -306,18 +306,18 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
         if (!passModal) return;
         setPassError('');
         if (pass1.trim().length < 6) {
-            setPassError('كلمة السر يجب أن تكون 6 أحرف على الأقل');
+            setPassError(t('settings.passMinLength'));
             return;
         }
         if (passModal.mode === 'export' && pass1 !== pass2) {
-            setPassError('كلمتا السر غير متطابقتين');
+            setPassError(t('settings.passMismatch'));
             return;
         }
         setPassBusy(true);
         try {
             if (passModal.mode === 'export') {
                 await tauriDb.saveBackup(passModal.data, passModal.path, pass1.trim());
-                showToast(`تم حفظ النسخة الاحتياطية المشفّرة في:\n${passModal.path}`, 'success');
+                showToast(t('settings.encryptedSaved', { path: passModal.path }), 'success');
                 setPassModal(null);
             } else {
                 const content = await tauriDb.readBackup(passModal.path, pass1.trim());
@@ -327,7 +327,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
         } catch (err: any) {
             const msg = errorMessage(err);
             if (msg === 'WRONG_PASSPHRASE') {
-                setPassError('كلمة المرور غير صحيحة');
+                setPassError(t('settings.wrongPassphraseShort'));
             } else {
                 setPassError(msg);
             }
@@ -338,16 +338,16 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
 
     const handleExportSqlite = async () => {
         if (!isTauri()) {
-            showToast('تصدير ملف SQLite متاح فقط في تطبيق سطح المكتب.', 'error');
+            showToast(t('settings.sqliteDesktopOnly'), 'error');
             return;
         }
         if (!supabase || !isOnline || !isDbConfigured) {
-            showToast('يتطلب التصدير اتصالاً مباشراً بقاعدة Supabase السحابية.', 'error');
+            showToast(t('settings.sqliteRequiresSupabase'), 'error');
             return;
         }
 
         try {
-            showToast('جارٍ جلب كل السجلات من Supabase...', 'info');
+            showToast(t('settings.fetchingSupabase'), 'info');
 
             // Fetch ALL rows from Supabase (paged) for every table
             const fetchAllRows = async (table: string): Promise<any[]> => {
@@ -376,7 +376,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
 
             const totalRows = results.reduce((sum, rows) => sum + rows.length, 0);
             if (totalRows === 0) {
-                showToast('قاعدة Supabase فارغة — لا توجد سجلات للتصدير.', 'error');
+                showToast(t('settings.supabaseEmpty'), 'error');
                 return;
             }
 
@@ -385,7 +385,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
             const path = await save({
                 defaultPath: `goft3_local_${date}.db`,
                 filters: [{ name: 'SQLite Database', extensions: ['db', 'sqlite'] }],
-                title: 'تصدير قاعدة Supabase إلى SQLite',
+                title: t('settings.exportSupabaseTitle'),
             });
             if (!path) return;
 
@@ -396,37 +396,37 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
                 .join(' | ');
 
             showToast(
-                `تم تصدير ${inserted} سجل من Supabase إلى SQLite بنجاح.\nالملف: ${path}\n${perTable}`,
+                t('settings.supabaseExportSuccess', { count: inserted, path, tables: perTable }),
                 'success'
             );
         } catch (err: any) {
             console.error('Supabase → SQLite export failed:', err);
-            showToast(`فشل التصدير من Supabase: ${err?.message || err}`, 'error');
+            showToast(t('settings.supabaseExportError', { message: err?.message || err }), 'error');
         }
     };
 
     const handleResetDatabase = async () => {
-        if (!window.confirm('خطر! سيؤدي هذا لتفريغ كافة الجداول. هل أنت متأكد؟')) return;
+        if (!window.confirm(t('settings.resetDbConfirm'))) return;
         try {
             await resetDatabase();
-            showToast("تم مسح قاعدة البيانات بنجاح", 'success');
+            showToast(t('settings.dbReset'), 'success');
         } catch (resetErr) {
-            showToast(`حدث خطأ أثناء مسح قاعدة البيانات — السبب: ${errorMessage(resetErr)}`, 'error');
+            showToast(t('settings.resetError', { reason: errorMessage(resetErr) }), 'error');
         }
     };
 
     const handleSaveConfig = (e: React.FormEvent) => {
         e.preventDefault();
-        if (window.confirm('سيتم إعادة تحميل التطبيق لحفظ الإعدادات. هل أنت متأكد؟')) {
+        if (window.confirm(t('settings.saveConfigConfirm'))) {
             saveConfig(setupUrl, setupKey);
             setIsConfigOpen(false);
         }
     };
 
     const tabs: {id: SettingsTab, label: string, icon: string}[] = [
-        { id: 'general', label: 'الإعدادات العامة', icon: 'bi-gear-wide-connected' },
-        { id: 'users', label: 'إدارة المستخدمين', icon: 'bi-people-fill' },
-        { id: 'tables', label: 'الجداول الأساسية', icon: 'bi-table' }
+        { id: 'general', label: t('settings.tabGeneral'), icon: 'bi-gear-wide-connected' },
+        { id: 'users', label: t('settings.tabUsers'), icon: 'bi-people-fill' },
+        { id: 'tables', label: t('settings.tabTables'), icon: 'bi-table' }
     ];
 
     return (
@@ -467,7 +467,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
                                 </h3>
                                 <div className="space-y-3">
                                     <p className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg border border-blue-100 mb-4">
-                                        يعمل التطبيق حالياً بنظام المزامنة السحابية. يتم حفظ التغييرات فورياً وآلياً.
+                                        {t('settings.cloudSyncDesc')}
                                     </p>
 
                                     <div className="grid grid-cols-1 gap-2">
@@ -486,7 +486,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
 
                                         {isTauri() && (
                                             <button onClick={handleExportSqlite} className="flex items-center gap-2 w-full bg-emerald-50 text-emerald-800 border border-emerald-200 px-4 py-2.5 rounded-lg hover:bg-emerald-100 transition-colors text-sm font-bold">
-                                                <i className="bi bi-database-down text-emerald-600"></i> تصدير كامل من Supabase إلى SQLite (goft3_local_YYYY-MM-DD.db)
+                                                <i className="bi bi-database-down text-emerald-600"></i> {t('settings.exportSqliteButton')}
                                             </button>
                                         )}
 
@@ -505,17 +505,17 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
                             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                                 <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-indigo-800">
                                     <i className="bi bi-arrow-up-circle-fill"></i>
-                                    تحديث البرنامج
+                                    {t('settings.updateProgram')}
                                 </h3>
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-center bg-gray-50 p-4 rounded-lg border border-gray-100">
-                                        <div className="text-sm font-medium text-gray-500">الإصدار الحالي للنظام:</div>
+                                        <div className="text-sm font-medium text-gray-500">{t('settings.currentVersionLabel')}</div>
                                         <div className="font-mono font-bold text-indigo-600 bg-white px-3 py-1 rounded shadow-sm border">{APP_VERSION}</div>
                                     </div>
                                     
                                     <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-100">
                                         <p className="text-xs text-indigo-700 leading-relaxed mb-4">
-                                            ننصح بالتحقق بشكل دوري من وجود تحديثات لضمان الحصول على أحدث الإصلاحات والمميزات.
+                                            {t('settings.updateAdvice')}
                                         </p>
                                         <button 
                                             onClick={handleCheckUpdate} 
@@ -525,19 +525,19 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
                                             {checkingUpdate ? (
                                                 <>
                                                     <i className="bi bi-arrow-repeat animate-spin"></i>
-                                                    جاري الفحص...
+                                                    {t('settings.checking')}
                                                 </>
                                             ) : (
                                                 <>
                                                     <i className="bi bi-cloud-arrow-down-fill"></i>
-                                                    التحقق من وجود تحديث
+                                                    {t('settings.checkForUpdate')}
                                                 </>
                                             )}
                                         </button>
                                         {downloadProgress !== null && (
                                             <div className="mt-3">
                                                 <div className="flex items-center justify-between mb-1 text-[11px] font-bold text-indigo-700">
-                                                    <span>جارٍ التنزيل...</span>
+                                                    <span>{t('settings.downloading')}</span>
                                                     <span>{downloadProgress}%</span>
                                                 </div>
                                                 <div className="h-2 w-full bg-indigo-100 rounded-full overflow-hidden">
@@ -565,25 +565,25 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
                             <div className="flex justify-between items-center mb-6">
                                 <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
                                     <i className="bi bi-people-fill text-blue-600"></i>
-                                    قائمة المستخدمين المسجلين
+                                    {t('settings.registeredUsers')}
                                 </h3>
                                 <div className="flex gap-2">
                                     <button onClick={openAddUserModal} className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700 transition-colors font-medium">
-                                        <i className="bi bi-plus-lg"></i> إضافة
+                                        <i className="bi bi-plus-lg"></i> {t('btn.add')}
                                     </button>
                                     <button 
                                         onClick={openEditUserModal} 
                                         disabled={selectedUserId === null} 
                                         className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:shadow-none"
                                     >
-                                        <i className="bi bi-pencil-square"></i> تعديل
+                                        <i className="bi bi-pencil-square"></i> {t('btn.edit')}
                                     </button>
                                     <button 
                                         onClick={handleDeleteUser} 
                                         disabled={selectedUserId === null} 
                                         className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg shadow hover:bg-red-700 transition-colors disabled:bg-gray-300 disabled:shadow-none"
                                     >
-                                        <i className="bi bi-trash3"></i> حذف
+                                        <i className="bi bi-trash3"></i> {t('btn.delete')}
                                     </button>
                                 </div>
                             </div>
@@ -592,9 +592,9 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
                                 <table className="w-full text-right border-collapse">
                                     <thead className="bg-gray-50 border-b border-gray-200">
                                         <tr>
-                                            <th className="p-4 text-sm font-bold text-gray-600">اسم المستخدم</th>
-                                            <th className="p-4 text-sm font-bold text-gray-600">الدور الصلاحيات</th>
-                                            <th className="p-4 text-sm font-bold text-gray-600 text-left">المعرف</th>
+                                            <th className="p-4 text-sm font-bold text-gray-600">{t('col.username')}</th>
+                                            <th className="p-4 text-sm font-bold text-gray-600">{t('col.role')}</th>
+                                            <th className="p-4 text-sm font-bold text-gray-600 text-left">{t('col.id')}</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100">
@@ -633,7 +633,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
                         >
                             <h3 className="text-xl font-bold mb-6 text-gray-800 flex items-center gap-2">
                                 <i className="bi bi-journal-bookmark-fill text-indigo-600"></i>
-                                إدارة البيانات المرجعية
+                                {t('settings.referenceData')}
                             </h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                 <button onClick={() => navigate('PROGRAMME')} className="group flex flex-col items-center gap-3 p-6 bg-gray-50 border border-gray-100 rounded-xl hover:bg-white hover:shadow-md hover:border-blue-200 transition-all text-sm font-bold text-gray-700">
@@ -670,10 +670,10 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
             </div>
 
             {/* Modals from original code + New User Modal */}
-            <Modal isOpen={isConfigOpen} onClose={() => setIsConfigOpen(false)} title="إعدادات قاعدة البيانات (Supabase)">
+            <Modal isOpen={isConfigOpen} onClose={() => setIsConfigOpen(false)} title={t('settings.dbConfigTitle')}>
                 <form onSubmit={handleSaveConfig} className="space-y-4" dir="ltr">
                     <div>
-                        <label className="block text-gray-700 text-sm font-bold mb-2 text-left">رابط المشروع (Project URL)</label>
+                        <label className="block text-gray-700 text-sm font-bold mb-2 text-left">{t('settings.projectUrlLabel')}</label>
                         <input 
                             type="url" 
                             value={setupUrl} 
@@ -684,7 +684,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
                         />
                     </div>
                     <div>
-                        <label className="block text-gray-700 text-sm font-bold mb-2 text-left">مفتاح API (anon/public)</label>
+                        <label className="block text-gray-700 text-sm font-bold mb-2 text-left">{t('settings.apiKeyLabel')}</label>
                         <input 
                             type="password" 
                             value={setupKey} 
@@ -695,14 +695,14 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
                         />
                     </div>
                     <div className="flex justify-end gap-2 pt-4" dir="rtl">
-                        <button type="button" onClick={() => setIsConfigOpen(false)} className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors">إلغاء</button>
-                        <button type="submit" className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">حفظ واتصال</button>
+                        <button type="button" onClick={() => setIsConfigOpen(false)} className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors">{t('btn.cancel')}</button>
+                        <button type="submit" className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">{t('settings.saveAndConnect')}</button>
                     </div>
                 </form>
             </Modal>
 
             {isAdmin && (
-                <Modal isOpen={isUserModalOpen} onClose={() => setIsUserModalOpen(false)} title={editingUser ? 'تعديل مستخدم' : 'إضافة مستخدم جديد'}>
+                <Modal isOpen={isUserModalOpen} onClose={() => setIsUserModalOpen(false)} title={editingUser ? t('settings.editUserTitle') : t('settings.addUserTitle')}>
                     <AddUserForm key={formKey} onClose={() => setIsUserModalOpen(false)} onSave={handleSaveUser} initialData={editingUser} />
                 </Modal>
             )}
@@ -711,19 +711,19 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
                 <Modal
                     isOpen={true}
                     onClose={() => setPassModal(null)}
-                    title={passModal.mode === 'export' ? 'تشفير النسخة الاحتياطية' : 'فتح نسخة احتياطية مشفّرة'}
+                    title={passModal.mode === 'export' ? t('settings.encryptBackupTitle') : t('settings.decryptBackupTitle')}
                 >
                     <form onSubmit={handlePassModalSubmit} className="space-y-3" dir="rtl">
                         <p className="text-xs text-gray-600 leading-relaxed">
                             {passModal.mode === 'export'
-                                ? 'اختر كلمة سر قوية (6 أحرف على الأقل). ستحتاجها لاستعادة هذه النسخة على أي جهاز — احتفظ بها في مكان آمن.'
-                                : 'هذه النسخة الاحتياطية مشفّرة. أدخل كلمة سرها للاستيراد.'}
+                                ? t('settings.passStrengthHint')
+                                : t('settings.passEntryHint')}
                         </p>
                         <input
                             type="password"
                             value={pass1}
                             onChange={e => { setPass1(e.target.value); setPassError(''); }}
-                            placeholder="كلمة السر"
+                            placeholder={t('settings.passPlaceholder')}
                             className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             autoFocus
                         />
@@ -732,15 +732,15 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
                                 type="password"
                                 value={pass2}
                                 onChange={e => { setPass2(e.target.value); setPassError(''); }}
-                                placeholder="تأكيد كلمة السر"
+                                placeholder={t('settings.confirmPassPlaceholder')}
                                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         )}
                         {passError && <div className="text-xs text-red-600 font-bold">{passError}</div>}
                         <div className="flex gap-2 justify-end pt-1">
-                            <button type="button" onClick={() => setPassModal(null)} className="px-4 py-2 text-sm bg-gray-200 rounded-md hover:bg-gray-300 transition-colors">إلغاء</button>
+                            <button type="button" onClick={() => setPassModal(null)} className="px-4 py-2 text-sm bg-gray-200 rounded-md hover:bg-gray-300 transition-colors">{t('btn.cancel')}</button>
                             <button type="submit" disabled={passBusy} className="px-4 py-2 text-sm font-bold text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors">
-                                {passBusy ? 'جارٍ المعالجة...' : (passModal.mode === 'export' ? 'تشفير وحفظ' : 'فك التشفير والاستيراد')}
+                                {passBusy ? t('settings.processing') : (passModal.mode === 'export' ? t('settings.encryptSave') : t('settings.decryptImport'))}
                             </button>
                         </div>
                     </form>
@@ -749,8 +749,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
 
             <ConfirmActionModal
                 isOpen={isDeleteConfirmOpen}
-                title="تأكيد حذف المستخدم"
-                message="هل أنت متأكد أنك تريد حذف هذا المستخدم؟"
+                title={t('settings.confirmDeleteTitle')}
+                message={t('settings.confirmDeleteMsg')}
                 onCancel={() => setIsDeleteConfirmOpen(false)}
                 onConfirm={confirmDeleteUser}
             />

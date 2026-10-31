@@ -2,6 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { Page, User } from '../types';
 import { useData } from '../context/DataContext';
+import { useLanguage } from '../context/LanguageContext';
 import PageWrapper from '../components/PageWrapper';
 import { formatCurrency } from '../utils/currencyUtils';
 import CustomDropdown from '../components/CustomDropdown';
@@ -18,6 +19,7 @@ interface FinancialStatusByStructurePageProps {
 
 const FinancialStatusByStructurePage: React.FC<FinancialStatusByStructurePageProps> = ({ navigate, onGoBack, initialOperationId, initialRubricId, currentUser }) => {
     const { db, loading } = useData();
+    const { t } = useLanguage();
     const [selectedOperationId, setSelectedOperationId] = useState<string>(initialOperationId ? String(initialOperationId) : '');
     const [highlightRubricId, setHighlightRubricId] = useState<number | null>(initialRubricId ? parseInt(initialRubricId, 10) : null);
 
@@ -52,8 +54,8 @@ const FinancialStatusByStructurePage: React.FC<FinancialStatusByStructurePagePro
                 console.error("Error parsing allowed operations", e);
             }
         }
-        return [{ value: '', label: 'اختر العملية' }, ...ops.map(op => ({ value: String(op.ID_OPERATION), label: op.INT_OPERATION }))];
-    }, [db.T_OPERATION, currentUser]);
+        return [{ value: '', label: t('filter.select_operation') }, ...ops.map(op => ({ value: String(op.ID_OPERATION), label: op.INT_OPERATION }))];
+    }, [db.T_OPERATION, currentUser, t]);
 
     const tableData = useMemo(() => {
         if (!selectedOperationId || loading) return { rows: [], totals: { initialAuth: 0, finalAuth: 0, commitment: 0, remainingAuth: 0, payment: 0, executionBalance: 0 } };
@@ -125,7 +127,7 @@ const FinancialStatusByStructurePage: React.FC<FinancialStatusByStructurePagePro
 
     const handleExport = async () => {
         if (tableData.rows.length === 0) {
-            alert('لا توجد بيانات للتصدير.');
+            alert(t('finstruct.no_data_export'));
             return;
         }
 
@@ -140,7 +142,7 @@ const FinancialStatusByStructurePage: React.FC<FinancialStatusByStructurePagePro
         const formattedDateArabic = `${String(today.getDate()).padStart(2, '0')} / ${String(today.getMonth() + 1).padStart(2, '0')} / ${today.getFullYear()}`;
 
         const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('الوضعية المالية حسب الهيكلة');
+        const worksheet = workbook.addWorksheet(t('page.financial_status_structure'));
         
         // Enable right to left direction for proper Arabic rendering
         worksheet.views = [{ rightToLeft: true }];
@@ -166,7 +168,7 @@ const FinancialStatusByStructurePage: React.FC<FinancialStatusByStructurePagePro
         // Row 2: Republic Name (Centered)
         worksheet.mergeCells('A2:E2');
         const republicCell = worksheet.getCell('A2');
-        republicCell.value = 'الجمهورية الجزائرية الديمقراطية الشعبية';
+        republicCell.value = t('print.header.republic');
         republicCell.font = { name: 'Arial', bold: true, size: 14 };
         republicCell.alignment = { horizontal: 'center', vertical: 'middle' };
         worksheet.getRow(2).height = 25;
@@ -190,7 +192,7 @@ const FinancialStatusByStructurePage: React.FC<FinancialStatusByStructurePagePro
         // Row 7: Stopped Date (Centered, bold, underlined)
         worksheet.mergeCells('A7:E7');
         const dateCell = worksheet.getCell('A7');
-        dateCell.value = `الوضعية المالية الموقوفة في: ${formattedDateArabic}`;
+        dateCell.value = t('print.label.stopped_at', { date: formattedDateArabic });
         dateCell.font = { name: 'Arial', bold: true, size: 12, underline: true };
         dateCell.alignment = { horizontal: 'center', vertical: 'middle' };
         worksheet.getRow(7).height = 25;
@@ -198,7 +200,7 @@ const FinancialStatusByStructurePage: React.FC<FinancialStatusByStructurePagePro
         // Row 9: Operation Number (Centered, bold)
         worksheet.mergeCells('A9:E9');
         const opNumCell = worksheet.getCell('A9');
-        opNumCell.value = `العملية رقم: ${operation?.N_OPERATION || ''}`;
+        opNumCell.value = `${t('print.label.operation_num')} ${operation?.N_OPERATION || ''}`;
         opNumCell.font = { name: 'Arial', bold: true, size: 11 };
         opNumCell.alignment = { horizontal: 'center', vertical: 'middle' };
         worksheet.getRow(9).height = 20;
@@ -206,7 +208,7 @@ const FinancialStatusByStructurePage: React.FC<FinancialStatusByStructurePagePro
         // Row 11: Operation Title (Centered, bold)
         worksheet.mergeCells('A11:E11');
         const opTitleCell = worksheet.getCell('A11');
-        opTitleCell.value = `عنوان العملية: ${operation?.INT_OPERATION || ''}`;
+        opTitleCell.value = `${t('print.label.operation_title')} ${operation?.INT_OPERATION || ''}`;
         opTitleCell.font = { name: 'Arial', bold: true, size: 11 };
         opTitleCell.alignment = { horizontal: 'center', vertical: 'middle' };
         worksheet.getRow(11).height = 20;
@@ -216,11 +218,11 @@ const FinancialStatusByStructurePage: React.FC<FinancialStatusByStructurePagePro
         headerRow.height = 30;
 
         const headers = [
-            { col: 'A', value: 'باقي رخصة الالتزام' },
-            { col: 'B', value: 'الالتزام' },
-            { col: 'C', value: 'رخصة الالتزام النهائية' },
-            { col: 'D', value: 'رخصة الالتزام الأولية' },
-            { col: 'E', value: 'هيكلة الكلفة' }
+            { col: 'A', value: t('col.remaining_ae') },
+            { col: 'B', value: t('col.commitment') },
+            { col: 'C', value: t('col.final_auth') },
+            { col: 'D', value: t('col.initial_auth') },
+            { col: 'E', value: t('col.structure') }
         ];
 
         headers.forEach(h => {
@@ -343,7 +345,7 @@ const FinancialStatusByStructurePage: React.FC<FinancialStatusByStructurePagePro
 
         // Col E: "المجموع"
         const cellE = totalRow.getCell('E');
-        cellE.value = 'المجموع';
+        cellE.value = t('lbl.total');
         cellE.alignment = { horizontal: 'center', vertical: 'middle' };
         cellE.font = { name: 'Arial', bold: true, size: 11 };
         cellE.fill = {
@@ -361,14 +363,14 @@ const FinancialStatusByStructurePage: React.FC<FinancialStatusByStructurePagePro
         // Merge Columns A to B for left signature
         worksheet.mergeCells(`A${currentRowIndex}:B${currentRowIndex}`);
         const sigLeft = worksheet.getCell(`A${currentRowIndex}`);
-        sigLeft.value = 'مسؤول النشاط';
+        sigLeft.value = t('finstruct.sig_responsible');
         sigLeft.font = { name: 'Arial', bold: true, size: 11, underline: true };
         sigLeft.alignment = { horizontal: 'center', vertical: 'middle' };
 
         // Merge Columns D to E for right signature
         worksheet.mergeCells(`D${currentRowIndex}:E${currentRowIndex}`);
         const sigRight = worksheet.getCell(`D${currentRowIndex}`);
-        sigRight.value = 'المراقب الميزانياتي';
+        sigRight.value = t('finstruct.sig_budget_controller');
         sigRight.font = { name: 'Arial', bold: true, size: 11, underline: true };
         sigRight.alignment = { horizontal: 'center', vertical: 'middle' };
 
@@ -376,30 +378,30 @@ const FinancialStatusByStructurePage: React.FC<FinancialStatusByStructurePagePro
         await saveWorkbook(workbook, `الوضعية_المالية_حسب_الهيكلة_${operation?.N_OPERATION || ''}.xlsx`);
     };
 
-    if (loading) return <div>جار التحميل...</div>;
+    if (loading) return <div>{t('loading')}</div>;
 
     return (
-        <PageWrapper title="الوضعية المالية حسب الهيكلة" navigate={navigate} onGoBack={onGoBack} backPage='FINANCIAL_STATUS' currentUser={currentUser}>
+        <PageWrapper title={t('page.financial_status_structure')} navigate={navigate} onGoBack={onGoBack} backPage='FINANCIAL_STATUS' currentUser={currentUser}>
             <div className="bg-indigo-100 p-4 rounded-lg shadow-md mb-6 border border-indigo-300">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">تصفية حسب العملية</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('filter.operation')}</label>
                         <CustomDropdown
                             options={operationOptions}
                             value={selectedOperationId}
                             onChange={setSelectedOperationId}
-                            placeholder="اختر العملية"
+                            placeholder={t('filter.select_operation')}
                         />
                     </div>
                     <div className="flex flex-col sm:flex-row gap-2">
                         <button onClick={() => navigate('PRINT_FINANCIAL_STATUS_BY_STRUCTURE', selectedOperationId ? parseInt(selectedOperationId) : 0)} disabled={!selectedOperationId} className="bg-blue-600 text-white px-3 py-2 rounded-lg shadow hover:bg-blue-700 transition-colors w-full disabled:bg-gray-400 text-xs font-bold">
-                            <i className="bi bi-printer mr-1"></i> طباعة (الالتزام و الدفع)
+                            <i className="bi bi-printer mr-1"></i> {t('finstruct.btn.print_commitment_payment')}
                         </button>
                         <button onClick={() => navigate('PRINT_FINANCIAL_STATUS_BY_STRUCTURE_COMMITMENT', selectedOperationId ? parseInt(selectedOperationId) : 0)} disabled={!selectedOperationId} className="bg-blue-500 text-white px-3 py-2 rounded-lg shadow hover:bg-blue-600 transition-colors w-full disabled:bg-gray-400 text-xs font-bold">
-                            <i className="bi bi-printer mr-1"></i> طباعة (الالتزام)
+                            <i className="bi bi-printer mr-1"></i> {t('finstruct.btn.print_commitment')}
                         </button>
                         <button onClick={handleExport} disabled={tableData.rows.length === 0} className="bg-teal-500 text-white px-3 py-2 rounded-lg shadow hover:bg-teal-600 transition-colors w-full disabled:bg-gray-400 text-xs font-bold">
-                            <i className="bi bi-file-earmark-excel mr-1"></i> تصدير
+                            <i className="bi bi-file-earmark-excel mr-1"></i> {t('btn.export')}
                         </button>
                     </div>
                 </div>
@@ -409,13 +411,13 @@ const FinancialStatusByStructurePage: React.FC<FinancialStatusByStructurePagePro
                 <table className="w-full text-right min-w-[900px]">
                     <thead className="bg-indigo-200 sticky top-0">
                         <tr>
-                            <th className="p-3 text-sm font-semibold text-gray-700 w-[20%]">هيكلة الكلفة</th>
-                            <th className="p-3 text-sm font-semibold text-gray-700">رخصة الالتزام الأولية</th>
-                            <th className="p-3 text-sm font-semibold text-gray-700">رخصة الالتزام النهائية</th>
-                            <th className="p-3 text-sm font-semibold text-gray-700">الالتزام</th>
-                            <th className="p-3 text-sm font-semibold text-gray-700">باقي رخصة الالتزام</th>
-                            <th className="p-3 text-sm font-semibold text-gray-700">الدفع</th>
-                            <th className="p-3 text-sm font-semibold text-gray-700">باقي الانجاز</th>
+                            <th className="p-3 text-sm font-semibold text-gray-700 w-[20%]">{t('col.structure')}</th>
+                            <th className="p-3 text-sm font-semibold text-gray-700">{t('col.initial_auth')}</th>
+                            <th className="p-3 text-sm font-semibold text-gray-700">{t('col.final_auth')}</th>
+                            <th className="p-3 text-sm font-semibold text-gray-700">{t('col.commitment')}</th>
+                            <th className="p-3 text-sm font-semibold text-gray-700">{t('col.remaining_ae')}</th>
+                            <th className="p-3 text-sm font-semibold text-gray-700">{t('finstruct.col.payment')}</th>
+                            <th className="p-3 text-sm font-semibold text-gray-700">{t('finstruct.col.remaining_progress')}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -436,7 +438,7 @@ const FinancialStatusByStructurePage: React.FC<FinancialStatusByStructurePagePro
                         )) : (
                             <tr>
                                 <td colSpan={7} className="p-6 text-center text-gray-500">
-                                    {selectedOperationId ? 'لا توجد بيانات لهذه العملية.' : 'يرجى اختيار عملية لعرض البيانات.'}
+                                    {selectedOperationId ? t('finstruct.no_data_operation') : t('finstruct.pls_select_operation')}
                                 </td>
                             </tr>
                         )}
@@ -444,7 +446,7 @@ const FinancialStatusByStructurePage: React.FC<FinancialStatusByStructurePagePro
                     {tableData.rows.length > 0 && (
                         <tfoot className="bg-gray-300 font-bold text-gray-800 text-sm sticky bottom-0">
                             <tr>
-                                <td className="p-3 text-center text-sm">المجموع</td>
+                                <td className="p-3 text-center text-sm">{t('lbl.total')}</td>
                                 <td className="p-3 text-sm">{formatCurrency(tableData.totals.initialAuth)}</td>
                                 <td className="p-3 text-sm">{formatCurrency(tableData.totals.finalAuth)}</td>
                                 <td className="p-3 text-sm">{formatCurrency(tableData.totals.commitment)}</td>

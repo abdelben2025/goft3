@@ -195,7 +195,7 @@ const Appendix01Page: React.FC<Appendix01PageProps> = ({ navigate, onGoBack, cur
 
     const handleExport = () => {
         if (!aggregatedData || operationsData.length === 0) {
-            alert('لا توجد بيانات للتصدير.');
+            alert(t('appx.no_data_to_export'));
             return;
         }
 
@@ -213,26 +213,26 @@ const Appendix01Page: React.FC<Appendix01PageProps> = ({ navigate, onGoBack, cur
 
         // Append Header Rows like the image
         tableHtml += `
-            <tr><th colspan="5" style="border:none; text-align:center; font-size: 18px;">ملحق 01<br/>الوضعية المالية للنقل رخص الإلتزام</th></tr>
+            <tr><th colspan="5" style="border:none; text-align:center; font-size: 18px;">${t('appx.header_title')}</th></tr>
             <tr><td colspan="5" style="border:none;">&nbsp;</td></tr>
-            <tr><td colspan="5" class="header-info">وزارة الأشغال العمومية و المنشآت القاعدية</td></tr>
-            <tr><td colspan="5" class="header-info">محفظة برنامج: ${aggregatedData.portCode}</td></tr>
-            <tr><td colspan="5" class="header-info">برنامج: ${aggregatedData.progCode}</td></tr>
-            <tr><td colspan="5" class="header-info">النشاط: ${aggregatedData.actCode}</td></tr>
-            <tr><td colspan="5" class="header-info">السنة المالية ${parseInt(selectedYear)} (ن-1)</td></tr>
-            <tr><td colspan="5" class="header-info">نقل للسنة المالية ${parseInt(selectedYear) + 1} (ن)</td></tr>
-            <tr><td colspan="5" class="header-info">وضعية ميزانياتية معدة و مرسلة من طرف مسؤول النشاط</td></tr>
+            <tr><td colspan="5" class="header-info">${t('appx.ministry')}</td></tr>
+            <tr><td colspan="5" class="header-info">${t('appx.portfolio_label')} ${aggregatedData.portCode}</td></tr>
+            <tr><td colspan="5" class="header-info">${t('appx.program_colon')} ${aggregatedData.progCode}</td></tr>
+            <tr><td colspan="5" class="header-info">${t('appx.activity_colon')} ${aggregatedData.actCode}</td></tr>
+            <tr><td colspan="5" class="header-info">${t('appx.fiscal_year_nminus1', {year: parseInt(selectedYear)})}</td></tr>
+            <tr><td colspan="5" class="header-info">${t('appx.carry_over_year', {year: parseInt(selectedYear) + 1})}</td></tr>
+            <tr><td colspan="5" class="header-info">${t('appx.prepared_by')}</td></tr>
             <tr><td colspan="5" style="border:none;">&nbsp;</td></tr>
         `;
 
         tableHtml += `
             <thead>
                 <tr>
-                    <th style="background-color: #f0f0f0;">رمز / رقم العملية</th>
-                    <th style="background-color: #f0f0f0;">برنامج / برنامج فرعي / نشاط / عملية</th>
-                    <th style="background-color: #f0f0f0;">رخصة التزام حالية</th>
-                    <th style="background-color: #f0f0f0;">رخصة التزام ملتزم بها</th>
-                    <th style="background-color: #f0f0f0;">رخصة التزام متوفرة</th>
+                    <th style="background-color: #f0f0f0;">${t('appx.col_code_op')}</th>
+                    <th style="background-color: #f0f0f0;">${t('appx.col_program_path')}</th>
+                    <th style="background-color: #f0f0f0;">${t('appx.col_current_ae')}</th>
+                    <th style="background-color: #f0f0f0;">${t('appx.col_committed_ae')}</th>
+                    <th style="background-color: #f0f0f0;">${t('appx.col_available_ae')}</th>
                 </tr>
             </thead>
             <tbody>
@@ -252,31 +252,31 @@ const Appendix01Page: React.FC<Appendix01PageProps> = ({ navigate, onGoBack, cur
 
         // Render Programs
         aggregatedData.programsData.forEach((totals, code) => {
-            const progName = db.T_PROGRAMME.find((p: any) => p.PROGRAMME === code)?.INT_PROGRAMME || 'منشآت القاعدية للطرق و الطرق السيارة';
-            tableHtml += renderTotalRow(`البرنامج: ${progName}`, code, totals.totalAE, totals.engagedAE, totals.availableAE);
+            const progName = db.T_PROGRAMME.find((p: any) => p.PROGRAMME === code)?.INT_PROGRAMME || t('appx.default_program_name');
+            tableHtml += renderTotalRow(t('appx.program_prefix', {name: progName}), code, totals.totalAE, totals.engagedAE, totals.availableAE);
         });
 
         // Render Sub-programs
         const sortedSubPrograms = Array.from(aggregatedData.subProgramsData.entries()).sort((a, b) => a[0].localeCompare(b[0]));
         sortedSubPrograms.forEach(([code, totals]) => {
-            const sprogName = db.T_SPROGRAMME.find((p: any) => p.SPROGRAMME === code)?.INT_SPROGRAMME || `تطوير المنشآت القاعدية للطرق`;
-            tableHtml += renderTotalRow(`البرنامج الفرعي: ${sprogName}`, code, totals.totalAE, totals.engagedAE, totals.availableAE);
+            const sprogName = db.T_SPROGRAMME.find((p: any) => p.SPROGRAMME === code)?.INT_SPROGRAMME || t('appx.default_subprogram_name');
+            tableHtml += renderTotalRow(t('appx.subprogram_prefix', {name: sprogName}), code, totals.totalAE, totals.engagedAE, totals.availableAE);
         });
 
         // Render Activities
         aggregatedData.actionsData.forEach((totals, code) => {
-            const actName = db.T_DIRECTION.find((d: any) => d.ACTION === code)?.INT_ACTION || 'تطوير و صيانة المنشآت القاعدية للطرق و الطرق السيارة';
-            tableHtml += renderTotalRow(`النشاط: ${actName}`, code, totals.totalAE, totals.engagedAE, totals.availableAE);
+            const actName = db.T_DIRECTION.find((d: any) => d.ACTION === code)?.INT_ACTION || t('appx.default_activity_name');
+            tableHtml += renderTotalRow(t('appx.activity_prefix', {name: actName}), code, totals.totalAE, totals.engagedAE, totals.availableAE);
         });
 
         // Render detailed Sub-programs
         sortedSubPrograms.forEach(([spCode, _]) => {
-            const spName = db.T_SPROGRAMME.find((p: any) => p.SPROGRAMME === spCode)?.INT_SPROGRAMME || `تطوير المنشآت القاعدية للطرق`;
+            const spName = db.T_SPROGRAMME.find((p: any) => p.SPROGRAMME === spCode)?.INT_SPROGRAMME || t('appx.default_subprogram_name');
 
             // Sub-program Header
             tableHtml += `
                 <tr class="bg-gray">
-                    <td colspan="5" class="text-center font-bold" style="background-color: #f0f0f0;">البرنامج الفرعي ${spCode} : ${spName}</td>
+                    <td colspan="5" class="text-center font-bold" style="background-color: #f0f0f0;">${t('appx.subprogram_header', {code: spCode, name: spName})}</td>
                 </tr>
             `;
 
@@ -300,8 +300,8 @@ const Appendix01Page: React.FC<Appendix01PageProps> = ({ navigate, onGoBack, cur
             <tfoot>
                 <tr><td colspan="5" style="border:none;">&nbsp;</td></tr>
                 <tr>
-                    <td colspan="2" style="border:none; text-align:left; font-weight:bold;">المراقبة الميزانياتي لدى مسؤول النشاط</td>
-                    <td colspan="3" style="border:none; text-align:right; font-weight:bold;">مسؤول النشاط</td>
+                    <td colspan="2" style="border:none; text-align:left; font-weight:bold;">${t('appx.controller_frame')}</td>
+                    <td colspan="3" style="border:none; text-align:right; font-weight:bold;">${t('appx.activity_manager_frame')}</td>
                 </tr>
             </tfoot>
             </table>
@@ -310,13 +310,13 @@ const Appendix01Page: React.FC<Appendix01PageProps> = ({ navigate, onGoBack, cur
         exportToFormattedExcel(tableHtml, `appendix_01_${selectedYear}.xls`);
     };
 
-    const getProgName = (code: string) => db.T_PROGRAMME.find((p: any) => p.PROGRAMME === code)?.INT_PROGRAMME || 'منشآت القاعدية للطرق و الطرق السيارة';
-    const getSprogName = (code: string) => db.T_SPROGRAMME.find((p: any) => p.SPROGRAMME === code)?.INT_SPROGRAMME || `البرنامج الفرعي ${code}`;
-    const getActName = (code: string) => db.T_DIRECTION.find((d: any) => d.ACTION === code)?.INT_ACTION || 'تطوير و صيانة المنشآت القاعدية للطرق و الطرق السيارة';
+    const getProgName = (code: string) => db.T_PROGRAMME.find((p: any) => p.PROGRAMME === code)?.INT_PROGRAMME || t('appx.default_program_name');
+    const getSprogName = (code: string) => db.T_SPROGRAMME.find((p: any) => p.SPROGRAMME === code)?.INT_SPROGRAMME || t('appx.default_subprogram_name');
+    const getActName = (code: string) => db.T_DIRECTION.find((d: any) => d.ACTION === code)?.INT_ACTION || t('appx.default_activity_name');
 
     return (
         <PageWrapper
-            title="ملحق 01: الوضعية المالية للنقل رخص الإلتزام"
+            title={t('appx.title')}
             navigate={navigate}
             onGoBack={onGoBack}
             backPage='FINANCIAL_STATUS'
@@ -334,12 +334,12 @@ const Appendix01Page: React.FC<Appendix01PageProps> = ({ navigate, onGoBack, cur
                         />
                     </div>
                     <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">البرنامج</label>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">{t('appx.program_label')}</label>
                         <CustomDropdown
-                            options={[{ value: '', label: 'جميع البرامج' }, ...programmes]}
+                            options={[{ value: '', label: t('appx.all_programs') }, ...programmes]}
                             value={selectedProgramme}
                             onChange={setSelectedProgramme}
-                            placeholder="اختر البرنامج"
+                            placeholder={t('appx.select_program_placeholder')}
                         />
                     </div>
                     <div>
@@ -364,15 +364,15 @@ const Appendix01Page: React.FC<Appendix01PageProps> = ({ navigate, onGoBack, cur
                     <div className="min-w-[1000px] text-right">
                         {/* Headers */}
                         <div className="mb-6">
-                            <h2 className="text-center font-bold text-lg mb-4">ملحق 01 <br /> الوضعية المالية للنقل رخص الإلتزام</h2>
+                            <h2 className="text-center font-bold text-lg mb-4">{t('appx.h2_title1')} <br /> {t('appx.h2_title2')}</h2>
                             <div className="font-bold text-sm">
-                                <p>وزارة الأشغال العمومية و المنشآت القاعدية</p>
-                                <p>محفظة برنامج: <span className="font-normal">{aggregatedData.portCode}</span></p>
-                                <p>برنامج: <span className="font-normal">{aggregatedData.progCode}</span></p>
-                                <p>النشاط: <span className="font-normal">{aggregatedData.actCode}</span></p>
-                                <p>السنة المالية {parseInt(selectedYear)} (ن-1)</p>
-                                <p>نقل للسنة المالية {parseInt(selectedYear) + 1} (ن)</p>
-                                <p>وضعية ميزانياتية معدة و مرسلة من طرف مسؤول النشاط</p>
+                                <p>{t('appx.ministry')}</p>
+                                <p>{t('appx.portfolio_label')} <span className="font-normal">{aggregatedData.portCode}</span></p>
+                                <p>{t('appx.program_colon')} <span className="font-normal">{aggregatedData.progCode}</span></p>
+                                <p>{t('appx.activity_colon')} <span className="font-normal">{aggregatedData.actCode}</span></p>
+                                <p>{t('appx.fiscal_year_nminus1', {year: parseInt(selectedYear)})}</p>
+                                <p>{t('appx.carry_over_year', {year: parseInt(selectedYear) + 1})}</p>
+                                <p>{t('appx.prepared_by')}</p>
                             </div>
                         </div>
 
@@ -380,11 +380,11 @@ const Appendix01Page: React.FC<Appendix01PageProps> = ({ navigate, onGoBack, cur
                         <table className="w-full border-collapse border border-gray-400 text-sm relative">
                             <thead className="sticky top-0 z-20 shadow-sm bg-gray-100">
                                 <tr className="bg-gray-100">
-                                    <th className="border border-gray-400 p-2 text-center w-1/6 sticky top-0 bg-gray-100 z-20">رمز / رقم العملية</th>
-                                    <th className="border border-gray-400 p-2 text-center w-2/6 sticky top-0 bg-gray-100 z-20">برنامج / برنامج فرعي / نشاط / عملية</th>
-                                    <th className="border border-gray-400 p-2 text-center w-1/6 sticky top-0 bg-gray-100 z-20">رخصة التزام حالية</th>
-                                    <th className="border border-gray-400 p-2 text-center w-1/6 sticky top-0 bg-gray-100 z-20">رخصة التزام ملتزم بها</th>
-                                    <th className="border border-gray-400 p-2 text-center w-1/6 sticky top-0 bg-gray-100 z-20">رخصة التزام متوفرة</th>
+                                    <th className="border border-gray-400 p-2 text-center w-1/6 sticky top-0 bg-gray-100 z-20">{t('appx.col_code_op')}</th>
+                                    <th className="border border-gray-400 p-2 text-center w-2/6 sticky top-0 bg-gray-100 z-20">{t('appx.col_program_path')}</th>
+                                    <th className="border border-gray-400 p-2 text-center w-1/6 sticky top-0 bg-gray-100 z-20">{t('appx.col_current_ae')}</th>
+                                    <th className="border border-gray-400 p-2 text-center w-1/6 sticky top-0 bg-gray-100 z-20">{t('appx.col_committed_ae')}</th>
+                                    <th className="border border-gray-400 p-2 text-center w-1/6 sticky top-0 bg-gray-100 z-20">{t('appx.col_available_ae')}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -392,7 +392,7 @@ const Appendix01Page: React.FC<Appendix01PageProps> = ({ navigate, onGoBack, cur
                                 {Array.from(aggregatedData.programsData.entries()).map(([code, totals]) => (
                                     <tr key={`prog-${code}`}>
                                         <td className="border border-gray-400 p-2 font-bold text-center">{code}</td>
-                                        <td className="border border-gray-400 p-2 font-bold bg-white text-right">البرنامج: {getProgName(code)}</td>
+                                        <td className="border border-gray-400 p-2 font-bold bg-white text-right">{t('appx.program_prefix', {name: getProgName(code)})}</td>
                                         <td className="border border-gray-400 p-2 font-bold text-center">{formatCurrency(totals.totalAE)}</td>
                                         <td className="border border-gray-400 p-2 font-bold text-center">{formatCurrency(totals.engagedAE)}</td>
                                         <td className="border border-gray-400 p-2 font-bold text-center">{formatCurrency(totals.availableAE)}</td>
@@ -403,7 +403,7 @@ const Appendix01Page: React.FC<Appendix01PageProps> = ({ navigate, onGoBack, cur
                                 {Array.from(aggregatedData.subProgramsData.entries()).sort((a, b) => a[0].localeCompare(b[0])).map(([code, totals]) => (
                                     <tr key={`sprog-${code}`}>
                                         <td className="border border-gray-400 p-2 font-bold text-center">{code}</td>
-                                        <td className="border border-gray-400 p-2 font-bold bg-white text-right">البرنامج الفرعي: {getSprogName(code)}</td>
+                                        <td className="border border-gray-400 p-2 font-bold bg-white text-right">{t('appx.subprogram_prefix', {name: getSprogName(code)})}</td>
                                         <td className="border border-gray-400 p-2 font-bold text-center">{formatCurrency(totals.totalAE)}</td>
                                         <td className="border border-gray-400 p-2 font-bold text-center">{formatCurrency(totals.engagedAE)}</td>
                                         <td className="border border-gray-400 p-2 font-bold text-center">{formatCurrency(totals.availableAE)}</td>
@@ -414,7 +414,7 @@ const Appendix01Page: React.FC<Appendix01PageProps> = ({ navigate, onGoBack, cur
                                 {Array.from(aggregatedData.actionsData.entries()).map(([code, totals]) => (
                                     <tr key={`act-${code}`}>
                                         <td className="border border-gray-400 p-2 font-bold text-center">{code}</td>
-                                        <td className="border border-gray-400 p-2 font-bold bg-white text-right">النشاط: {getActName(code)}</td>
+                                        <td className="border border-gray-400 p-2 font-bold bg-white text-right">{t('appx.activity_prefix', {name: getActName(code)})}</td>
                                         <td className="border border-gray-400 p-2 font-bold text-center">{formatCurrency(totals.totalAE)}</td>
                                         <td className="border border-gray-400 p-2 font-bold text-center">{formatCurrency(totals.engagedAE)}</td>
                                         <td className="border border-gray-400 p-2 font-bold text-center">{formatCurrency(totals.availableAE)}</td>
@@ -427,7 +427,7 @@ const Appendix01Page: React.FC<Appendix01PageProps> = ({ navigate, onGoBack, cur
                                         {/* Sub-program Header Row */}
                                         <tr className="bg-gray-100">
                                             <td className="border border-gray-400 p-2 font-bold text-center"></td>
-                                            <td className="border border-gray-400 p-2 font-bold text-right pr-4">البرنامج الفرعي {spCode} : {getSprogName(spCode)}</td>
+                                            <td className="border border-gray-400 p-2 font-bold text-right pr-4">{t('appx.subprogram_header', {code: spCode, name: getSprogName(spCode)})}</td>
                                             <td className="border border-gray-400 p-2 font-bold text-center" colSpan={3}></td>
                                         </tr>
                                         {/* Operations */}
@@ -446,13 +446,13 @@ const Appendix01Page: React.FC<Appendix01PageProps> = ({ navigate, onGoBack, cur
                         </table>
 
                         <div className="flex justify-between mt-8 font-bold px-8">
-                            <div>المراقبة الميزانياتي لدى مسؤول النشاط</div>
-                            <div>مسؤول النشاط</div>
+                            <div>{t('appx.controller_frame')}</div>
+                            <div>{t('appx.activity_manager_frame')}</div>
                         </div>
                     </div>
                 ) : (
                     <div className="text-center p-8 text-gray-500">
-                        لا توجد بيانات متاحة
+                        {t('appx.no_data_available')}
                     </div>
                 )}
             </div>

@@ -134,9 +134,9 @@ const PrintFinancialStatusByStructurePage: React.FC<PrintFinancialStatusByStruct
     if (!printData || 'error' in printData) {
         let errorMsg = t('no_data');
         if (printData && 'error' in printData) {
-            if (printData.error === 'missing_id') errorMsg = "يرجى اختيار العملية أولاً";
-            if (printData.error === 'operation_not_found') errorMsg = "العملية المختارة غير موجودة";
-            if (printData.error === 'direction_not_found') errorMsg = "يرجى ملء معلومات المديرية في الإعدادات أولاً";
+            if (printData.error === 'missing_id') errorMsg = t('print.err_select_operation');
+            if (printData.error === 'operation_not_found') errorMsg = t('print.err_operation_not_found');
+            if (printData.error === 'direction_not_found') errorMsg = t('print.err_direction_not_set');
         }
         return <div className="p-8 text-center text-red-500 font-bold">{errorMsg}</div>;
     }
@@ -167,10 +167,10 @@ const PrintFinancialStatusByStructurePage: React.FC<PrintFinancialStatusByStruct
                 }
             `}</style>
             <div className="no-print mb-4 flex justify-between items-center bg-gray-100 p-3 rounded shadow">
-                <h2 className="text-xl font-bold">معاينة طباعة الوضعية المالية حسب الهيكلة</h2>
+                <h2 className="text-xl font-bold">{t('print.struct_preview')}</h2>
                 <div className="flex gap-2">
-                    <button onClick={() => navigate('FINANCIAL_STATUS_BY_STRUCTURE')} className="bg-gray-600 text-white px-4 py-2 rounded">رجوع</button>
-                    <button onClick={handlePrintJS} className="bg-blue-700 text-white px-6 py-2 rounded font-bold hover:bg-blue-800 transition-colors"><i className="bi bi-printer mr-2"></i> طباعة </button>
+                    <button onClick={() => navigate('FINANCIAL_STATUS_BY_STRUCTURE')} className="bg-gray-600 text-white px-4 py-2 rounded">{t('btn.back')}</button>
+                    <button onClick={handlePrintJS} className="bg-blue-700 text-white px-6 py-2 rounded font-bold hover:bg-blue-800 transition-colors"><i className="bi bi-printer mr-2"></i> {t('btn.print')} </button>
                 </div>
             </div>
 
@@ -196,10 +196,10 @@ const PrintFinancialStatusByStructurePage: React.FC<PrintFinancialStatusByStruct
                             <th className="border border-black p-2 w-[25%]">{t('col.structure')}</th>
                             <th className="border border-black p-2">{t('col.initial_auth')}</th>
                             <th className="border border-black p-2">{t('col.final_auth')}</th>
-                            <th className="border border-black p-2">الالتزام</th>
-                            <th className="border border-black p-2">باقي رخصة الالتزام</th>
-                            <th className="border border-black p-2">الدفع</th>
-                            <th className="border border-black p-2">باقي الانجاز</th>
+                            <th className="border border-black p-2">{t('col.commitment')}</th>
+                            <th className="border border-black p-2">{t('col.remaining_ae')}</th>
+                            <th className="border border-black p-2">{t('finstruct.col.payment')}</th>
+                            <th className="border border-black p-2">{t('finstruct.col.remaining_progress')}</th>
                         </tr>
                     </thead>
                     <tbody>

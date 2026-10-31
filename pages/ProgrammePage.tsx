@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Page, Programme, Sprogramme, User } from '../types';
 import { useData } from '../context/DataContext';
 import { useToast } from '../context/ToastContext';
+import { useLanguage } from '../context/LanguageContext';
 import { errorMessage } from '../utils/errorMessage';
 import PageWrapper from '../components/PageWrapper';
 import Modal from '../components/Modal';
@@ -19,6 +20,7 @@ interface ProgrammePageProps {
 const ProgrammePage: React.FC<ProgrammePageProps> = ({ navigate, onGoBack, currentUser }) => {
     const { db, loading, addItem, updateItem, deleteItem } = useData();
     const { showToast } = useToast();
+    const { t } = useLanguage();
     const [selectedProgrammeId, setSelectedProgrammeId] = useState<number | null>(db.T_PROGRAMME[0]?.ID_PROGRAMME || null);
     const [selectedSProgrammeId, setSelectedSProgrammeId] = useState<number | null>(null);
     const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; type: 'prog' | 'sprog' | null }>({ open: false, type: null });
@@ -32,19 +34,19 @@ const ProgrammePage: React.FC<ProgrammePageProps> = ({ navigate, onGoBack, curre
 
     // Programme CRUD
     const handleSaveProgramme = async (data: Omit<Programme, 'ID_PROGRAMME'> | Programme) => {
-        showToast('جاري حفظ البرنامج...', 'loading');
+        showToast(t('prog.toast_saving'), 'loading');
         try {
             if ('ID_PROGRAMME' in data) {
                 await updateItem('T_PROGRAMME', data.ID_PROGRAMME, data);
-                showToast('تم تعديل البرنامج بنجاح', 'success');
+                showToast(t('prog.toast_edit_success'), 'success');
             } else {
                 await addItem('T_PROGRAMME', data);
-                showToast('تمت إضافة البرنامج بنجاح', 'success');
+                showToast(t('prog.toast_add_success'), 'success');
             }
             setIsProgrammeModalOpen(false);
             setEditingProgramme(undefined);
         } catch (error) {
-            showToast(`حدث خطأ أثناء الحفظ — السبب: ${errorMessage(error)}`, 'error');
+            showToast(t('prog.toast_save_error', { reason: errorMessage(error) }), 'error');
         }
     };
 
@@ -56,33 +58,33 @@ const ProgrammePage: React.FC<ProgrammePageProps> = ({ navigate, onGoBack, curre
     const confirmDeleteProgramme = async () => {
         setDeleteConfirm({ open: false, type: null });
         if (selectedProgrammeId === null) return;
-        showToast('جاري الحذف...', 'loading');
+        showToast(t('prog.toast_deleting'), 'loading');
         try {
             await deleteItem('T_PROGRAMME', selectedProgrammeId);
             const newProgrammes = db.T_PROGRAMME.filter(p => p.ID_PROGRAMME !== selectedProgrammeId);
             setSelectedProgrammeId(newProgrammes[0]?.ID_PROGRAMME || null);
             setSelectedSProgrammeId(null);
-            showToast('تم حذف البرنامج بنجاح', 'success');
+            showToast(t('prog.toast_delete_success'), 'success');
         } catch (error) {
-            showToast(`حدث خطأ أثناء الحذف — السبب: ${errorMessage(error)}`, 'error');
+            showToast(t('prog.toast_delete_error', { reason: errorMessage(error) }), 'error');
         }
     };
 
     // SProgramme CRUD
     const handleSaveSProgramme = async (data: Omit<Sprogramme, 'ID_SPROGRAMME'> | Sprogramme) => {
-        showToast('جاري حفظ البرنامج الفرعي...', 'loading');
+        showToast(t('prog.toast_saving_sprogram'), 'loading');
         try {
             if ('ID_SPROGRAMME' in data) {
                 await updateItem('T_SPROGRAMME', data.ID_SPROGRAMME, data);
-                showToast('تم تعديل البرنامج الفرعي بنجاح', 'success');
+                showToast(t('prog.toast_edit_sprogram_success'), 'success');
             } else {
                 await addItem('T_SPROGRAMME', data);
-                showToast('تمت إضافة البرنامج الفرعي بنجاح', 'success');
+                showToast(t('prog.toast_add_sprogram_success'), 'success');
             }
             setIsSProgrammeModalOpen(false);
             setEditingSProgramme(undefined);
         } catch (error) {
-            showToast(`حدث خطأ أثناء الحفظ — السبب: ${errorMessage(error)}`, 'error');
+            showToast(t('prog.toast_save_error', { reason: errorMessage(error) }), 'error');
         }
     };
 
@@ -94,21 +96,21 @@ const ProgrammePage: React.FC<ProgrammePageProps> = ({ navigate, onGoBack, curre
     const confirmDeleteSProgramme = async () => {
         setDeleteConfirm({ open: false, type: null });
         if (selectedSProgrammeId === null) return;
-        showToast('جاري الحذف...', 'loading');
+        showToast(t('prog.toast_deleting'), 'loading');
         try {
             await deleteItem('T_SPROGRAMME', selectedSProgrammeId);
             setSelectedSProgrammeId(null);
-            showToast('تم حذف البرنامج الفرعي بنجاح', 'success');
+            showToast(t('prog.toast_delete_sprogram_success'), 'success');
         } catch (error) {
-            showToast(`حدث خطأ أثناء الحذف — السبب: ${errorMessage(error)}`, 'error');
+            showToast(t('prog.toast_delete_error', { reason: errorMessage(error) }), 'error');
         }
     };
 
-    if (loading) return <div>جار التحميل...</div>;
+    if (loading) return <div>{t('loading')}</div>;
 
     return (
         <PageWrapper
-            title="إدارة البرامج"
+            title={t('page.programme')}
             navigate={navigate}
             onGoBack={onGoBack}
             currentUser={currentUser}
@@ -116,19 +118,19 @@ const ProgrammePage: React.FC<ProgrammePageProps> = ({ navigate, onGoBack, curre
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-white p-4 rounded-lg shadow-md">
                     <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-xl font-bold text-gray-800">البرامج الرئيسية</h3>
+                        <h3 className="text-xl font-bold text-gray-800">{t('prog.main_programmes')}</h3>
                         <div className="flex items-center gap-2">
-                            <button onClick={() => { if(loading) { alert("يجب الانتظار حتى يتم تحديث النافذة"); return; } setEditingProgramme(undefined); setProgFormKey(p => p + 1); setIsProgrammeModalOpen(true); }} className="bg-green-500 text-white px-3 py-1 rounded-md shadow hover:bg-green-600 text-sm"><i className="bi bi-plus-circle mr-1"></i> إضافة</button>
-                            <button onClick={() => { if(loading) { alert("يجب الانتظار حتى يتم تحديث النافذة"); return; } const item = db.T_PROGRAMME.find(i=>i.ID_PROGRAMME === selectedProgrammeId); if(item) { setEditingProgramme(item); setProgFormKey(p => p + 1); setIsProgrammeModalOpen(true); } }} disabled={selectedProgrammeId === null} className="bg-yellow-500 text-white px-3 py-1 rounded-md shadow hover:bg-yellow-600 text-sm disabled:bg-gray-400"><i className="bi bi-pencil-fill mr-1"></i> تعديل</button>
-                            <button onClick={handleDeleteProgramme} disabled={selectedProgrammeId === null} className="bg-red-500 text-white px-3 py-1 rounded-md shadow hover:bg-red-600 text-sm disabled:bg-gray-400"><i className="bi bi-trash-fill mr-1"></i> حذف</button>
+                            <button onClick={() => { if(loading) { alert(t('op.alert_wait_loading')); return; } setEditingProgramme(undefined); setProgFormKey(p => p + 1); setIsProgrammeModalOpen(true); }} className="bg-green-500 text-white px-3 py-1 rounded-md shadow hover:bg-green-600 text-sm"><i className="bi bi-plus-circle mr-1"></i> {t('btn.add')}</button>
+                            <button onClick={() => { if(loading) { alert(t('op.alert_wait_loading')); return; } const item = db.T_PROGRAMME.find(i=>i.ID_PROGRAMME === selectedProgrammeId); if(item) { setEditingProgramme(item); setProgFormKey(p => p + 1); setIsProgrammeModalOpen(true); } }} disabled={selectedProgrammeId === null} className="bg-yellow-500 text-white px-3 py-1 rounded-md shadow hover:bg-yellow-600 text-sm disabled:bg-gray-400"><i className="bi bi-pencil-fill mr-1"></i> {t('btn.edit')}</button>
+                            <button onClick={handleDeleteProgramme} disabled={selectedProgrammeId === null} className="bg-red-500 text-white px-3 py-1 rounded-md shadow hover:bg-red-600 text-sm disabled:bg-gray-400"><i className="bi bi-trash-fill mr-1"></i> {t('btn.delete')}</button>
                         </div>
                     </div>
                      <div className="overflow-auto max-h-[calc(100vh-20rem)]">
                         <table className="w-full text-right">
                              <thead className="bg-blue-100 sticky top-0">
                                 <tr>
-                                    <th className="p-3 text-sm font-semibold text-gray-700">الرمز</th>
-                                    <th className="p-3 text-sm font-semibold text-gray-700">العنوان</th>
+                                    <th className="p-3 text-sm font-semibold text-gray-700">{t('col.code')}</th>
+                                    <th className="p-3 text-sm font-semibold text-gray-700">{t('col.title')}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -149,19 +151,19 @@ const ProgrammePage: React.FC<ProgrammePageProps> = ({ navigate, onGoBack, curre
 
                  <div className="bg-white p-4 rounded-lg shadow-md">
                     <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-xl font-bold text-gray-800">البرامج الفرعية</h3>
+                        <h3 className="text-xl font-bold text-gray-800">{t('prog.sub_programmes')}</h3>
                         <div className="flex items-center gap-2">
-                            <button onClick={() => { if(loading) { alert("يجب الانتظار حتى يتم تحديث النافذة"); return; } setEditingSProgramme(undefined); setSprogFormKey(p => p + 1); setIsSProgrammeModalOpen(true); }} disabled={selectedProgrammeId === null} className="bg-green-500 text-white px-3 py-1 rounded-md shadow hover:bg-green-600 text-sm disabled:bg-gray-400"><i className="bi bi-plus-circle mr-1"></i> إضافة</button>
-                            <button onClick={() => { if(loading) { alert("يجب الانتظار حتى يتم تحديث النافذة"); return; } const item = db.T_SPROGRAMME.find(i=>i.ID_SPROGRAMME === selectedSProgrammeId); if(item) { setEditingSProgramme(item); setSprogFormKey(p => p + 1); setIsSProgrammeModalOpen(true); } }} disabled={selectedSProgrammeId === null} className="bg-yellow-500 text-white px-3 py-1 rounded-md shadow hover:bg-yellow-600 text-sm disabled:bg-gray-400"><i className="bi bi-pencil-fill mr-1"></i> تعديل</button>
-                            <button onClick={handleDeleteSProgramme} disabled={selectedSProgrammeId === null} className="bg-red-500 text-white px-3 py-1 rounded-md shadow hover:bg-red-600 text-sm disabled:bg-gray-400"><i className="bi bi-trash-fill mr-1"></i> حذف</button>
+                            <button onClick={() => { if(loading) { alert(t('op.alert_wait_loading')); return; } setEditingSProgramme(undefined); setSprogFormKey(p => p + 1); setIsSProgrammeModalOpen(true); }} disabled={selectedProgrammeId === null} className="bg-green-500 text-white px-3 py-1 rounded-md shadow hover:bg-green-600 text-sm disabled:bg-gray-400"><i className="bi bi-plus-circle mr-1"></i> {t('btn.add')}</button>
+                            <button onClick={() => { if(loading) { alert(t('op.alert_wait_loading')); return; } const item = db.T_SPROGRAMME.find(i=>i.ID_SPROGRAMME === selectedSProgrammeId); if(item) { setEditingSProgramme(item); setSprogFormKey(p => p + 1); setIsSProgrammeModalOpen(true); } }} disabled={selectedSProgrammeId === null} className="bg-yellow-500 text-white px-3 py-1 rounded-md shadow hover:bg-yellow-600 text-sm disabled:bg-gray-400"><i className="bi bi-pencil-fill mr-1"></i> {t('btn.edit')}</button>
+                            <button onClick={handleDeleteSProgramme} disabled={selectedSProgrammeId === null} className="bg-red-500 text-white px-3 py-1 rounded-md shadow hover:bg-red-600 text-sm disabled:bg-gray-400"><i className="bi bi-trash-fill mr-1"></i> {t('btn.delete')}</button>
                         </div>
                     </div>
                      <div className="overflow-auto max-h-[calc(100vh-20rem)]">
                         <table className="w-full text-right">
                              <thead className="bg-blue-100 sticky top-0">
                                 <tr>
-                                    <th className="p-3 text-sm font-semibold text-gray-700">الرمز</th>
-                                    <th className="p-3 text-sm font-semibold text-gray-700">العنوان</th>
+                                    <th className="p-3 text-sm font-semibold text-gray-700">{t('col.code')}</th>
+                                    <th className="p-3 text-sm font-semibold text-gray-700">{t('col.title')}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -177,19 +179,19 @@ const ProgrammePage: React.FC<ProgrammePageProps> = ({ navigate, onGoBack, curre
                 </div>
             </div>
 
-            <Modal isOpen={isProgrammeModalOpen} onClose={() => setIsProgrammeModalOpen(false)} title={editingProgramme ? "تعديل برنامج" : "إضافة برنامج جديد"}>
+            <Modal isOpen={isProgrammeModalOpen} onClose={() => setIsProgrammeModalOpen(false)} title={editingProgramme ? t('prog.edit_title') : t('prog.add_title')}>
                 <AddProgrammeForm key={progFormKey} onClose={() => setIsProgrammeModalOpen(false)} onSave={handleSaveProgramme} initialData={editingProgramme} />
             </Modal>
-            <Modal isOpen={isSProgrammeModalOpen} onClose={() => setIsSProgrammeModalOpen(false)} title={editingSProgramme ? "تعديل برنامج فرعي" : "إضافة برنامج فرعي جديد"}>
+            <Modal isOpen={isSProgrammeModalOpen} onClose={() => setIsSProgrammeModalOpen(false)} title={editingSProgramme ? t('prog.edit_sprogram_title') : t('prog.add_sprogram_title')}>
                 <AddSProgrammeForm key={sprogFormKey} onClose={() => setIsSProgrammeModalOpen(false)} onSave={handleSaveSProgramme} initialData={editingSProgramme} programmes={db.T_PROGRAMME} selectedProgrammeId={selectedProgrammeId} />
             </Modal>
             <ConfirmActionModal
                 isOpen={deleteConfirm.open}
-                title="تأكيد الحذف"
+                title={t('det.confirmDeleteTitle')}
                 message={
                     deleteConfirm.type === 'prog'
-                        ? 'هل أنت متأكد أنك تريد حذف هذا البرنامج؟ سيتم حذف جميع البرامج الفرعية المرتبطة به.'
-                        : 'هل أنت متأكد أنك تريد حذف هذا البرنامج الفرعي؟'
+                        ? t('prog.delete_confirm_message')
+                        : t('prog.delete_sprogram_confirm_message')
                 }
                 onCancel={() => setDeleteConfirm({ open: false, type: null })}
                 onConfirm={() => {

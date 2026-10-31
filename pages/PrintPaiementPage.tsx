@@ -2,6 +2,7 @@
 import React, { useMemo } from 'react';
 import { Page } from '../types';
 import { useData } from '../context/DataContext';
+import { useLanguage } from '../context/LanguageContext';
 
 interface PrintPaiementPageProps {
     navigate: (page: Page, id?: number, tab?: string) => void;
@@ -19,6 +20,7 @@ const formatCurrency = (amount: number | null | undefined) => {
 
 const PrintPaiementPage: React.FC<PrintPaiementPageProps> = ({ navigate, paiementId }) => {
     const { db, loading } = useData();
+    const { t } = useLanguage();
 
     const printData = useMemo(() => {
         if (loading || !paiementId) return null;
@@ -136,8 +138,8 @@ const PrintPaiementPage: React.FC<PrintPaiementPageProps> = ({ navigate, paiemen
         window.print();
     };
 
-    if (loading) return <div className="p-8 text-center">جار تحميل البيانات...</div>;
-    if (!printData) return <div className="p-8 text-center text-red-500">لم يتم العثور على البيانات.</div>;
+    if (loading) return <div className="p-8 text-center">{t('loading')}</div>;
+    if (!printData) return <div className="p-8 text-center text-red-500">{t('no_data')}</div>;
 
     const { paiement, operation, contractInitialEngagement, beneficiary, direction, scategorie, categorie, lots, paiementsAnterieurs, totalPaiement } = printData;
 
@@ -165,29 +167,29 @@ const PrintPaiementPage: React.FC<PrintPaiementPageProps> = ({ navigate, paiemen
             `}</style>
             
             <div className="no-print mb-4 flex justify-between items-center bg-gray-100 p-3 rounded shadow">
-                <h2 className="text-xl font-bold">طباعة بطاقة الدفع</h2>
+                <h2 className="text-xl font-bold">{t('print.payment_card_preview')}</h2>
                 <div className="flex gap-2">
-                    <button onClick={() => navigate('OPERATION_DETAILS', operation.ID_OPERATION, `PAIEMENTS:${paiement.ID_PAIEMENT}:blue`)} className="bg-gray-600 text-white px-4 py-2 rounded">رجوع</button>
-                    <button onClick={handlePrintJS} className="bg-blue-700 text-white px-6 py-2 rounded font-bold hover:bg-blue-800 transition-colors"><i className="bi bi-printer mr-2"></i> طباعة </button>
+                    <button onClick={() => navigate('OPERATION_DETAILS', operation.ID_OPERATION, `PAIEMENTS:${paiement.ID_PAIEMENT}:blue`)} className="bg-gray-600 text-white px-4 py-2 rounded">{t('btn.back')}</button>
+                    <button onClick={handlePrintJS} className="bg-blue-700 text-white px-6 py-2 rounded font-bold hover:bg-blue-800 transition-colors"><i className="bi bi-printer mr-2"></i> {t('btn.print')} </button>
                 </div>
             </div>
 
             <div id="print-content" className="print-area bg-white mx-auto max-w-[210mm] max-h-[297mm] text-black" dir="rtl">
                 <header className="flex justify-center items-start mb-2">
                      <div className="text-center">
-                      <p className="font-bold text-lg">الجمهورية الجزائرية الديمقراطية الشعبية</p>
+                      <p className="font-bold text-lg">{t('print.header.republic')}</p>
                      </div>
                 </header>
                 <div className="flex justify-center mb-2">
-                      <p className="font-bold text-lg">بطاقة الدفع</p>
+                      <p className="font-bold text-lg">{t('print.title.payment_card')}</p>
                 </div>
                 <div className="mb-2">
                     <div className="w-full flex justify-right">
                         <div className="w-1/2">
                             <table className="w-full text-center">
                                 <tbody> 
-                                    <tr><td className="border-none text-center font-bold text-lg">عمليــات الميــزانية</td></tr>						 
-                                    <tr><td className="border border-black p-1 text-center font-bold text-lg">تحديد المسير</td></tr>
+                                    <tr><td className="border-none text-center font-bold text-lg">{t('print.label.budget_ops')}</td></tr>						 
+                                    <tr><td className="border border-black p-1 text-center font-bold text-lg">{t('print.label.manager_id')}</td></tr>
                                     <tr><td className="border border-black p-1 text-center text-lg">{direction.DIRECTION}</td></tr> 
                                 </tbody>
                             </table>
@@ -199,7 +201,7 @@ const PrintPaiementPage: React.FC<PrintPaiementPageProps> = ({ navigate, paiemen
                         <div className="w-1/2">
                             <table className="w-full border-collapse border border-black text-center">
                                  <tbody>
-                                    <tr><td className="border border-black p-1 text-lg font-bold text-center">رقم بطاقة الالتزام الأولي</td></tr>
+                                    <tr><td className="border border-black p-1 text-lg font-bold text-center">{t('print.label.initial_eng_num')}</td></tr>
                                     <tr><td className="border border-black p-2 text-lg text-center">{contractInitialEngagement.N_ENG}/{contractInitialEngagement.ANNEE}</td></tr>
                                 </tbody>
                             </table>
@@ -207,7 +209,7 @@ const PrintPaiementPage: React.FC<PrintPaiementPageProps> = ({ navigate, paiemen
                         <div className="w-1/2">
                             <table className="w-full border-collapse border border-black text-center">
                                  <tbody>
-                                    <tr><td className="border border-black p-1 text-lg font-bold text-center">رقم البطاقة</td></tr>
+                                    <tr><td className="border border-black p-1 text-lg font-bold text-center">{t('print.label.card_num')}</td></tr>
                                     <tr><td className="border border-black p-2 text-lg text-center">{paiement.N_PAI}/{paiement.ANNEE}</td></tr>
                                 </tbody>
                             </table>
@@ -218,7 +220,7 @@ const PrintPaiementPage: React.FC<PrintPaiementPageProps> = ({ navigate, paiemen
                 <div className="flex justify-center mb-2">
                     <table className="w-3/4 border-collapse border border-black text-center">
                         <tbody>
-                            <tr><td className="border border-black p-1 text-lg font-bold text-center">رقم العملية</td></tr>
+                            <tr><td className="border border-black p-1 text-lg font-bold text-center">{t('print.operation_number_cell')}</td></tr>
                             <tr><td className="border border-black p-2 text-lg font-bold text-center">{operation.N_OPERATION}</td></tr>
                         </tbody>
                     </table>
@@ -226,12 +228,12 @@ const PrintPaiementPage: React.FC<PrintPaiementPageProps> = ({ navigate, paiemen
 
 
                 <div className="text-right space-y-2 text-base mb-1">
-                    <p><span className="font-bold">عنوان العملية:</span> {operation.INT_OPERATION}</p>
-                    <p><span className="font-bold">موضوع الدفع:</span> {paiement.OBJET_PAI}</p>
+                    <p><span className="font-bold">{t('print.label.operation_title')}</span> {operation.INT_OPERATION}</p>
+                    <p><span className="font-bold">{t('print.label.payment_subject')}</span> {paiement.OBJET_PAI}</p>
                     {lots.length > 0 && lots.map(lot => (
                         <p key={lot.ID_LOT}>
                             {/^\d+$/.test(lot.N_LOT.trim()) ? (
-                                <><span className="text-sm">الحصة رقم: {lot.N_LOT}</span> {lot.INTITULE_LOT}</>
+                                <><span className="text-sm">{t('print.label.lot_num')} {lot.N_LOT}</span> {lot.INTITULE_LOT}</>
                             ) : (
                                 <span className="text-sm">{lot.INTITULE_LOT}</span>
                             )}
@@ -240,31 +242,31 @@ const PrintPaiementPage: React.FC<PrintPaiementPageProps> = ({ navigate, paiemen
                 </div>
 
                 <div className="flex justify-between items-center mb-2">
-                     <p><span className="font-bold text-sm">المستفيد:</span> {beneficiary.BENEFICIAIRE}</p>
+                     <p><span className="font-bold text-sm">{t('col.beneficiary')}:</span> {beneficiary.BENEFICIAIRE}</p>
                      <span></span>
                 </div>
                 
-                <h2 className="font-bold text-right text-lg mb-2">هيكلة الدفع المقترح :</h2>
+                <h2 className="font-bold text-right text-lg mb-2">{t('print.label.payment_structure')}</h2>
 
                 <table className="w-full border-collapse border border-black text-center mb-2 text-sm">
                     <thead className="font-bold">
                         <tr>
-                            <th className="border border-black text-center p-2 w-3/5">تفصيل الهيكلة</th>
-                            <th className="border border-black text-center p-2">المبلغ (دج)</th>
-                            <th className="border border-black text-center p-2 w-1/5">الملاحظة</th>
+                            <th className="border border-black text-center p-2 w-3/5">{t('col.structure')}</th>
+                            <th className="border border-black text-center p-2">{t('print.amount_dzd')}</th>
+                            <th className="border border-black text-center p-2 w-1/5">{t('col.observation')}</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
                             <td className="border border-black p-2 text-right h-24 align-top text-lg">
-                                {categorie && <p>الصنف: {categorie.C_CATEGORIE} {categorie.INT_CATEGORIE}</p>}
-                                {scategorie && <p className="pr-4">الصنف الفرعي: {scategorie.C_SCATEGORIE} {scategorie.INT_SCATEGORIE}</p>}
+                                {categorie && <p>{t('col.categorie')}: {categorie.C_CATEGORIE} {categorie.INT_CATEGORIE}</p>}
+                                {scategorie && <p className="pr-4">{t('col.sub_categorie')}: {scategorie.C_SCATEGORIE} {scategorie.INT_SCATEGORIE}</p>}
                             </td>
                             <td className="border border-black p-2 align-top font-bold text-lg">{formatCurrency(paiement.MONTANT_PAI)}</td>
                             <td className="border border-black p-2"></td>
                         </tr>
                         <tr className="font-bold">
-                             <td className="border border-black p-2 text-center">المجموع</td>
+                             <td className="border border-black p-2 text-center">{t('lbl.total')}</td>
                              <td className="border border-black p-2 text-lg">{formatCurrency(paiement.MONTANT_PAI)}</td>
                              <td className="border border-black p-2"></td>
                         </tr>
@@ -274,10 +276,10 @@ const PrintPaiementPage: React.FC<PrintPaiementPageProps> = ({ navigate, paiemen
                 <table className="w-full border-collapse border border-black text-center text-sm">
                      <thead className="font-bold">
                         <tr>
-                            <th className="border border-black text-center p-2">الدفع السابق (دج)</th>
-                            <th className="border border-black text-center p-2">الدفع المقترح (دج)</th>
-                            <th className="border border-black text-center p-2">مجموع الدفع (دج)</th>
-                            <th className="border border-black text-center p-2 w-1/5">الملاحظة</th>
+                            <th className="border border-black text-center p-2">{t('print.previous_payment_dzd')}</th>
+                            <th className="border border-black text-center p-2">{t('print.proposed_payment_dzd')}</th>
+                            <th className="border border-black text-center p-2">{t('print.total_payment_dzd')}</th>
+                            <th className="border border-black text-center p-2 w-1/5">{t('col.observation')}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -293,12 +295,12 @@ const PrintPaiementPage: React.FC<PrintPaiementPageProps> = ({ navigate, paiemen
                 <footer className="mt-2 text-base">
                      <div className="flex justify-between items-start">
                         <div className="border border-black p-3 space-y-3 text-right w-1/2">
-                            <p>الأمر رقم: ............ في: ........................</p>
-                            <p>قبول المصاريف في: .................................</p>
+                            <p>{t('print.label.order_num')} ............ في: ........................</p>
+                            <p>{t('print.label.accepted_at')} .................................</p>
                         </div>
                          <div className="text-center w-1/3">
-                            <p>غليزان في: ................</p>
-                            <p className="font-bold mt-2 text-lg">المـــديــــــــــر</p>
+                            <p>{t('print.relizane_in')}</p>
+                            <p className="font-bold mt-2 text-lg">{t('print.footer.director')}</p>
                         </div>
                     </div>
                 </footer>

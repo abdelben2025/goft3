@@ -2,6 +2,7 @@ import React from 'react';
 import { Piece, Database } from '../types';
 import { formatCurrency } from '../utils/currencyUtils';
 import { normalizeDate } from '../utils/dateUtils';
+import { useLanguage } from '../context/LanguageContext';
 
 interface DocumentInfoBoxProps {
     piece: Piece;
@@ -15,6 +16,7 @@ interface DocumentInfoBoxProps {
  * documents table. Extracted so both DocumentsPage and DocumentDetailsPage share it.
  */
 const DocumentInfoBox: React.FC<DocumentInfoBoxProps> = ({ piece, details, odsCalcs, db }) => {
+    const { t } = useLanguage();
     if (piece.NAT_PIECE === 'أخرى') return null;
 
     const basePieceId = details?.basePiece?.ID_PIECE || piece.ID_PIECE;
@@ -35,7 +37,7 @@ const DocumentInfoBox: React.FC<DocumentInfoBoxProps> = ({ piece, details, odsCa
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {(['ملحق', 'قرار فسخ', 'وضعية الأشغال', 'وضعية التسبيق الجزافي', 'وضعية التسبيق على التموين', 'فاتورة', 'حكم قضائي'].includes(piece.NAT_PIECE)) && details?.basePiece && (
                         <div className="col-span-1 md:col-span-2 bg-blue-50 p-2 rounded border border-blue-100">
-                            <p className="text-[9px] text-gray-500 font-bold mb-1">الوثيقة الأصلية (الصفقة/الاتفاقية):</p>
+                            <p className="text-[9px] text-gray-500 font-bold mb-1">{t('doc.original_document')}</p>
                             <p className="text-[10px] font-bold text-blue-900 leading-tight">
                                 {details.basePiece.PIECE}
                             </p>
@@ -46,26 +48,26 @@ const DocumentInfoBox: React.FC<DocumentInfoBoxProps> = ({ piece, details, odsCa
                         <>
                             <div className="col-span-1 md:col-span-2 grid grid-cols-2 gap-2 border-b pb-2">
                                 <div className="space-y-1">
-                                    <p className="text-[9px] text-gray-500 font-bold">رقم التعريف الجبائي (NIF):</p>
+                                    <p className="text-[9px] text-gray-500 font-bold">{t('doc.nif')}</p>
                                     <p className="text-[10px] font-semibold text-gray-800 text-right" dir="ltr">
                                         {details?.beneficiaire?.CODE_FISCALE || '---'}
                                     </p>
                                 </div>
                                 <div className="space-y-1">
-                                    <p className="text-[9px] text-gray-500 font-bold">رقم السجل التجاري (NRC):</p>
+                                    <p className="text-[9px] text-gray-500 font-bold">{t('doc.nrc')}</p>
                                     <p className="text-[10px] font-semibold text-gray-800 text-right" dir="ltr">
                                         {details?.beneficiaire?.RC || '---'}
                                     </p>
                                 </div>
                             </div>
                             <div className="space-y-1">
-                                <p className="text-[9px] text-gray-500 font-bold">عنوان المستفيد:</p>
+                                <p className="text-[9px] text-gray-500 font-bold">{t('doc.beneficiary_address')}</p>
                                 <p className="text-[10px] font-semibold text-gray-800 leading-tight">
                                     {details?.beneficiaire?.ADRESSE || '---'}
                                 </p>
                             </div>
                             <div className="space-y-1">
-                                <p className="text-[9px] text-gray-500 font-bold">الحساب البنكي (RIB):</p>
+                                <p className="text-[9px] text-gray-500 font-bold">{t('doc.bank_account')}</p>
                                 <div className="flex flex-wrap gap-x-2 items-center">
                                     <p className="text-[10px] font-bold text-gray-800 font-mono">
                                         {details?.compte?.RIB || '---'}
@@ -82,13 +84,13 @@ const DocumentInfoBox: React.FC<DocumentInfoBoxProps> = ({ piece, details, odsCa
 
                     {(piece.NAT_PIECE === 'صفقة' || (piece.NAT_PIECE === 'ملحق' && (piece.N_VISA_CM || piece.DATE_VISA_CM))) && (
                         <div className="space-y-1 border-t pt-2">
-                            <p className="text-[9px] text-gray-500 font-bold mb-1">تأشيرة لجنة الصفقات:</p>
+                            <p className="text-[9px] text-gray-500 font-bold mb-1">{t('doc.cm_visa')}</p>
                             <div className="bg-pink-50 p-1 rounded border border-pink-200">
                                 <p className="text-[10px] font-bold text-gray-700">
-                                    رقم: {piece.N_VISA_CM || '---'}
+                                    {t('doc.ref_num', { number: piece.N_VISA_CM || '---' })}
                                 </p>
                                 <p className="text-[9px] text-gray-500 font-semibold">
-                                    بتاريخ: {piece.DATE_VISA_CM ? normalizeDate(piece.DATE_VISA_CM) : '---'}
+                                    {t('doc.dated', { date: piece.DATE_VISA_CM ? normalizeDate(piece.DATE_VISA_CM) : '---' })}
                                 </p>
                             </div>
                         </div>
@@ -96,37 +98,37 @@ const DocumentInfoBox: React.FC<DocumentInfoBoxProps> = ({ piece, details, odsCa
 
                     {(['صفقة', 'اتفاقية', 'ملحق', 'مقرر', 'قرار فسخ', 'فاتورة','حكم قضائي'].includes(piece.NAT_PIECE)) && (
                         <div className="space-y-1 border-t pt-2">
-                            <p className="text-[9px] text-gray-500 font-bold mb-1">تأشيرة المراقب المالي:</p>
+                            <p className="text-[9px] text-gray-500 font-bold mb-1">{t('doc.cf_visa')}</p>
                             {details?.engagement ? (
                                 <div className="bg-blue-50 p-1 rounded border border-blue-200">
                                     <p className="text-[10px] font-bold text-blue-700">
-                                        رقم: {details.engagement.N_VISA_CB || '---'} في: {normalizeDate(details.engagement.DATE_VISA_CB)}
+                                        {t('doc.visa_num_date', { number: details.engagement.N_VISA_CB || '---', date: normalizeDate(details.engagement.DATE_VISA_CB) })}
                                     </p>
                                     <p className="text-[9px] text-blue-600 font-semibold">
-                                        بطاقة: {details.engagement.N_ENG}/{details.engagement.ANNEE}
+                                        {t('doc.card', { value: `${details.engagement.N_ENG}/${details.engagement.ANNEE}` })}
                                     </p>
                                 </div>
                             ) : (
-                                <p className="text-[10px] font-semibold text-red-500 italic">غير ملتزم بها بعد</p>
+                                <p className="text-[10px] font-semibold text-red-500 italic">{t('doc.not_yet_committed')}</p>
                             )}
                         </div>
                     )}
 
                     {['فاتورة', 'وضعية الأشغال', 'وضعية التسبيق الجزافي', 'وضعية التسبيق على التموين','حكم قضائي'].includes(piece.NAT_PIECE) && (
                         <div className="space-y-1 border-t pt-2">
-                            <p className="text-[9px] text-gray-500 font-bold mb-1">رقم و تاريخ الحوالة (تاريخ القبول):</p>
+                            <p className="text-[9px] text-gray-500 font-bold mb-1">{t('doc.mandate_num_date')}</p>
                             <div className="bg-green-50 p-1 rounded border border-green-100">
                                 <div className="flex justify-between items-center">
                                     <div>
                                         <p className="text-[10px] font-bold text-green-700">
-                                            {details?.paiement?.N_MANDAT ? `رقم: ${details.paiement.N_MANDAT}` : 'بدون رقم'}
+                                            {details?.paiement?.N_MANDAT ? t('doc.ref_num', { number: details.paiement.N_MANDAT }) : t('doc.no_number')}
                                         </p>
                                         <p className="text-[9px] text-green-600 font-semibold">
-                                            {details?.paiement?.DATE_MANDAT ? `بتاريخ: ${normalizeDate(details.paiement.DATE_MANDAT)}` : ''}
+                                            {details?.paiement?.DATE_MANDAT ? t('doc.dated', { date: normalizeDate(details.paiement.DATE_MANDAT) }) : ''}
                                         </p>
                                     </div>
                                     <div className="bg-white/50 px-1 py-0.5 rounded border border-green-200">
-                                        <p className="text-[8px] text-gray-500 font-bold leading-none mb-0.5">تاريخ القبول</p>
+                                        <p className="text-[8px] text-gray-500 font-bold leading-none mb-0.5">{t('doc.acceptance_date')}</p>
                                         <p className="text-[10px] font-bold text-green-800 leading-none">
                                             {details?.paiement?.DATE_ADMIS ? normalizeDate(details.paiement.DATE_ADMIS) : '---'}
                                         </p>
@@ -135,7 +137,7 @@ const DocumentInfoBox: React.FC<DocumentInfoBoxProps> = ({ piece, details, odsCa
                             </div>
                             {details && details.delayPenalty !== 0 && (
                                 <div className="mt-1 bg-red-50 p-1.5 rounded border border-red-100 flex justify-between items-center">
-                                    <p className="text-[9px] text-red-500 font-bold">عقوبة التأخير:</p>
+                                    <p className="text-[9px] text-red-500 font-bold">{t('doc.delay_penalty')}</p>
                                     <p className="text-[10px] font-black text-red-700 text-left" dir="ltr">
                                         {formatCurrency(details.delayPenalty)}
                                     </p>
@@ -150,14 +152,14 @@ const DocumentInfoBox: React.FC<DocumentInfoBoxProps> = ({ piece, details, odsCa
                         <div className="grid grid-cols-2 gap-2">
                             {details.terminationAmount !== 0 && (
                                 <div className="bg-red-50 p-1.5 rounded border border-red-100">
-                                    <p className="text-[9px] text-red-500 font-bold">مبلغ الفسخ: {formatCurrency(details.terminationAmount)}</p>
+                                    <p className="text-[9px] text-red-500 font-bold">{t('doc.termination_amount', { amount: formatCurrency(details.terminationAmount) })}</p>
                                 </div>
                             )}
                             <div className="bg-blue-50 p-1.5 rounded border border-blue-100 flex justify-between items-center">
-                                <p className="text-[9px] text-blue-500 font-bold">المبلغ الجديد: {formatCurrency(details.newTotalAmount)}</p>
+                                <p className="text-[9px] text-blue-500 font-bold">{t('doc.new_amount', { amount: formatCurrency(details.newTotalAmount) })}</p>
                                 {details.amendmentsCount > 0 && (
                                     <span className="text-[8px] bg-blue-200 text-blue-800 px-1.5 py-0.5 rounded-full font-bold">
-                                        {details.amendmentsCount} ملحق
+                                        {t('doc.amendments_count', { count: details.amendmentsCount })}
                                     </span>
                                 )}
                             </div>
@@ -165,27 +167,27 @@ const DocumentInfoBox: React.FC<DocumentInfoBoxProps> = ({ piece, details, odsCa
 
                         <div className="bg-orange-50 p-2 rounded border border-orange-100 flex justify-between items-center">
                             <div>
-                                <p className="text-[9px] text-orange-600 font-bold">إجمالي الدفع: {formatCurrency(details.totalPaid)}</p>
+                                <p className="text-[9px] text-orange-600 font-bold">{t('doc.total_paid', { amount: formatCurrency(details.totalPaid) })}</p>
                                 {details.unregisteredPaymentsAmount > 0 && (
                                     <p className="text-[8px] text-red-600 font-bold mt-0.5">
-                                        دفع غير مسجل: {formatCurrency(details.unregisteredPaymentsAmount)}
+                                        {t('doc.unregistered_payment', { amount: formatCurrency(details.unregisteredPaymentsAmount) })}
                                     </p>
                                 )}
                             </div>
                             <div className="text-right space-y-1">
                                 {details.workSituationsCount > 0 && details.totalPaid > 0 && (
                                     <span className="text-[9px] bg-orange-200 text-orange-800 px-1.5 py-0.5 rounded-full font-bold block text-center">
-                                        {details.workSituationsCount} وضعية
+                                        {t('doc.work_situations_count', { count: details.workSituationsCount })}
                                     </span>
                                 )}
                                 {details.unregisteredRelatedCount > 0 && (
-                                    <span className="text-[9px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full font-bold block text-center" title="عدد الوثائق غير المسجلة">
-                                        {details.unregisteredRelatedCount} غ. مسجلة
+                                    <span className="text-[9px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full font-bold block text-center" title={t('notif.unregistered_document_tooltip')}>
+                                        {t('doc.unregistered_short', { count: details.unregisteredRelatedCount })}
                                     </span>
                                 )}
                                 {details.delayPenalty !== 0 && (
                                     <div className="bg-red-100 text-red-700 px-1.5 py-0.5 rounded border border-red-200">
-                                        <p className="text-[8px] font-bold leading-none mb-0.5">إجمالي العقوبات</p>
+                                        <p className="text-[8px] font-bold leading-none mb-0.5">{t('doc.total_penalties')}</p>
                                         <p className="text-[9px] font-black leading-none text-left" dir="ltr">
                                             {formatCurrency(details.delayPenalty)}
                                         </p>
@@ -196,7 +198,7 @@ const DocumentInfoBox: React.FC<DocumentInfoBoxProps> = ({ piece, details, odsCa
 
                         <div className="space-y-1">
                             <div className="flex justify-between items-center">
-                                <p className="text-[9px] text-gray-500 font-bold">نسبة التقدم المالي:</p>
+                                <p className="text-[9px] text-gray-500 font-bold">{t('doc.financial_progress')}</p>
                                 <span className="text-[10px] font-bold text-gray-700">
                                     {Math.min(100, details.progressPercent).toFixed(1)}%
                                 </span>
@@ -210,7 +212,7 @@ const DocumentInfoBox: React.FC<DocumentInfoBoxProps> = ({ piece, details, odsCa
                         </div>
 
                         <div className="flex justify-between items-center border-t pt-1">
-                            <p className="text-[9px] text-gray-500 font-bold">المبلغ المتبقي:</p>
+                            <p className="text-[9px] text-gray-500 font-bold">{t('doc.remaining_amount')}</p>
                             <p className={`text-[10px] font-black ${details.remainingAmount < 0 ? 'text-red-600' : 'text-gray-700'}`} dir="ltr">
                                 {formatCurrency(details.remainingAmount)}
                             </p>
@@ -220,7 +222,7 @@ const DocumentInfoBox: React.FC<DocumentInfoBoxProps> = ({ piece, details, odsCa
                             <div className="border-t border-dashed pt-2 mt-1">
                                 <div className="bg-purple-50 p-2 rounded border border-purple-200">
                                     <div className="flex justify-between items-center mb-1">
-                                        <p className="text-[9px] text-purple-700 font-bold">تاريخ انتهاء الضمان:</p>
+                                        <p className="text-[9px] text-purple-700 font-bold">{t('doc.warranty_end_date')}</p>
                                         <span className="text-[10px] font-black text-purple-900">
                                             {normalizeDate(odsCalcs.warrantyEndDate.toISOString().split('T')[0])}
                                         </span>
@@ -229,12 +231,12 @@ const DocumentInfoBox: React.FC<DocumentInfoBoxProps> = ({ piece, details, odsCa
                                         odsCalcs.isWarrantyExpired ? (
                                             <div className="flex items-center gap-1 text-[9px] text-green-700 font-black mt-1 bg-green-100/50 px-1 rounded">
                                                 <i className="bi bi-shield-check"></i>
-                                                يمكن رفع اليد الضمان {piece.CAUTION ? `(${piece.CAUTION})` : ''}
+                                                {t('doc.can_release_guarantee')}{piece.CAUTION ? `(${piece.CAUTION})` : ''}
                                             </div>
                                         ) : (
                                             <div className="flex items-center gap-1 text-[9px] text-red-600 font-black mt-1 bg-red-100/50 px-1 rounded border border-red-200">
                                                 <i className="bi bi-exclamation-triangle"></i>
-                                                لا يمكن رفع اليد الضمان
+                                                {t('doc.cannot_release_guarantee')}
                                             </div>
                                         )
                                     )}

@@ -161,7 +161,7 @@ const PrintPaymentClaimsPage: React.FC<PrintPaymentClaimsPageProps> = ({ navigat
                         ) : (
                             <header className="flex justify-between items-center border-b pb-2 mb-6 text-sm">
                                 <span className="font-bold">{t('print.title.payment_claims')}</span>
-                                <span className="text-xs text-gray-500 font-bold">صفحة {pageIndex + 1} من {pages.length}</span>
+                                <span className="text-xs text-gray-500 font-bold">{t('print.page_of', { page: pageIndex + 1, total: pages.length })}</span>
                             </header>
                         )}
 
@@ -189,7 +189,7 @@ const PrintPaymentClaimsPage: React.FC<PrintPaymentClaimsPageProps> = ({ navigat
                                 {/* Subtotal Row for each page */}
                                 <tr className="bg-gray-100 font-bold">
                                     <td colSpan={!operationId ? 4 : 3} className="border border-black p-2 text-right">
-                                        {pages.length === 1 ? t('lbl.total_general') : `المجموع الفرعي للصفحة (${pageIndex + 1})`}
+                                        {pages.length === 1 ? t('lbl.total_general') : t('print.page_subtotal_num', { num: pageIndex + 1 })}
                                     </td>
                                     <td className="border border-black p-2 font-bold">{formatCurrency(subtotal)}</td>
                                 </tr>

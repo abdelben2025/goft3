@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { LotPiece, LotOperation } from '../../types';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface AddLotPieceFormProps {
     onClose: () => void;
@@ -23,6 +24,7 @@ const AddLotPieceForm: React.FC<AddLotPieceFormProps> = ({ onClose, onSave, piec
     const [selectedLotId, setSelectedLotId] = useState<number>(0);
     const [delaiExVal, setDelaiExVal] = useState<string>('');
     const [delaiExUnit, setDelaiExUnit] = useState<'days' | 'months'>('days');
+    const { t } = useLanguage();
 
     // Initialize fields based on initialData (Edit Mode)
     useEffect(() => {
@@ -58,7 +60,7 @@ const AddLotPieceForm: React.FC<AddLotPieceFormProps> = ({ onClose, onSave, piec
         if (isSubmitting) return;
 
         if (!selectedLotId) {
-            alert("يرجى اختيار حصة");
+            alert(t('lotpieceform.selectLotAlert'));
             return;
         }
 
@@ -81,14 +83,14 @@ const AddLotPieceForm: React.FC<AddLotPieceFormProps> = ({ onClose, onSave, piec
     return (
         <form onSubmit={handleSubmit} className="flex flex-col max-h-[85vh]">
             <div className="sticky top-0 bg-white z-10 pb-2 border-b border-gray-200 flex justify-end gap-3 pt-1 mb-2">
-                <button type="button" onClick={onClose} className="px-5 py-1.5 bg-gray-200 text-gray-800 rounded-[20px] hover:bg-gray-300 transition-colors text-sm">إلغاء</button>
+                <button type="button" onClick={onClose} className="px-5 py-1.5 bg-gray-200 text-gray-800 rounded-[20px] hover:bg-gray-300 transition-colors text-sm">{t('btn.cancel')}</button>
                 <button type="submit" disabled={isSubmitting || (availableLots.length === 0 && !initialData)} className="px-5 py-1.5 bg-blue-600 text-white rounded-[20px] hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm">
-                    {isSubmitting ? 'جاري الحفظ...' : (initialData ? 'حفظ التغييرات' : 'إضافة')}
+                    {isSubmitting ? t('lotpieceform.saving') : (initialData ? t('lotpieceform.saveChanges') : t('btn.add'))}
                 </button>
             </div>
             <div className="space-y-3 overflow-y-auto p-1 text-right">
             <div>
-                <label htmlFor="idLot" className="block text-sm font-medium text-gray-700 text-right">الحصة</label>
+                <label htmlFor="idLot" className="block text-sm font-medium text-gray-700 text-right">{t('doc.lot')}</label>
                 {availableLots.length > 0 ? (
                     <select
                         id="idLot"
@@ -104,27 +106,27 @@ const AddLotPieceForm: React.FC<AddLotPieceFormProps> = ({ onClose, onSave, piec
                         ))}
                     </select>
                 ) : (
-                    <p className="mt-2 text-gray-600">لا توجد حصص متاحة للربط في هذه العملية.</p>
+                    <p className="mt-2 text-gray-600">{t('lotpieceform.noAvailableLots')}</p>
                 )}
             </div>
             
             <div className="grid grid-cols-3 gap-2">
                 <div className="col-span-2">
-                    <label htmlFor="delaiExVal" className="block text-sm font-medium text-gray-700 text-right">مدة الإنجاز الخاصة بالحصة</label>
+                    <label htmlFor="delaiExVal" className="block text-sm font-medium text-gray-700 text-right">{t('lotpieceform.durationLabel')}</label>
                     <input 
                         id="delaiExVal" 
                         type="text" 
                         value={delaiExVal} 
                         onChange={e => setDelaiExVal(e.target.value)} 
-                        placeholder="اختياري (إذا كانت مختلفة عن الصفقة)"
+                        placeholder={t('lotpieceform.durationPlaceholder')}
                         className="w-full h-9 px-3 py-2 mt-1 text-gray-700 bg-white border border-gray-300 rounded-[20px] focus:outline-none focus:ring-2 focus:ring-blue-500" 
                     />
                 </div>
                 <div>
-                    <label htmlFor="delaiExUnit" className="block text-sm font-medium text-gray-700 text-right">الوحدة</label>
+                    <label htmlFor="delaiExUnit" className="block text-sm font-medium text-gray-700 text-right">{t('docform.unit')}</label>
                     <select id="delaiExUnit" value={delaiExUnit} onChange={e => setDelaiExUnit(e.target.value as any)} className="w-full h-9 px-1 py-1 mt-1 text-sm text-gray-700 bg-white border border-gray-300 rounded-[20px] focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="days">أيام</option>
-                        <option value="months">أشهر</option>
+                        <option value="days">{t('docform.days')}</option>
+                        <option value="months">{t('lotpieceform.months')}</option>
                     </select>
                 </div>
             </div>

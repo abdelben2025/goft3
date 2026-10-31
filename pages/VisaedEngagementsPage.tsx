@@ -5,6 +5,7 @@ import PageWrapper from '../components/PageWrapper';
 import { exportToFormattedExcel } from '../utils/exportToCsv';
 import { formatCurrency } from '../utils/currencyUtils';
 import CustomDropdown from '../components/CustomDropdown';
+import { useLanguage } from '../context/LanguageContext';
 
 interface VisaedEngagementsPageProps {
     navigate: (page: Page, operationId?: number, tab?: string) => void;
@@ -32,6 +33,7 @@ const normalizeDate = (dateStr: string | null | undefined): string => {
 
 const VisaedEngagementsPage: React.FC<VisaedEngagementsPageProps> = ({ navigate, onGoBack, currentUser }) => {
     const { db, loading } = useData();
+    const { t } = useLanguage();
     const [selectedYear, setSelectedYear] = useState(sessionStorage.getItem('goft3_selectedYear') || new Date().getFullYear().toString());
     const [selectedAction, setSelectedAction] = useState(sessionStorage.getItem('goft3_fs_action') || '');
 
@@ -158,38 +160,38 @@ const VisaedEngagementsPage: React.FC<VisaedEngagementsPageProps> = ({ navigate,
 
     const handleExport = () => {
         if (reportData.length === 0) {
-            alert('لا توجد بيانات للتصدير.');
+            alert(t('visa.no_data_to_export'));
             return;
         }
 
-        const activityName = activities.find(a => a.value === selectedAction)?.label || 'الكل';
-        const titleText = `جدول الإلتزامات المؤشرة من طرف المراقب الميزانياتي لسنة المالية ${selectedYear}`;
-        const activityText = `النشاط : ${activityName}`;
+        const activityName = activities.find(a => a.value === selectedAction)?.label || t('visa.all');
+        const titleText = t('visa.title_text', {year: selectedYear});
+        const activityText = t('visa.activity_line', {activity: activityName});
 
         const styles = `<style> table, th, td { border: 1px solid black; border-collapse: collapse; text-align: center; padding: 5px; font-family: Arial, sans-serif; vertical-align: middle; } th { background-color: #f2f2f2; font-weight: bold; } .total { background-color: #e2efd9; font-weight: bold; } td { mso-number-format:"\\@"; } .currency { mso-number-format:"\\#\\,##0\\.00"; text-align: right; } .op-title { text-align: right; } </style>`;
 
         let tableHtml = `${styles}
             <table>
                 <thead>
-                    <tr><th colspan="18" style="font-size:16px; border:none; padding:10px;">الجمهورية الجزائرية الديمقراطية الشعبية</th></tr>
-                    <tr><th colspan="18" style="font-size:14px; border:none; padding:5px; text-align: right;">وزارة الأشغال العمومية و المنشآت القاعدية</th></tr>
-                    <tr><th colspan="18" style="font-size:14px; border:none; padding:5px; text-align: right;">مديرية الأشغال العمومية</th></tr>
-                    <tr><th colspan="18" style="font-size:14px; border:none; padding:5px; text-align: right;">لولاية غليزان</th></tr>
+                    <tr><th colspan="18" style="font-size:16px; border:none; padding:10px;">${t('visa.republic')}</th></tr>
+                    <tr><th colspan="18" style="font-size:14px; border:none; padding:5px; text-align: right;">${t('visa.ministry')}</th></tr>
+                    <tr><th colspan="18" style="font-size:14px; border:none; padding:5px; text-align: right;">${t('visa.directorate')}</th></tr>
+                    <tr><th colspan="18" style="font-size:14px; border:none; padding:5px; text-align: right;">${t('visa.wilaya')}</th></tr>
                     <tr><th colspan="18" style="font-size:16px; border:none; padding:15px; font-weight:bold;">${titleText}</th></tr>
                     <tr><th colspan="18" style="font-size:14px; border:none; padding:5px; text-align: right;">${activityText}</th></tr>
                     <tr>
-                        <th rowspan="2">رقم و عنوان العملية</th>
-                        <th rowspan="2">رخصة الإلتزام النهائية</th>
-                        <th colspan="4">مبلغ الإلتزام للثلاثي الأول</th>
-                        <th colspan="4">مبلغ الإلتزام للثلاثي الثاني</th>
-                        <th colspan="4">مبلغ الإلتزام للثلاثي الثالث</th>
-                        <th colspan="4">مبلغ الإلتزام للثلاثي الرابع</th>
+                        <th rowspan="2">${t('visa.op_title_header')}</th>
+                        <th rowspan="2">${t('card.final_ae')}</th>
+                        <th colspan="4">${t('visa.q1_header')}</th>
+                        <th colspan="4">${t('visa.q2_header')}</th>
+                        <th colspan="4">${t('visa.q3_header')}</th>
+                        <th colspan="4">${t('visa.q4_header')}</th>
                     </tr>
                     <tr>
-                        <th>جانفي</th><th>فيفري</th><th>مارس</th><th>المجموع الثلاثي الأول</th>
-                        <th>أفريل</th><th>ماي</th><th>جوان</th><th>المجموع الثلاثي الثاني</th>
-                        <th>جويلية</th><th>أوت</th><th>سبتمبر</th><th>المجموع الثلاثي الثالث</th>
-                        <th>أكتوبر</th><th>نوفمبر</th><th>ديسمبر</th><th>المجموع الثلاثي الرابع</th>
+                        <th>${t('month.1')}</th><th>${t('month.2')}</th><th>${t('month.3')}</th><th>${t('visa.q1_subtotal')}</th>
+                        <th>${t('month.4')}</th><th>${t('month.5')}</th><th>${t('month.6')}</th><th>${t('visa.q2_subtotal')}</th>
+                        <th>${t('month.7')}</th><th>${t('month.8')}</th><th>${t('month.9')}</th><th>${t('visa.q3_subtotal')}</th>
+                        <th>${t('month.10')}</th><th>${t('month.11')}</th><th>${t('month.12')}</th><th>${t('visa.q4_subtotal')}</th>
                     </tr>
                 </thead>
                 <tbody>`;
@@ -223,7 +225,7 @@ const VisaedEngagementsPage: React.FC<VisaedEngagementsPageProps> = ({ navigate,
 
         if (reportTotals) {
             tableHtml += `<tr class="total">
-                <td>المجموع</td>
+                <td>${t('lbl.total')}</td>
                 <td class="currency">${formatCurrencyForExcel(reportTotals.finalAE)}</td>
                 
                 <td class="currency">${formatCurrencyForExcel(reportTotals.monthsData[0])}</td>
@@ -252,11 +254,11 @@ const VisaedEngagementsPage: React.FC<VisaedEngagementsPageProps> = ({ navigate,
         exportToFormattedExcel(tableHtml, `visaed_engagements_${selectedYear}.xls`);
     };
 
-    if (loading) return <div className="p-8 text-center text-gray-600">جار تحميل البيانات...</div>;
+    if (loading) return <div className="p-8 text-center text-gray-600">{t('visa.loading')}</div>;
 
     return (
         <PageWrapper
-            title="جدول الإلتزامات المؤشرة من طرف المراقب الميزانياتي"
+            title={t('visa.title')}
             navigate={navigate}
             onGoBack={onGoBack}
             backPage='FINANCIAL_STATUS'
@@ -265,26 +267,26 @@ const VisaedEngagementsPage: React.FC<VisaedEngagementsPageProps> = ({ navigate,
             <div className="bg-blue-100 p-4 rounded-lg shadow-md mb-6 border border-blue-200">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">السنة المالية</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('visa.fiscal_year')}</label>
                         <CustomDropdown
                             options={years.map(y => ({ value: y, label: y }))}
                             value={selectedYear}
                             onChange={setSelectedYear}
-                            placeholder="اختر السنة"
+                            placeholder={t('filter.select_year')}
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">تصفية حسب النشاط</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('filter.activity')}</label>
                         <CustomDropdown
-                            options={[{ value: '', label: 'كل النشاطات' }, ...activities]}
+                            options={[{ value: '', label: t('visa.all_activities') }, ...activities]}
                             value={selectedAction}
                             onChange={setSelectedAction}
-                            placeholder="اختر النشاط"
+                            placeholder={t('filter.select_activity')}
                         />
                     </div>
                     <div className="flex gap-2">
                         <button onClick={handleExport} disabled={reportData.length === 0} className="bg-teal-500 text-white px-4 py-2 rounded-lg shadow hover:bg-teal-600 transition-colors w-full disabled:bg-gray-400">
-                            <i className="bi bi-file-earmark-excel mr-2"></i> تصدير إلى Excel
+                            <i className="bi bi-file-earmark-excel mr-2"></i> {t('visa.export_excel')}
                         </button>
                     </div>
                 </div>
@@ -295,41 +297,41 @@ const VisaedEngagementsPage: React.FC<VisaedEngagementsPageProps> = ({ navigate,
                     <thead className="bg-gray-100 text-gray-700 sticky top-0 z-20 shadow-sm">
                         <tr>
                             <th colSpan={18} className="p-2 border border-gray-300 text-lg font-bold bg-white text-gray-800">
-                                جدول الإلتزامات المؤشرة من طرف المراقب الميزانياتي لسنة المالية {selectedYear}
+                                {t('visa.title_text', {year: selectedYear})}
                             </th>
                         </tr>
                         <tr>
-                            <th rowSpan={2} className="p-2 border border-gray-300 w-64 bg-gray-200">رقم و عنوان العملية</th>
-                            <th rowSpan={2} className="p-2 border border-gray-300 w-32 bg-gray-200">رخصة الإلتزام النهائية</th>
-                            <th colSpan={4} className="p-2 border border-gray-300 bg-blue-50">مبلغ الإلتزام للثلاثي الأول</th>
-                            <th colSpan={4} className="p-2 border border-gray-300 bg-green-50">مبلغ الإلتزام للثلاثي الثاني</th>
-                            <th colSpan={4} className="p-2 border border-gray-300 bg-yellow-50">مبلغ الإلتزام للثلاثي الثالث</th>
-                            <th colSpan={4} className="p-2 border border-gray-300 bg-purple-50">مبلغ الإلتزام للثلاثي الرابع</th>
+                            <th rowSpan={2} className="p-2 border border-gray-300 w-64 bg-gray-200">{t('visa.op_title_header')}</th>
+                            <th rowSpan={2} className="p-2 border border-gray-300 w-32 bg-gray-200">{t('card.final_ae')}</th>
+                            <th colSpan={4} className="p-2 border border-gray-300 bg-blue-50">{t('visa.q1_header')}</th>
+                            <th colSpan={4} className="p-2 border border-gray-300 bg-green-50">{t('visa.q2_header')}</th>
+                            <th colSpan={4} className="p-2 border border-gray-300 bg-yellow-50">{t('visa.q3_header')}</th>
+                            <th colSpan={4} className="p-2 border border-gray-300 bg-purple-50">{t('visa.q4_header')}</th>
                         </tr>
                         <tr>
                             {/* Q1 */}
-                            <th className="p-1 border border-gray-300 bg-blue-50 font-medium">جانفي</th>
-                            <th className="p-1 border border-gray-300 bg-blue-50 font-medium">فيفري</th>
-                            <th className="p-1 border border-gray-300 bg-blue-50 font-medium">مارس</th>
-                            <th className="p-1 border border-gray-300 bg-blue-100 font-bold">المجموع</th>
+                            <th className="p-1 border border-gray-300 bg-blue-50 font-medium">{t('month.1')}</th>
+                            <th className="p-1 border border-gray-300 bg-blue-50 font-medium">{t('month.2')}</th>
+                            <th className="p-1 border border-gray-300 bg-blue-50 font-medium">{t('month.3')}</th>
+                            <th className="p-1 border border-gray-300 bg-blue-100 font-bold">{t('lbl.total')}</th>
 
                             {/* Q2 */}
-                            <th className="p-1 border border-gray-300 bg-green-50 font-medium">أفريل</th>
-                            <th className="p-1 border border-gray-300 bg-green-50 font-medium">ماي</th>
-                            <th className="p-1 border border-gray-300 bg-green-50 font-medium">جوان</th>
-                            <th className="p-1 border border-gray-300 bg-green-100 font-bold">المجموع</th>
+                            <th className="p-1 border border-gray-300 bg-green-50 font-medium">{t('month.4')}</th>
+                            <th className="p-1 border border-gray-300 bg-green-50 font-medium">{t('month.5')}</th>
+                            <th className="p-1 border border-gray-300 bg-green-50 font-medium">{t('month.6')}</th>
+                            <th className="p-1 border border-gray-300 bg-green-100 font-bold">{t('lbl.total')}</th>
 
                             {/* Q3 */}
-                            <th className="p-1 border border-gray-300 bg-yellow-50 font-medium">جويلية</th>
-                            <th className="p-1 border border-gray-300 bg-yellow-50 font-medium">أوت</th>
-                            <th className="p-1 border border-gray-300 bg-yellow-50 font-medium">سبتمبر</th>
-                            <th className="p-1 border border-gray-300 bg-yellow-100 font-bold">المجموع</th>
+                            <th className="p-1 border border-gray-300 bg-yellow-50 font-medium">{t('month.7')}</th>
+                            <th className="p-1 border border-gray-300 bg-yellow-50 font-medium">{t('month.8')}</th>
+                            <th className="p-1 border border-gray-300 bg-yellow-50 font-medium">{t('month.9')}</th>
+                            <th className="p-1 border border-gray-300 bg-yellow-100 font-bold">{t('lbl.total')}</th>
 
                             {/* Q4 */}
-                            <th className="p-1 border border-gray-300 bg-purple-50 font-medium">أكتوبر</th>
-                            <th className="p-1 border border-gray-300 bg-purple-50 font-medium">نوفمبر</th>
-                            <th className="p-1 border border-gray-300 bg-purple-50 font-medium">ديسمبر</th>
-                            <th className="p-1 border border-gray-300 bg-purple-100 font-bold">المجموع</th>
+                            <th className="p-1 border border-gray-300 bg-purple-50 font-medium">{t('month.10')}</th>
+                            <th className="p-1 border border-gray-300 bg-purple-50 font-medium">{t('month.11')}</th>
+                            <th className="p-1 border border-gray-300 bg-purple-50 font-medium">{t('month.12')}</th>
+                            <th className="p-1 border border-gray-300 bg-purple-100 font-bold">{t('lbl.total')}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -368,14 +370,14 @@ const VisaedEngagementsPage: React.FC<VisaedEngagementsPageProps> = ({ navigate,
                         ))}
                         {reportData.length === 0 && (
                             <tr>
-                                <td colSpan={18} className="p-8 text-center text-gray-500">لا توجد بيانات لهذه السنة والنشاط.</td>
+                                <td colSpan={18} className="p-8 text-center text-gray-500">{t('visa.no_data_for_year_activity')}</td>
                             </tr>
                         )}
                     </tbody>
                     {reportTotals && (
                         <tfoot className="bg-gray-200 font-bold text-gray-900 sticky bottom-0 z-20 shadow-[0_-2px_10px_rgba(0,0,0,0.1)]">
                             <tr>
-                                <td className="p-2 border border-gray-300 text-center bg-gray-200">المجموع</td>
+                                <td className="p-2 border border-gray-300 text-center bg-gray-200">{t('lbl.total')}</td>
                                 <td className="p-2 border border-gray-300 text-right bg-gray-200">{formatCurrency(reportTotals.finalAE)}</td>
 
                                 <td className="p-2 border border-gray-300 text-right bg-gray-200">{formatCurrency(reportTotals.monthsData[0])}</td>

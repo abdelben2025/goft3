@@ -10,10 +10,12 @@ import ConfirmActionModal from '../components/ConfirmActionModal';
 import AddUserForm from '../components/forms/AddUserForm';
 import { hashPassword } from '../utils/authUtils';
 import { insertUserRow, insertCloudUser, setUserPassword, CLOUD_USER_MISSING } from '../services/authService';
+import { useLanguage } from '../context/LanguageContext';
 
 const UsersPage: React.FC<{ navigate: (page: Page) => void, onGoBack?: () => void, currentUser: User }> = ({ navigate, onGoBack, currentUser }) => {
     const { db, loading, addItem, updateItem, deleteItem, isDbConfigured, isOnline, refreshData } = useData();
     const { showToast } = useToast();
+    const { t } = useLanguage();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<User | undefined>(undefined);
     const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
@@ -21,7 +23,7 @@ const UsersPage: React.FC<{ navigate: (page: Page) => void, onGoBack?: () => voi
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
     const handleSaveUser = async (userData: Omit<User, 'ID_USER' | 'PASSWORD'> | User, plainPassword?: string) => {
-        showToast('جاري حفظ البيانات...', 'loading');
+        showToast(t('users.saving'), 'loading');
         try {
             // Cloud: the row is written first (without a hash) and the password
             // set afterwards via setUserPassword, which derives the hash
@@ -39,7 +41,7 @@ const UsersPage: React.FC<{ navigate: (page: Page) => void, onGoBack?: () => voi
                 if (cloud && plainPassword) {
                     await setUserPassword(userData, plainPassword);
                 }
-                showToast('تم تعديل المستخدم بنجاح', 'success');
+                showToast(t('users.userUpdated'), 'success');
             } else {
                 // Cloud rows must be inserted through Supabase directly: addItem
                 // falls back to the local SQLite on any error, which would hand
@@ -56,23 +58,23 @@ const UsersPage: React.FC<{ navigate: (page: Page) => void, onGoBack?: () => voi
                 if (cloud) {
                     refreshData({ silent: true }).catch(() => { /* list refreshes on next tick */ });
                 }
-                showToast('تمت إضافة المستخدم بنجاح', 'success');
+                showToast(t('users.userAdded'), 'success');
             }
             setIsModalOpen(false);
             setEditingUser(undefined);
         } catch (error: any) {
             console.error("Error saving user:", error);
             // Provide a clearer error message to the user
-            let errorMessage = "حدث خطأ أثناء حفظ المستخدم.";
+            let errorMessage = t('users.saveError');
             if (error && typeof error === 'object') {
                 if (error.code === '23505') { // Unique violation
-                    errorMessage = "اسم المستخدم موجود بالفعل.";
+                    errorMessage = t('users.usernameExists');
                 } else if (error.code === '23514') { // Check constraint violation
-                    errorMessage = "تنبيه: قاعدة البيانات ترفض إضافة دور 'ملاحظ'.\nيرجى الذهاب إلى صفحة الإعدادات -> عرض كود SQL ونسخ الكود لتحديث قاعدة البيانات.";
+                    errorMessage = t('users.roleViewerRejected');
                 } else if (error.code === CLOUD_USER_MISSING || error.message === CLOUD_USER_MISSING) {
-                    errorMessage = 'هذا المستخدم موجود في نسخة هذا الجهاز وليس في السحابة، لذلك لا يمكن حفظ كلمة مروره هناك. احذفه من القائمة ثم أضفه من جديد ليُسجّل في السحابة.';
+                    errorMessage = t('users.cloudUserMissing');
                 } else if (error.message) {
-                    errorMessage += ` التفاصيل: ${error.message}`;
+                    errorMessage += ' ' + t('users.errorDetails', { message: error.message });
                 }
             }
             showToast(errorMessage, 'error');
@@ -86,7 +88,7 @@ const UsersPage: React.FC<{ navigate: (page: Page) => void, onGoBack?: () => voi
         const userToDelete = db.T_USER.find(u => u.ID_USER === selectedUserId);
         const adminCount = db.T_USER.filter(u => u.ROLE === 'admin').length;
         if (userToDelete?.ROLE === 'admin' && adminCount <= 1) {
-            alert('لا يمكن حذف آخر مسؤول في النظام.');
+            alert(t('users.cannotDeleteLastAdmin'));
             return;
         }
         setIsDeleteConfirmOpen(true);
@@ -96,20 +98,20 @@ const UsersPage: React.FC<{ navigate: (page: Page) => void, onGoBack?: () => voi
     const confirmDeleteUser = async () => {
         setIsDeleteConfirmOpen(false);
         if (selectedUserId === null) return;
-        showToast('جاري الحذف...', 'loading');
+        showToast(t('users.deleting'), 'loading');
         try {
             await deleteItem('T_USER', selectedUserId);
-            showToast('تم حذف المستخدم بنجاح', 'success');
+            showToast(t('users.userDeleted'), 'success');
             setSelectedUserId(null);
         } catch (error) {
             console.error("Error deleting user", error);
-            showToast(`حدث خطأ أثناء حذف المستخدم — السبب: ${errorMessage(error)}`, 'error');
+            showToast(t('users.deleteError', { reason: errorMessage(error) }), 'error');
         }
     };
 
     const openAddModal = () => {
         if (loading) {
-            alert("يجب الانتظار حتى يتم تحديث النافذة");
+            alert(t('users.waitRefresh'));
             return;
         }
         setEditingUser(undefined);
@@ -119,7 +121,7 @@ const UsersPage: React.FC<{ navigate: (page: Page) => void, onGoBack?: () => voi
 
     const openEditModal = () => {
         if (loading) {
-            alert("يجب الانتظار حتى يتم تحديث النافذة");
+            alert(t('users.waitRefresh'));
             return;
         }
         if (selectedUserId === null) return;
@@ -133,15 +135,15 @@ const UsersPage: React.FC<{ navigate: (page: Page) => void, onGoBack?: () => voi
 
     const getRoleName = (role: string) => {
         switch (role) {
-            case 'admin': return 'مسؤول';
-            case 'viewer': return 'ملاحظ';
-            default: return 'مستخدم';
+            case 'admin': return t('role.admin');
+            case 'viewer': return t('role.viewer');
+            default: return t('role.user');
         }
     };
 
     return (
         <PageWrapper
-            title="إدارة المستخدمين"
+            title={t('page.users')}
             navigate={navigate}
             onGoBack={onGoBack}
             backPage="SETTINGS"
@@ -149,13 +151,13 @@ const UsersPage: React.FC<{ navigate: (page: Page) => void, onGoBack?: () => voi
             actions={
                 <div className="flex items-center gap-2">
                     <button onClick={openAddModal} className="bg-green-500 text-white px-4 py-2 rounded-lg shadow hover:bg-green-600">
-                        <i className="bi bi-plus-circle mr-2"></i> إضافة مستخدم
+                        <i className="bi bi-plus-circle mr-2"></i> {t('users.addUser')}
                     </button>
                     <button onClick={openEditModal} disabled={selectedUserId === null} className="bg-yellow-500 text-white px-4 py-2 rounded-lg shadow hover:bg-yellow-600 disabled:bg-gray-400">
-                        <i className="bi bi-pencil-fill mr-2"></i> تعديل
+                        <i className="bi bi-pencil-fill mr-2"></i> {t('btn.edit')}
                     </button>
                     <button onClick={handleDeleteUser} disabled={selectedUserId === null} className="bg-red-500 text-white px-4 py-2 rounded-lg shadow hover:bg-red-600 disabled:bg-gray-400">
-                        <i className="bi bi-trash-fill mr-2"></i> حذف
+                        <i className="bi bi-trash-fill mr-2"></i> {t('btn.delete')}
                     </button>
                 </div>
             }
@@ -164,8 +166,8 @@ const UsersPage: React.FC<{ navigate: (page: Page) => void, onGoBack?: () => voi
                 <table className="w-full text-right min-w-[600px]">
                     <thead className="bg-blue-100">
                         <tr>
-                            <th className="p-3 text-sm font-semibold text-gray-700">اسم المستخدم</th>
-                            <th className="p-3 text-sm font-semibold text-gray-700">الدور</th>
+                            <th className="p-3 text-sm font-semibold text-gray-700">{t('col.username')}</th>
+                            <th className="p-3 text-sm font-semibold text-gray-700">{t('col.role')}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -178,13 +180,13 @@ const UsersPage: React.FC<{ navigate: (page: Page) => void, onGoBack?: () => voi
                     </tbody>
                 </table>
             </div>
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingUser ? 'تعديل مستخدم' : 'إضافة مستخدم جديد'}>
+            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingUser ? t('users.editUserTitle') : t('users.addUserTitle')}>
                 <AddUserForm key={formKey} onClose={() => setIsModalOpen(false)} onSave={handleSaveUser} initialData={editingUser} />
             </Modal>
             <ConfirmActionModal
                 isOpen={isDeleteConfirmOpen}
-                title="تأكيد حذف المستخدم"
-                message="هل أنت متأكد أنك تريد حذف هذا المستخدم؟ لا يمكن التراجع عن هذا الإجراء."
+                title={t('users.confirmDeleteTitle')}
+                message={t('users.confirmDeleteMsg')}
                 onCancel={() => setIsDeleteConfirmOpen(false)}
                 onConfirm={confirmDeleteUser}
             />

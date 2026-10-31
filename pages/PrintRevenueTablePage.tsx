@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Page } from '../types';
 import { useData } from '../context/DataContext';
 import { formatCurrency, numberToArabicWords } from '../utils/currencyUtils';
+import { useLanguage } from '../context/LanguageContext';
 
 interface PrintRevenueTablePageProps {
     navigate: (page: Page, id?: number, tab?: string) => void;
@@ -10,6 +11,7 @@ interface PrintRevenueTablePageProps {
 
 const PrintRevenueTablePage: React.FC<PrintRevenueTablePageProps> = ({ navigate, paiementId }) => {
     const { db, loading } = useData();
+    const { t } = useLanguage();
 
     const printData = useMemo(() => {
         if (loading || !paiementId) return null;
@@ -55,8 +57,8 @@ const PrintRevenueTablePage: React.FC<PrintRevenueTablePageProps> = ({ navigate,
         .border-none { border: none !important; }
     `;
 
-    if (loading) return <div className="p-8 text-center">جار تحميل البيانات...</div>;
-    if (!printData) return <div className="p-8 text-center text-red-500">لم يتم العثور على البيانات.</div>;
+    if (loading) return <div className="p-8 text-center">{t('loading')}</div>;
+    if (!printData) return <div className="p-8 text-center text-red-500">{t('no_data')}</div>;
 
     const { paiement, operation, beneficiary, direction, programme, sprogramme } = printData;
     const amountToCollect = paiement.PENALITE_RETARD || paiement.MONTANT_PAI || 0;
@@ -75,28 +77,28 @@ const PrintRevenueTablePage: React.FC<PrintRevenueTablePageProps> = ({ navigate,
             `}</style>
 
             <div className="no-print mb-4 flex justify-between items-center bg-gray-100 p-3 rounded shadow max-w-[210mm] mx-auto">
-                <h2 className="text-xl font-bold">طباعة جدول إرسال أوامر الإيرادات (ملحق 05)</h2>
+                <h2 className="text-xl font-bold">{t('print.revenue_table_preview')}</h2>
                 <div className="flex gap-2">
-                    <button onClick={() => navigate('OPERATION_DETAILS', operation.ID_OPERATION, `PAIEMENTS:${paiement.ID_PAIEMENT}:blue`)} className="bg-gray-600 text-white px-4 py-2 rounded">رجوع</button>
-                    <button onClick={() => window.print()} className="bg-blue-700 text-white px-6 py-2 rounded font-bold hover:bg-blue-800 transition-colors"><i className="bi bi-printer mr-2"></i> طباعة </button>
+                    <button onClick={() => navigate('OPERATION_DETAILS', operation.ID_OPERATION, `PAIEMENTS:${paiement.ID_PAIEMENT}:blue`)} className="bg-gray-600 text-white px-4 py-2 rounded">{t('btn.back')}</button>
+                    <button onClick={() => window.print()} className="bg-blue-700 text-white px-6 py-2 rounded font-bold hover:bg-blue-800 transition-colors"><i className="bi bi-printer mr-2"></i> {t('btn.print')} </button>
                 </div>
             </div>
 
             <div id="print-content" className="print-area bg-white mx-auto max-w-[210mm] text-black">
                 <div>
-                    <span className="font-bold text-sm">الملحق رقم: 05</span>
+                    <span className="font-bold text-sm">{t('print.appendix_num', { num: '05' })}</span>
                 </div>
                 <div className="text-center">
-                    <p className="font-bold text-base">الجمهورية الجزائرية الديمقراطية الشعبية</p>
+                    <p className="font-bold text-base">{t('print.header.republic')}</p>
                     <p className="text-sm underline font-bold">REPUBLIQUE ALGERIENNE DEMOCRATIQUE ET POPULAIRE</p>
                 </div>
                 <div className="border border-black p-2 text-center text-xs w-[260px] mt-3">
                     <p className="font-bold">{direction?.DIRECTION}</p>
-                    <p className="mt-1">رمز الآمر بالصرف : {direction?.ORDONATEUR}</p>
+                    <p className="mt-1">{t('print.label.ordonnateur_code')} : {direction?.ORDONATEUR}</p>
                 </div>
 
                 <div className="text-center my-3">
-                    <h2 className="text-xl font-bold">جدول إرسال أوامر الإيرادات</h2>
+                    <h2 className="text-xl font-bold">{t('print.revenue_table_title')}</h2>
                 </div>
 
                 <table className="mb-3">
@@ -104,16 +106,16 @@ const PrintRevenueTablePage: React.FC<PrintRevenueTablePageProps> = ({ navigate,
                         <tr>
 						   
                             <td className="w-1/2 p-1.5 border border-black">
-                                <div className="flex justify-between"><span>السنة المالية : {paiement.ANNEE}</span></div>
-                                <div className="flex justify-between"><span>محفظة البرنامج : {direction?.PORTEFEUILLE || ''}</span></div>
-                                <div className="flex justify-between"><span>البرنامج : {programme?.PROGRAMME || ''}</span></div>
-                                <div className="flex justify-between"><span>البرنامج الفرعي :{sprogramme?.SPROGRAMME || ''}</span></div>
-                                <div className="flex justify-between"><span>النشاط :{direction?.ACTION || ''}</span></div>
-                                <div className="flex justify-between"><span>النشاط الفرعي :{direction?.SACTION || ''}</span></div>
+                                <div className="flex justify-between"><span>{t('print.fiscal_year', { year: paiement.ANNEE })}</span></div>
+                                <div className="flex justify-between"><span>{t('print.label.activity_portfolio')} : {direction?.PORTEFEUILLE || ''}</span></div>
+                                <div className="flex justify-between"><span>{t('print.label.program')} : {programme?.PROGRAMME || ''}</span></div>
+                                <div className="flex justify-between"><span>{t('col.sub_program')} :{sprogramme?.SPROGRAMME || ''}</span></div>
+                                <div className="flex justify-between"><span>{t('print.label.activity')} :{direction?.ACTION || ''}</span></div>
+                                <div className="flex justify-between"><span>{t('print.label.sub_activity')} :{direction?.SACTION || ''}</span></div>
                             </td>
 							<div className="text-right mr-10">
-								<p>رقم جدول الإرسال : </p>
-								<p>رقم الحساب : </p>
+								<p>{t('print.dispatch_table_num')}</p>
+								<p>{t('print.account_number')}</p>
                             </div> 
                         </tr>
                     </tbody>
@@ -122,14 +124,14 @@ const PrintRevenueTablePage: React.FC<PrintRevenueTablePageProps> = ({ navigate,
                 <table>
                     <thead>
                         <tr>
-                            <th colSpan={2} className="w-1/4 ">رقم و تاريخ الأمر بالإيراد</th>
-                            <th rowSpan={2} className="w-1/3">اسم المدينين</th>
-                            <th rowSpan={2} className="w-1/5 ">المبلغ المراد تحصيله</th>
-                            <th rowSpan={2} className="w-1/5">ملاحظات</th>
+                            <th colSpan={2} className="w-1/4 ">{t('print.order_num_date_header')}</th>
+                            <th rowSpan={2} className="w-1/3">{t('print.debtors_names')}</th>
+                            <th rowSpan={2} className="w-1/5 ">{t('print.amount_to_collect')}</th>
+                            <th rowSpan={2} className="w-1/5">{t('col.observation')}</th>
                         </tr>
                         <tr>
-                            <th>الـــرقـم</th>
-                            <th className="w-1/5">التــــاريخ</th>
+                            <th>{t('print.num_header')}</th>
+                            <th className="w-1/5">{t('col.date')}</th>
 							
 							
                         </tr>
@@ -148,21 +150,21 @@ const PrintRevenueTablePage: React.FC<PrintRevenueTablePageProps> = ({ navigate,
                         <tr>
 						    <td className=" border border-none"></td>
 							<td className=" border border-none"></td>
-                            <td className="font-bold text-left px-4">اجمالي أوامر الإيرادات</td>
+                            <td className="font-bold text-left px-4">{t('print.total_revenue_orders')}</td>
                             <td className="text-center font-bold">{formatCurrency(amountToCollect)}</td>
                            
                         </tr>
                         <tr>
 						    <td className=" border border-none"></td>
 							<td className=" border border-none"></td>
-                            <td className="font-bold text-left px-4">مجموع المبلغ السابق</td>
+                            <td className="font-bold text-left px-4">{t('print.previous_amount_total')}</td>
                             <td className="text-center"></td>
                             
                         </tr>
                         <tr>
 						    <td className=" border border-none"></td>
 							<td className=" border border-none"></td>
-                            <td className="font-bold text-left px-4">المبلغ الإجمالي</td>
+                            <td className="font-bold text-left px-4">{t('print.total_amount')}</td>
                             <td className="text-center font-black text-emerald-800">{formatCurrency(amountToCollect)}</td>
                             
                         </tr>
@@ -171,13 +173,13 @@ const PrintRevenueTablePage: React.FC<PrintRevenueTablePageProps> = ({ navigate,
 
                 <div className="mt-3 space-y-2 text-xs">
                     <p className="font-bold">
-                        يوقف الأمر بالإيراد على المبلغ : <span className="font-normal">{numberToArabicWords(amountToCollect)}</span>
+                        {t('print.stops_at_amount', { amount: numberToArabicWords(amountToCollect) })}
                     </p>
                 </div>
 
                 <div className="text-left font-bold mt-4 ml-10">
-                    <p>غليــــــزان في: </p>
-                    <p className="mt-4">الآمر بالصرف</p>
+                    <p>{t('print.relizane_in_long')}</p>
+                    <p className="mt-4">{t('print.ordonnateur_sign')}</p>
                 </div>
             </div>
         </div>

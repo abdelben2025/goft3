@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNotifications } from '../hooks/useNotifications';
 import { Page, User } from '../types';
 import { formatDate } from '../utils/dateUtils';
+import { useLanguage } from '../context/LanguageContext';
 
 interface NotificationBellProps {
     navigate: (page: Page, operationId?: number, tab?: string) => void;
@@ -10,6 +11,7 @@ interface NotificationBellProps {
 
 const NotificationBell: React.FC<NotificationBellProps> = ({ navigate, currentUser }) => {
     const notifications = useNotifications(currentUser);
+    const { t } = useLanguage();
     const [isOpen, setIsOpen] = useState(false);
     const wrapperRef = useRef<HTMLDivElement>(null);
 
@@ -136,7 +138,7 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ navigate, currentUs
                 };
             default:
                 return {
-                    label: 'تنبيه',
+                    label: t('bell.notification'),
                     icon: 'bi-bell-fill',
                     colorClass: 'bg-gray-50 hover:bg-gray-100 border-gray-100',
                     badgeClass: 'bg-gray-100 text-gray-800 border-gray-200',
@@ -147,19 +149,19 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ navigate, currentUs
 
     const getNotificationLabel = (type: string) => {
         switch(type) {
-            case 'overdue': return 'متأخر';
-            case 'financial_alert': return 'تجاوز مالي';
-            case 'unapproved_engagement': return 'التزام غير مؤشر';
-            case 'unaccepted_payment': return 'انتظار قبول الدفع';
-            case 'upcoming': return 'تنبيه استحقاق';
-            case 'overdue_service_order': return 'تأخر أمر الخدمة';
-            case 'approaching_service_order': return 'وشيك أمر الخدمة';
-            case 'missing_bordereau': return 'جدول إرسال مفقود';
-            case 'long_delays': return 'تأخير طويل';
-            case 'payment_claim_alert': return 'تنبيه دفع';
-            case 'ae_structure_insufficiency': return 'نقص اعتمادات';
-            case 'unregistered_document': return 'وثيقة غير مسجلة';
-            default: return 'تنبيه';
+            case 'overdue': return t('notif.overdue');
+            case 'financial_alert': return t('notif.financial_alert');
+            case 'unapproved_engagement': return t('notif.unapproved_engagement');
+            case 'unaccepted_payment': return t('notif.unaccepted_payment');
+            case 'upcoming': return t('bell.upcoming');
+            case 'overdue_service_order': return t('bell.overdue_service_order');
+            case 'approaching_service_order': return t('bell.approaching_service_order');
+            case 'missing_bordereau': return t('bell.missing_bordereau');
+            case 'long_delays': return t('bell.long_delays');
+            case 'payment_claim_alert': return t('bell.payment_claim_alert');
+            case 'ae_structure_insufficiency': return t('bell.ae_insufficiency');
+            case 'unregistered_document': return t('notif.unregistered_document');
+            default: return t('bell.notification');
         }
     };
 
@@ -168,7 +170,7 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ navigate, currentUs
             <button 
                 onClick={() => setIsOpen(!isOpen)} 
                 className="text-gray-500 hover:text-gray-700 transition-all p-2 rounded-full hover:bg-gray-100 focus:outline-none relative" 
-                aria-label={`لديك ${notifications.length} إشعارات`}
+                aria-label={t('bell.aria_count', { count: notifications.length })}
             >
                 {notifications.length > 0 ? (
                     <>
@@ -186,11 +188,11 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ navigate, currentUs
                     <div className="px-4 py-3 font-bold border-b text-gray-800 bg-gray-50 flex justify-between items-center">
                         <span className="flex items-center gap-2">
                              <i className="bi bi-megaphone-fill text-blue-600"></i>
-                             الإشعارات
+                             {t('bell.title')}
                         </span>
                         {notifications.length > 0 && (
                             <span className="text-xs font-normal text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">
-                                {notifications.length} إشعارات
+                                {t('bell.count', { count: notifications.length })}
                             </span>
                         )}
                     </div>
@@ -225,14 +227,14 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ navigate, currentUs
                                                         <div className="flex items-center gap-1.5 bg-white/60 px-2 py-1 rounded border border-gray-100 text-gray-600" dir="ltr">
                                                             <i className="bi bi-calendar-event text-gray-400"></i>
                                                             <span className="font-mono">{formatDate(notif.deadline)}</span>
-                                                            <span className="ml-1 text-gray-400 font-sans">:الاستحقاق</span>
+                                                            <span className="ml-1 text-gray-400 font-sans">{t('bell.deadline')}</span>
                                                         </div>
                                                     ) : (
                                                         <div />
                                                     )}
                                                     
                                                     <span className="text-blue-600 font-semibold flex items-center gap-1 group-hover:translate-x-[-4px] transition-transform">
-                                                        عرض التفاصيل
+                                                        {t('bell.view_details')}
                                                         <i className="bi bi-chevron-left small"></i>
                                                     </span>
                                                 </div>
@@ -244,13 +246,13 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ navigate, currentUs
                         ) : (
                             <div className="py-12 px-6 text-center space-y-3">
                                 <i className="bi bi-check-circle text-4xl text-gray-200"></i>
-                                <p className="text-gray-500 font-medium">لا توجد إشعارات جديدة حالياً.</p>
+                                <p className="text-gray-500 font-medium">{t('bell.empty')}</p>
                             </div>
                         )}
                     </div>
                     {notifications.length > 5 && (
                         <div className="bg-gray-50 p-2 text-center border-t">
-                            <span className="text-[10px] text-gray-400 uppercase tracking-widest">قم بالتمرير لمشاهدة المزيد</span>
+                            <span className="text-[10px] text-gray-400 uppercase tracking-widest">{t('bell.scroll_more')}</span>
                         </div>
                     )}
                 </div>

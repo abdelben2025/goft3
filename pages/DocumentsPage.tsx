@@ -43,22 +43,22 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
     const { db, loading, addItem, updateItem, deleteItem, runInTransaction, connectionError, integrityIssues, refreshData } = useData();
 
     const { showToast } = useToast();
+    const { t } = useLanguage();
     const [isRetrying, setIsRetrying] = useState<boolean>(false);
 
     const handleRetry = useCallback(async () => {
         setIsRetrying(true);
-        showToast('جاري إعادة المحاولة والاتصال بـ Supabase...', 'loading');
+        showToast(t('docalert.retrying'), 'loading');
         try {
             await refreshData();
-            showToast('تم تحديث البيانات والاتصال بنجاح', 'success');
+            showToast(t('docalert.retry_success'), 'success');
         } catch (error) {
             console.error("Retry failed:", error);
-            showToast(`فشلت محاولة الاتصال مجددًا بقاعدة البيانات — السبب: ${errorMessage(error)}`, 'error');
+            showToast(t('docalert.retry_error', { reason: errorMessage(error) }), 'error');
         } finally {
             setIsRetrying(false);
         }
-    }, [refreshData, showToast]);
-    const { t } = useLanguage();
+    }, [refreshData, showToast, t]);
     const [selectedOperationId, setSelectedOperationId] = useState<string>('');
     const [selectedPieceType, setSelectedPieceType] = useState<string>('');
     const [selectedStructureDetail, setSelectedStructureDetail] = useState<string>('');
@@ -549,7 +549,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
         }
 
         if (opId && !checkPermission(opId)) {
-            alert('ليس لديك صلاحية التعديل على هذه العملية.');
+            alert(t('det.noEditPermission'));
             return;
         }
 
@@ -557,34 +557,34 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
         if (table === 'T_PIECE') {
             const opExists = db.T_OPERATION.some(op => Number(op.ID_OPERATION) === Number(data.ID_OPERATION));
             if (!data.ID_OPERATION || !opExists) {
-                alert('خطأ في سلامة العلاقات: لا يمكن ربط الوثيقة بمهام أو عملية غير صالحة أو غير موجودة بمخزن البيانات.');
+                alert(t('docalert.fk_operation_invalid'));
                 return;
             }
             if (data.ID_BENEFICIAIRE && data.NAT_PIECE !== 'مقرر') {
                 const benExists = db.T_BENEFICIAIRE.some(b => Number(b.ID_BENEFICIAIRE) === Number(data.ID_BENEFICIAIRE));
                 if (!benExists) {
-                    alert('خطأ في سلامة العلاقات: المستفيد المحدد غير موجود في قاعدة البيانات.');
+                    alert(t('docalert.fk_beneficiary_missing'));
                     return;
                 }
             }
             if (data.ID_SCATEGORIE) {
                 const scatExists = db.T_SCATEGORIE.some(s => Number(s.ID_SCATEGORIE) === Number(data.ID_SCATEGORIE));
                 if (!scatExists) {
-                    alert('خطأ في سلامة العلاقات: الصنف الفرعي المحدد غير موجود في قاعدة البيانات.');
+                    alert(t('docalert.fk_scat_missing'));
                     return;
                 }
             }
             if (data.ID_RUBRIQUE) {
                 const rubExists = db.T_RUBRIQUE.some(r => Number(r.ID_RUBRIQUE) === Number(data.ID_RUBRIQUE));
                 if (!rubExists) {
-                    alert('خطأ في سلامة العلاقات: تفصيل الهيكلة المحدد غير موجود في قاعدة البيانات.');
+                    alert(t('docalert.fk_rubrique_missing'));
                     return;
                 }
             }
             if (data.ID_PIECE_INIT) {
                 const parentExists = db.T_PIECE.some(p => Number(p.ID_PIECE) === Number(data.ID_PIECE_INIT));
                 if (!parentExists) {
-                    alert('خطأ في سلامة العلاقات: الوثيقة الأصلية المرتبط بها غير موجودة في قاعدة البيانات.');
+                    alert(t('docalert.fk_parent_missing'));
                     return;
                 }
             }
@@ -593,12 +593,12 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
         if (table === 'T_ENGAGEMENT') {
             const opExists = db.T_OPERATION.some(op => Number(op.ID_OPERATION) === Number(data.ID_OPERATION));
             if (!data.ID_OPERATION || !opExists) {
-                alert('خطأ في سلامة العلاقات: العملية المرتبطة بالالتزام غير موجودة.');
+                alert(t('docalert.fk_eng_op_missing'));
                 return;
             }
             const pieceExists = db.T_PIECE.some(p => Number(p.ID_PIECE) === Number(data.ID_PIECE));
             if (!data.ID_PIECE || !pieceExists) {
-                alert('خطأ في سلامة العلاقات: الوثيقة المرتبطة بالالتزام غير موجودة.');
+                alert(t('docalert.fk_eng_piece_missing'));
                 return;
             }
         }
@@ -606,12 +606,12 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
         if (table === 'T_PAIEMENT') {
             const opExists = db.T_OPERATION.some(op => Number(op.ID_OPERATION) === Number(data.ID_OPERATION));
             if (!data.ID_OPERATION || !opExists) {
-                alert('خطأ في سلامة العلاقات: العملية المرتبطة بالدفع غير موجودة.');
+                alert(t('docalert.fk_pai_op_missing'));
                 return;
             }
             const pieceExists = db.T_PIECE.some(p => Number(p.ID_PIECE) === Number(data.ID_PIECE));
             if (!data.ID_PIECE || !pieceExists) {
-                alert('خطأ في سلامة العلاقات: الوثيقة المرتبطة بالدفع غير موجودة.');
+                alert(t('docalert.fk_pai_piece_missing'));
                 return;
             }
         }
@@ -619,10 +619,10 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
         try {
             if (data[idField]) {
                 await updateItem(table, data[idField], data);
-                showToast('تم التعديل بنجاح', 'success');
+                showToast(t('det.editSuccess'), 'success');
             } else {
                 const nwItem = await addItem(table, data);
-                showToast('تمت الإضافة بنجاح', 'success');
+                showToast(t('det.addSuccess'), 'success');
                 if (nwItem && table === 'T_PIECE') {
                     if (nwItem.ID_OPERATION) {
                         setSelectedOperationId(String(nwItem.ID_OPERATION));
@@ -647,7 +647,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
             }
             setModalState({ type: null });
         } catch (error) {
-            showToast(`حدث خطأ أثناء الحفظ — السبب: ${errorMessage(error)}`, 'error');
+            showToast(t('det.saveError', { reason: errorMessage(error) }), 'error');
         }
     };
 
@@ -670,7 +670,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
         }
 
         if (opId && !checkPermission(opId)) {
-            alert('ليس لديك صلاحية الحذف في هذه العملية.');
+            alert(t('docalert.no_delete_permission'));
             return;
         }
 
@@ -685,11 +685,11 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
 
         const { table, id, idField, kind } = pending;
         setIsDeleting(true);
-        showToast('جاري الحذف...', 'loading');
+        showToast(t('det.deleting'), 'loading');
         try {
             if (kind === 'orphan') {
                 await deleteItem(table, id);
-                showToast('تم حذف العنصر اليتيم وإصلاح قاعدة البيانات بنجاح', 'success');
+                showToast(t('docalert.delete_orphan_success'), 'success');
                 return;
             }
             if (kind === 'orphanAll') {
@@ -698,7 +698,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                         await deleteItem('T_ENGAGEMENT', item.id_engagement);
                     }
                 }
-                showToast('تم حذف الالتزامات اليتامى بنجاح واستعادة سلامة البيانات', 'success');
+                showToast(t('docalert.delete_all_orphan_success'), 'success');
                 return;
             }
 
@@ -720,11 +720,11 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
             } else {
                 await deleteItem(table, id);
             }
-            showToast('تم الحذف بنجاح', 'success');
+            showToast(t('det.deleteSuccess'), 'success');
             if (idField === 'ID_PIECE') setSelectedPiece(null);
         } catch (error) {
             console.error("Delete failed", error);
-            showToast(`حدث خطأ أثناء الحذف — السبب: ${errorMessage(error)}`, 'error');
+            showToast(t('det.deleteError', { reason: errorMessage(error) }), 'error');
         } finally {
             setIsDeleting(false);
         }
@@ -734,7 +734,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
         if (isViewer || isDeleting) return;
         setPendingDelete({
             table, id, idField: '', kind: 'orphan',
-            message: 'هل أنت متأكد من رغبتك في حذف هذا العنصر اليتيم لإصلاح السلامة المرجعية للداتابيز؟'
+            message: t('docalert.confirm_delete_orphan')
         });
     };
 
@@ -743,7 +743,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
         const count = integrityIssues.brokenEngagements.length;
         setPendingDelete({
             table: 'T_ENGAGEMENT', id: 0, idField: '', kind: 'orphanAll',
-            message: `هل أنت متأكد من رغبتك في حذف جميع الالتزامات اليتامى (${count}) لإعادة السلامة المرجعية؟`
+            message: t('docalert.confirm_delete_all_orphan', { count })
         });
     };
     
@@ -758,7 +758,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
 
     const handleExport = async () => {
         if (flattenedRows.length === 0) {
-            alert('لا توجد بيانات للتصدير.');
+            alert(t('op.alert_no_export_data'));
             return;
         }
 
@@ -925,14 +925,14 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
         const reader = new FileReader();
         reader.onload = async (e) => {
             try {
-                showToast('جاري استيراد البيانات...', 'loading');
+                showToast(t('op.toast_importing'), 'loading');
                 const buffer = e.target?.result as ArrayBuffer;
                 const workbook = new ExcelJS.Workbook();
                 await workbook.xlsx.load(buffer);
                 
                 const worksheet = workbook.getWorksheet(1);
                 if (!worksheet) {
-                    showToast("الملف فارغ أو بصيغة غير صحيحة", 'error');
+                    showToast(t('det.emptyInvalidFile'), 'error');
                     return;
                 }
 
@@ -956,7 +956,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                 });
 
                 if (json.length === 0) {
-                    showToast("الملف فارغ أو بصيغة غير صحيحة", 'error');
+                    showToast(t('det.emptyInvalidFile'), 'error');
                     return;
                 }
 
@@ -980,18 +980,18 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                             const montant = parseFloat(montant_str);
 
                             if (!n_operation || !piece_text || !nat_piece || isNaN(montant)) {
-                                errors.push(`السطر ${index + 2}: الحقول الأساسية (رقم العملية، موضوع، طبيعة، مبلغ) مفقودة أو غير صالحة.`);
+                                errors.push(t('docalert.import_row_missing_fields', { row: index + 2 }));
                                 errorCount++; continue;
                             }
 
                             const operation = db.T_OPERATION.find(op => op.N_OPERATION === n_operation);
                             if (!operation) {
-                                errors.push(`السطر ${index + 2}: لم يتم العثور على العملية بالرقم '${n_operation}'.`);
+                                errors.push(t('docalert.import_row_op_not_found', { row: index + 2, num: n_operation }));
                                 errorCount++; continue;
                             }
                             
                             if (operation.CREATED_BY !== currentUser.ID_USER && currentUser.ROLE !== 'admin') {
-                                errors.push(`السطر ${index + 2}: ليس لديك صلاحية إضافة وثائق للعملية '${n_operation}'.`);
+                                errors.push(t('docalert.import_row_no_permission', { row: index + 2, num: n_operation }));
                                 errorCount++; continue;
                             }
 
@@ -1024,7 +1024,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                             const existingInBatch = createdPiecesInBatch.find(checkDuplicate);
                             
                             if (existingInDB || existingInBatch) {
-                                skipped.push(`السطر ${index + 2}: الوثيقة "${piece_text}" موجودة بالفعل لهذا الارتباط. تم تخطيها.`);
+                                skipped.push(t('docalert.import_row_skipped_duplicate', { row: index + 2, name: piece_text }));
                                 skippedCount++; continue;
                             }
 
@@ -1033,7 +1033,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                             if (row['المستفيد'] && nat_piece !== 'مقرر') {
                                 const beneficiaire = db.T_BENEFICIAIRE.find(b => b.BENEFICIAIRE.trim().toLowerCase() === String(row['المستفيد']).trim().toLowerCase());
                                 if (!beneficiaire) {
-                                    errors.push(`السطر ${index + 2}: لم يتم العثور على المستفيد '${row['المستفيد']}'.`);
+                                    errors.push(t('docalert.import_row_beneficiary_not_found', { row: index + 2, name: row['المستفيد'] }));
                                     errorCount++; continue;
                                 }
                                 id_beneficiaire = beneficiaire.ID_BENEFICIAIRE;
@@ -1041,12 +1041,12 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                                 if (row['رقم الحساب']) {
                                     const compte = db.T_COMPTE_BANCAIRE.find(acc => acc.ID_BENEFICIAIRE === id_beneficiaire && acc.RIB === String(row['رقم الحساب']).trim());
                                     if (!compte) {
-                                        errors.push(`السطر ${index + 2}: لم يتم العثور على الحساب البنكي '${row['رقم الحساب']}' للمستفيد.`);
+                                        errors.push(t('docalert.import_row_account_not_found', { row: index + 2, account: row['رقم الحساب'] }));
                                         errorCount++; continue;
                                     }
                                     id_compte = compte.ID_COMPTE;
                                 } else if (db.T_COMPTE_BANCAIRE.some(acc => acc.ID_BENEFICIAIRE === id_beneficiaire)) {
-                                    errors.push(`السطر ${index + 2}: رقم الحساب مطلوب للمستفيد '${beneficiaire.BENEFICIAIRE}'.`);
+                                    errors.push(t('docalert.import_row_account_required', { row: index + 2, name: beneficiaire.BENEFICIAIRE }));
                                     errorCount++; continue;
                                 }
                             }
@@ -1055,12 +1055,12 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                             if (row['رمز الصنف الفرعي']) {
                                 const scategorie = db.T_SCATEGORIE.find(sc => sc.C_SCATEGORIE === String(row['رمز الصنف الفرعي']).trim());
                                 if (!scategorie) {
-                                    errors.push(`السطر ${index + 2}: لم يتم العثور على الصنف الفرعي بالرمز '${row['رمز الصنف الفرعي']}'.`);
+                                    errors.push(t('docalert.import_row_scat_not_found', { row: index + 2, code: row['رمز الصنف الفرعي'] }));
                                     errorCount++; continue;
                                 }
                                 id_scat = scategorie.ID_SCATEGORIE;
                             } else {
-                                errors.push(`السطر ${index + 2}: رمز الصنف الفرعي مطلوب.`);
+                                errors.push(t('docalert.import_row_scat_required', { row: index + 2 }));
                                 errorCount++; continue;
                             }
                             
@@ -1068,7 +1068,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                             if (row['تفصيل الهيكلة']) {
                                 const rubrique = db.T_RUBRIQUE.find(r => r.RUBRIQUE === row['تفصيل الهيكلة'].trim());
                                 if (!rubrique) {
-                                    errors.push(`السطر ${index + 2}: لم يتم العثور على هيكل الكلفة '${row['تفصيل الهيكلة']}'.`);
+                                    errors.push(t('docalert.import_row_rubrique_not_found', { row: index + 2, name: row['تفصيل الهيكلة'] }));
                                     errorCount++; continue;
                                 }
                                 id_rubrique = rubrique.ID_RUBRIQUE;
@@ -1096,26 +1096,26 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
 
                         } catch (innerError) {
                             console.error("Error processing row:", row, innerError);
-                            errors.push(`السطر ${index + 2}: خطأ غير متوقع أثناء المعالجة.`);
+                            errors.push(t('op.error_unexpected', { row: index + 2 }));
                             errorCount++;
                         }
                     }
                 });
 
-                let summaryMessage = `اكتمل الاستيراد.\n\n- تمت إضافة ${successCount} وثائق بنجاح.\n- تم تخطي ${skippedCount} وثائق لأنها موجودة بالفعل.\n- فشلت معالجة ${errorCount} من السجلات.`;
+                let summaryMessage = t('docalert.import_summary', { success: successCount, skipped: skippedCount, errors: errorCount });
                 const details = [...skipped, ...errors];
                 if (details.length > 0) {
-                    summaryMessage += "\n\nالتفاصيل:\n" + details.slice(0, 10).join('\n');
-                    if (details.length > 10) summaryMessage += `\n... و ${details.length - 10} ملاحظات أخرى.`
+                    summaryMessage += "\n\n" + t('docalert.import_details_label') + "\n" + details.slice(0, 10).join('\n');
+                    if (details.length > 10) summaryMessage += t('docalert.import_more_notes', { count: details.length - 10 })
                 }
                 
-                if (successCount > 0) showToast(`تم استيراد ${successCount} وثائق`, 'success');
-                else if (errorCount > 0) showToast('فشل الاستيراد، راجع التفاصيل', 'error');
+                if (successCount > 0) showToast(t('docalert.import_toast_success', { count: successCount }), 'success');
+                else if (errorCount > 0) showToast(t('op.toast_import_failed'), 'error');
 
                 alert(summaryMessage);
 
             } catch {
-                alert('فشل استيراد البيانات. يرجى التحقق من أن الملف بصيغة Excel صحيحة وأن الأعمدة مطابقة للنموذج المطلوب.');
+                alert(t('op.alert_import_error'));
             } finally {
                 if (event.target) event.target.value = '';
             }
@@ -1194,16 +1194,16 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                  {!isViewer && (
                     <>
                         <div className="h-5 w-px bg-gray-200 mx-1 self-center"></div>
-                        <button onClick={() => { if(loading) { alert("يجب الانتظار حتى يتم تحديث النافذة"); return; } setModalState({ type: 'DOCUMENT', timestamp: Date.now() }); }} className="bg-green-100 text-green-600 px-2 py-0.5 border border-green-200 rounded-[20px] shadow.md  hover:bg-green-200 transition-colors text-xs">
+                        <button onClick={() => { if(loading) { alert(t('det.waitUpdate')); return; } setModalState({ type: 'DOCUMENT', timestamp: Date.now() }); }} className="bg-green-100 text-green-600 px-2 py-0.5 border border-green-200 rounded-[20px] shadow.md  hover:bg-green-200 transition-colors text-xs">
                             <i className="bi bi-plus-circle mr-1"></i> {t('btn.add_document')}
                         </button>
                         <button 
                             onClick={() => {
-                                if(loading) { alert("يجب الانتظار حتى يتم تحديث النافذة"); return; }
+                                if(loading) { alert(t('det.waitUpdate')); return; }
                                 if(selectedPiece && checkPermission(selectedPiece.ID_OPERATION)) {
                                     setModalState({ type: 'DOCUMENT', data: selectedPiece, timestamp: Date.now() });
                                 } else {
-                                    alert('ليس لديك صلاحية التعديل.');
+                                    alert(t('docalert.no_edit_permission'));
                                 }
                             }} 
                             disabled={selectedPiece === null} 

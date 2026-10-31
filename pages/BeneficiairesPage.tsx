@@ -207,14 +207,14 @@ const BeneficiairesPage: React.FC<BeneficiairesPageProps> = ({ navigate, onGoBac
         const reader = new FileReader();
         reader.onload = async (e) => {
             try {
-                showToast('جاري استيراد البيانات...', 'loading');
+                showToast(t('op.toast_importing'), 'loading');
                 const buffer = e.target?.result as ArrayBuffer;
                 const workbook = new ExcelJS.Workbook();
                 await workbook.xlsx.load(buffer);
                 
                 const worksheet = workbook.getWorksheet(1);
                 if (!worksheet) {
-                    showToast("الملف فارغ أو بصيغة غير صحيحة", 'error');
+                    showToast(t('op.toast_file_empty_invalid'), 'error');
                     return;
                 }
 
@@ -238,7 +238,7 @@ const BeneficiairesPage: React.FC<BeneficiairesPageProps> = ({ navigate, onGoBac
                 });
 
                 if (json.length === 0) {
-                    showToast("الملف فارغ أو بصيغة غير صحيحة", 'error');
+                    showToast(t('op.toast_file_empty_invalid'), 'error');
                     return;
                 }
 
@@ -256,14 +256,14 @@ const BeneficiairesPage: React.FC<BeneficiairesPageProps> = ({ navigate, onGoBac
                             const adresse = row['العنوان']?.trim();
 
                             if (!beneficiaire || !adresse) {
-                                errors.push(`السطر ${index + 2}: الحقول المطلوبة (الإسم المستفيد, العنوان) مفقودة.`);
+                                errors.push(t('bensalert.missingFields', { row: index + 2 }));
                                 errorCount++;
                                 continue;
                             }
 
                             const existingBeneficiary = db.T_BENEFICIAIRE.find(b => b.BENEFICIAIRE.trim().toLowerCase() === beneficiaire.toLowerCase());
                             if (existingBeneficiary) {
-                                skipped.push(`السطر ${index + 2}: المستفيد '${beneficiaire}' موجود بالفعل، تم تخطيه.`);
+                                skipped.push(t('bensalert.duplicateSkipped', { row: index + 2, name: beneficiaire }));
                                 skippedCount++;
                                 continue;
                             }
@@ -287,7 +287,7 @@ const BeneficiairesPage: React.FC<BeneficiairesPageProps> = ({ navigate, onGoBac
                             }
 
                             if (!hasAccount) {
-                                errors.push(`السطر ${index + 2}: يجب توفير حساب بنكي واحد على الأقل للمستفيد '${beneficiaire}'.`);
+                                errors.push(t('bensalert.noAccount', { row: index + 2, name: beneficiaire }));
                                 errorCount++;
                                 continue;
                             }
@@ -303,27 +303,27 @@ const BeneficiairesPage: React.FC<BeneficiairesPageProps> = ({ navigate, onGoBac
                             successCount++;
                         } catch (innerError) {
                             console.error("Error processing row:", row, innerError);
-                            errors.push(`السطر ${index + 2}: خطأ غير متوقع أثناء المعالجة.`);
+                            errors.push(t('op.error_unexpected', { row: index + 2 }));
                             errorCount++;
                         }
                     }
                 });
                 
-                let summaryMessage = `اكتمل الاستيراد.\n\n- تمت إضافة ${successCount} مستفيدين جدد بنجاح.\n- تم تخطي ${skippedCount} مستفيدين لأنهم موجودون بالفعل.\n- فشلت معالجة ${errorCount} من السجلات.`;
+                let summaryMessage = t('bensalert.importSummary', { success: successCount, skipped: skippedCount, error: errorCount });
                 const details = [...skipped, ...errors];
                 if (details.length > 0) {
-                    summaryMessage += "\n\nالتفاصيل:\n" + details.slice(0, 10).join('\n');
-                    if (details.length > 10) summaryMessage += `\n... و ${details.length - 10} ملاحظات أخرى.`
+                    summaryMessage += t('bensalert.importDetailsLabel') + details.slice(0, 10).join('\n');
+                    if (details.length > 10) summaryMessage += t('bensalert.importMoreNotes', { count: details.length - 10 })
                 }
                 
-                if (successCount > 0) showToast(`تم استيراد ${successCount} مستفيدين`, 'success');
-                else if (errorCount > 0) showToast('فشل الاستيراد، راجع التفاصيل', 'error');
+                if (successCount > 0) showToast(t('bensalert.importSuccess', { count: successCount }), 'success');
+                else if (errorCount > 0) showToast(t('op.toast_import_failed'), 'error');
 
                 alert(summaryMessage);
 
             } catch (error) {
                 console.error('Failed to import data:', error);
-                showToast(`فشل استيراد البيانات — السبب: ${errorMessage(error)}`, 'error');
+                showToast(t('bensalert.importFailedReason', { reason: errorMessage(error) }), 'error');
             } finally {
                 // Reset file input
                 if (event.target) {

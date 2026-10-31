@@ -665,7 +665,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                 await syncStructureTables(remainingRubriques);
             }
         } catch (error) {
-            showToast(`حدث خطأ أثناء الحذف — السبب: ${errorMessage(error)}`, 'error');
+            showToast(t('det.deleteError', { reason: errorMessage(error) }), 'error');
         }
     };
 

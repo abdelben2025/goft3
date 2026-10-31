@@ -5,6 +5,7 @@ import { supabase, saveConfiguration, resetConfiguration, isConfigured } from '.
 import { insertUserRow, insertCloudUser } from '../services/authService';
 import { DEFAULT_ADMIN_PASSWORD_HASH } from '../utils/authUtils';
 import { tauriDb } from '../services/tauriService';
+import { useLanguage } from './LanguageContext';
 
 // Key for local storage backup
 const LOCAL_DB_KEY = 'goft3_local_backup';
@@ -187,6 +188,7 @@ const isNetworkError = (error: any): boolean => {
 };
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+    const { t } = useLanguage();
     // 1. Core State (Light tables)
     const [dbMetadata, setDbMetadata] = useState<Partial<Database>>({});
     // 2. Heavy State (Separate for better reactivity)
@@ -242,7 +244,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             pieces.forEach(p => {
                 const opExists = ops.some(op => Number(op.ID_OPERATION) === Number(p.ID_OPERATION));
                 if (!opExists) {
-                    const errMsg = `الوثيقة "${p.PIECE}" (ID: ${p.ID_PIECE}) ترتبط بعملية غير موجودة (ID_OPERATION: ${p.ID_OPERATION})`;
+                    const errMsg = t('ctxalert.integrityPieceOp', { name: p.PIECE, id: p.ID_PIECE, opId: p.ID_OPERATION });
                     console.warn(`[Data Integrity - Foreign Key Broken] ${errMsg}`);
                     issues.brokenPieces.push({
                         piece: p,
@@ -255,7 +257,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 if (p.ID_SCATEGORIE && scats.length > 0) {
                     const scatExists = scats.some(sc => Number(sc.ID_SCATEGORIE) === Number(p.ID_SCATEGORIE));
                     if (!scatExists) {
-                        const errMsg = `الوثيقة "${p.PIECE}" (ID: ${p.ID_PIECE}) ترتبط بصنف فرعي غير موجود (ID_SCATEGORIE: ${p.ID_SCATEGORIE})`;
+                        const errMsg = t('ctxalert.integrityPieceScat', { name: p.PIECE, id: p.ID_PIECE, scatId: p.ID_SCATEGORIE });
                         console.warn(`[Data Integrity - Foreign Key Broken] ${errMsg}`);
                         issues.brokenPieces.push({
                             piece: p,
@@ -269,7 +271,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 if (p.ID_RUBRIQUE && rubrics.length > 0) {
                     const rubExists = rubrics.some(rub => Number(rub.ID_RUBRIQUE) === Number(p.ID_RUBRIQUE));
                     if (!rubExists) {
-                        const errMsg = `الوثيقة "${p.PIECE}" (ID: ${p.ID_PIECE}) ترتبط بتفصيل هيكلة غير موجود (ID_RUBRIQUE: ${p.ID_RUBRIQUE})`;
+                        const errMsg = t('ctxalert.integrityPieceRubrique', { name: p.PIECE, id: p.ID_PIECE, rubId: p.ID_RUBRIQUE });
                         console.warn(`[Data Integrity - Foreign Key Broken] ${errMsg}`);
                         issues.brokenPieces.push({
                             piece: p,
@@ -287,7 +289,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             engs.forEach(e => {
                 const pExists = pieces.some(p => Number(p.ID_PIECE) === Number(e.ID_PIECE));
                 if (!pExists) {
-                    const errMsg = `الالتزام رقم "${e.N_ENG}" (ID: ${e.ID_ENGAGEMENT}) يرتبط بوثيقة غير موجودة (ID_PIECE: ${e.ID_PIECE})`;
+                    const errMsg = t('ctxalert.integrityEngPiece', { num: e.N_ENG, id: e.ID_ENGAGEMENT, pieceId: e.ID_PIECE });
                     console.warn(`[Data Integrity - Foreign Key Broken] ${errMsg}`);
                     issues.brokenEngagements.push({
                         engagement: e,
@@ -300,7 +302,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
                 const opExists = ops.some(op => Number(op.ID_OPERATION) === Number(e.ID_OPERATION));
                 if (!opExists) {
-                    const errMsg = `الالتزام رقم "${e.N_ENG}" (ID: ${e.ID_ENGAGEMENT}) يرتبط بعملية غير موجودة (ID_OPERATION: ${e.ID_OPERATION})`;
+                    const errMsg = t('ctxalert.integrityEngOp', { num: e.N_ENG, id: e.ID_ENGAGEMENT, opId: e.ID_OPERATION });
                     console.warn(`[Data Integrity - Foreign Key Broken] ${errMsg}`);
                     issues.brokenEngagements.push({
                         engagement: e,
@@ -318,7 +320,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             pais.forEach(pai => {
                 const pExists = pieces.some(p => Number(p.ID_PIECE) === Number(pai.ID_PIECE));
                 if (!pExists) {
-                    const errMsg = `الدفع رقم "${pai.N_PAI}" (ID: ${pai.ID_PAIEMENT}) يرتبط بوثيقة غير موجودة (ID_PIECE: ${pai.ID_PIECE})`;
+                    const errMsg = t('ctxalert.integrityPaiPiece', { num: pai.N_PAI, id: pai.ID_PAIEMENT, pieceId: pai.ID_PIECE });
                     console.warn(`[Data Integrity - Foreign Key Broken] ${errMsg}`);
                     issues.brokenPaiements.push({
                         paiement: pai,
@@ -331,7 +333,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
                 const opExists = ops.some(op => Number(op.ID_OPERATION) === Number(pai.ID_OPERATION));
                 if (!opExists) {
-                    const errMsg = `الدفع رقم "${pai.N_PAI}" (ID: ${pai.ID_PAIEMENT}) يرتبط بعملية غير موجودة (ID_OPERATION: ${pai.ID_OPERATION})`;
+                    const errMsg = t('ctxalert.integrityPaiOp', { num: pai.N_PAI, id: pai.ID_PAIEMENT, opId: pai.ID_OPERATION });
                     console.warn(`[Data Integrity - Foreign Key Broken] ${errMsg}`);
                     issues.brokenPaiements.push({
                         paiement: pai,
@@ -373,7 +375,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             return issues;
         });
         return issues;
-    }, []);
+    }, [t]);
 
 
     const [loading, setLoading] = useState<boolean>(true);
@@ -616,7 +618,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 });
 
                 if (errors.length > 0) {
-                    setConnectionError(`خطأ في تحميل بعض الجداول: ${errors.map(e => TABLE_AR_NAMES[e] || e).join(', ')}`);
+                    setConnectionError(t('ctxalert.loadTablesError', { tables: errors.map(e => TABLE_AR_NAMES[e] || e).join(', ') }));
                     if (isInitialLoad) {
                         if (tauriDb.isAvailable()) {
                             try {
@@ -682,7 +684,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 }
             } catch (e) {
                 console.error("Supabase fetch failed, falling back to local storage", e);
-                setConnectionError("تعذر الاتصال بالخادم السحابي. جاري التحويل إلى القاعدة المحلية...");
+                setConnectionError(t('ctxalert.cloudUnreachableLocal'));
                 refreshStatus = { ok: false, source: 'local', mirrored: false };
                 if (tauriDb.isAvailable()) {
                     try {
@@ -736,14 +738,14 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
         // Supabase configured but offline and no local SQLite
         try {
-            setConnectionError("لا يوجد اتصال بالإنترنت. جاري التحميل من النسخة الاحتياطية المحلية...");
+            setConnectionError(t('ctxalert.offlineBackupLoading'));
             loadFromBackup();
         } finally {
             setLoading(false);
             setIsInitialLoad(false);
         }
         return { ok: false, source: 'backup' as const, mirrored: false };
-    }, [isInitialLoad, saveToBackup, loadFromBackup, applyDbToState, mirrorDbToSqlite, isOnline, validateDatabaseIntegrity]);
+    }, [isInitialLoad, saveToBackup, loadFromBackup, applyDbToState, mirrorDbToSqlite, isOnline, validateDatabaseIntegrity, t]);
 
 
     const syncData = useCallback(async () => {
@@ -814,7 +816,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                     console.error("Sync failed for action:", action, e);
                     if (isNetworkError(e)) {
                         setIsOnline(false);
-                        setConnectionError("تعذر الاتصال بالسيرفر أثناء المزامنة. سيتم المحاولة لاحقاً عند استعادة الاتصال.");
+                        setConnectionError(t('ctxalert.syncServerUnreachable'));
                         // Stop syncing on connection error to preserve order
                         break; 
                     } else {
@@ -836,7 +838,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         } finally {
             syncInProgress.current = false;
         }
-    }, [pendingActions, refreshData]);
+    }, [pendingActions, refreshData, t]);
 
     // Initial Load: hydrate from local/cache first, then refresh cloud in background
     useEffect(() => {
@@ -903,7 +905,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         };
         const handleOffline = () => {
             setIsOnline(false);
-            setConnectionError("لا يوجد اتصال بالإنترنت. جاري التحويل التلقائي إلى القاعدة المحلية (SQLite).");
+            setConnectionError(t('ctxalert.offlineAutoSwitch'));
             // Snapshot the latest cloud state into local SQLite before working offline
             if (tauriDb.isAvailable() && dbRef.current && storageModeRef.current === 'supabase') {
                 mirrorDbToSqlite(dbRef.current);
@@ -917,7 +919,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             window.removeEventListener('online', handleOnline);
             window.removeEventListener('offline', handleOffline);
         };
-    }, [syncData, mirrorDbToSqlite]);
+    }, [syncData, mirrorDbToSqlite, t]);
 
     // Automatically trigger Sync when transitioning online or when pending actions are loaded on mount
     useEffect(() => {
@@ -1470,7 +1472,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 if (isNetworkError(err)) {
                     console.warn("Network error during addItem, falling back to local SQLite:", err);
                     setIsOnline(false);
-                    setConnectionError("تعذر الاتصال بالسيرفر. تم الحفظ محلياً وسيتم مزامنتها تلقائياً عند استعادة الاتصال.");
+                    setConnectionError(t('ctxalert.networkSavedLocal'));
                 } else {
                     console.error("Supabase addItem failed, falling back to local storage:", err);
                 }
@@ -1591,7 +1593,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 if (isNetworkError(err)) {
                     console.warn("Network error during updateItem, falling back to local SQLite:", err);
                     setIsOnline(false);
-                    setConnectionError("تعذر الاتصال بالسيرفر. تم التعديل محلياً وسيتم مزامنتها تلقائياً عند استعادة الاتصال.");
+                    setConnectionError(t('ctxalert.networkUpdatedLocal'));
                 } else {
                     console.error("Supabase updateItem failed, falling back to local storage:", err);
                 }
@@ -1828,7 +1830,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 if (isNetworkError(err)) {
                     console.warn("Network error during deleteItem, falling back to local SQLite:", err);
                     setIsOnline(false);
-                    setConnectionError("تعذر الاتصال بالسيرفر. تم الحذف محلياً وسيتم مزامنتها تلقائياً عند استعادة الاتصال.");
+                    setConnectionError(t('ctxalert.networkDeletedLocal'));
                 } else {
                     console.error("Supabase deleteItem failed, falling back to local storage:", err);
                 }
@@ -1983,7 +1985,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 if (isNetworkError(err)) {
                     console.warn("Network error during deleteOperation, falling back to local SQLite:", err);
                     setIsOnline(false);
-                    setConnectionError("تعذر الاتصال بالسيرفر. تم الحذف محلياً وسيتم مزامنتها تلقائياً عند استعادة الاتصال.");
+                    setConnectionError(t('ctxalert.networkDeletedLocal'));
                 } else {
                     console.error("Supabase deleteOperation failed, falling back to local storage:", err);
                 }
@@ -2010,7 +2012,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const resetDatabase = async () => {
         // ── Priority 1: Supabase cloud reset when online ──
         if (supabase && isOnline) {
-            if (!window.confirm('تحذير: هذا الإجراء سيحذف جميع البيانات من قاعدة البيانات السحابية. هل أنت متأكد؟')) return;
+            if (!window.confirm(t('ctxalert.resetDbConfirm'))) return;
             // Capture the narrowed client: the closure below loses the narrowing.
             const sb = supabase;
             isBatchMode.current = true;
@@ -2060,13 +2062,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             return;
         }
 
-        alert("لا يمكن مسح قاعدة البيانات في وضع عدم الاتصال.");
+        alert(t('ctxalert.resetOfflineFail'));
     };
 
     const importDatabase = async (importedDb: Database) => {
         // ── Priority 1: Supabase cloud import when online ──
         if (supabase && isOnline) {
-            if (!window.confirm('استيراد قاعدة بيانات جديدة سيحذف البيانات الحالية من السحابة. هل أنت متأكد؟')) return;
+            if (!window.confirm(t('ctxalert.importConfirm'))) return;
 
             isBatchMode.current = true;
             setLoading(true);
@@ -2161,11 +2163,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                     }
                 }
                 broadcastEvent('import', 'قاعدة بيانات كاملة من ملف');
-                alert('تم استيراد البيانات بنجاح إلى السحابة!');
+                alert(t('ctxalert.importSuccess'));
             } catch (e) {
                 console.error("Import failed:", e);
                 const detail = e instanceof Error ? e.message : String(e);
-                alert(`فشل استيراد البيانات.\n${detail}`);
+                alert(t('ctxalert.importFailed', { detail }));
             } finally {
                 isBatchMode.current = false;
                 await refreshData();
@@ -2185,7 +2187,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             return;
         }
 
-        alert("لا يمكن استيراد قاعدة البيانات في وضع عدم الاتصال.");
+        alert(t('ctxalert.importOfflineFail'));
     };
 
 

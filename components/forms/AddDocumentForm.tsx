@@ -405,10 +405,10 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
         const amount = parseCurrency(montantPieceStr);
         if (amount > 0) {
             if (natPiece === 'صفقة' && amount < 12000000) {
-                setPieceValidationMessage('بالنسبة للصفقات، يجب أن يكون المبلغ مساوٍ أو يفوق 12,000,000 دج.');
+                setPieceValidationMessage(t('docformalert.validation_safqa_min'));
                 return;
             } else if (natPiece === 'اتفاقية' && amount >= 12000000) {
-                setPieceValidationMessage('بالنسبة للاتفاقيات، يجب أن يكون المبلغ أقل من 12,000,000 دج.');
+                setPieceValidationMessage(t('docformalert.validation_agreement_max'));
                 return;
             }
 
@@ -430,7 +430,7 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
                 const remainingCP = Math.max(0, totalCP - consumedCP);
                 
                 if (amount > remainingCP + 0.01) {
-                    setPieceValidationMessage(`تنبيه: المبلغ يتجاوز باقي إعتمادات الدفع (CP) الإجمالية لهذه العملية (${formatCurrency(remainingCP)} دج).`);
+                    setPieceValidationMessage(t('docformalert.validation_cp_exceeded', { amount: formatCurrency(remainingCP) }));
                     setPieceValidationType('warning');
                 }
             }
@@ -464,7 +464,7 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
                         const totalLotLimit = associatedLots.reduce((sum, l) => sum + (l.MONTANT_FINALE_LOT || l.MONTANT_INITIALE_LOT), 0);
 
                         if (totalWithCurrent > totalLotLimit + 0.01) {
-                            setPieceValidationMessage('تنبيه: يجب اعادة هيكلة الكلفة للحصة (مبلغ الصفقة + الملاحق يتجاوز الغلاف المالي للحصة/الحصص المرتبطة).');
+                            setPieceValidationMessage(t('docformalert.validation_lot_limit'));
                             setPieceValidationType('warning');
                         }
                     }
@@ -485,13 +485,13 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
                     releaseAllowedDate.setFullYear(releaseAllowedDate.getFullYear() + 1);
 
                     if (today < releaseAllowedDate) {
-                        setPieceValidationMessage(`لا يمكن رفع اليد عن الضمان: يجب مرور سنة و يوم واحد على الأقل من تاريخ الاستلام المؤقت (${normalizeDate(closingOds.DATE_ODS)}). التاريخ المسموح به هو: ${normalizeDate(releaseAllowedDate.toISOString().split('T')[0])}`);
+                        setPieceValidationMessage(t('docformalert.validation_release_date', { received: normalizeDate(closingOds.DATE_ODS), allowed: normalizeDate(releaseAllowedDate.toISOString().split('T')[0]) }));
                         setPieceValidationType('error');
                         return;
                     }
                 }
             } else {
-                setPieceValidationMessage('لا يمكن رفع اليد عن الضمان: لم يتم العثور على أمر ختام (محضر استلام مؤقت) للوثيقة الأصلية.');
+                setPieceValidationMessage(t('docformalert.validation_release_no_closure'));
                 setPieceValidationType('error');
                 return;
             }
@@ -518,7 +518,7 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
                 const totalCumulative = previousPaymentsAmount + amount;
 
                 if (totalCumulative > totalContractAmount + 0.01) {
-                    setPieceValidationMessage(`تنبيه: مبلغ الوضعية + الدفوعات السابقة (${formatCurrency(totalCumulative)} دج) يفوق مبلغ الجديد للصفقة (${formatCurrency(totalContractAmount)} دج).`);
+                    setPieceValidationMessage(t('docformalert.validation_work_total_exceeds', { total: formatCurrency(totalCumulative), contract: formatCurrency(totalContractAmount) }));
                     setPieceValidationType('warning');
                 }
             }
@@ -543,11 +543,11 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
                 if (allSafqaStatements.length > 0) {
                     const maxSafqaNumber = Math.max(...allSafqaStatements.map(p => p.parsed.number!));
                     if (current.number <= maxSafqaNumber) {
-                        setPieceValidationMessage(`تنبيه: رقم الوضعية (${current.number}) يجب أن يكون أكبر من أكبر ترقيم سابق في هذه الصفقة (${maxSafqaNumber}).`);
+                        setPieceValidationMessage(t('docformalert.validation_seq_number', { number: current.number, max: maxSafqaNumber }));
                         setPieceValidationType('warning');
                     }
                 } else if (current.number !== 1) {
-                    setPieceValidationMessage('تنبيه: يجب أن يكون رقم الوضعية 01 لعدم وجود وضعيات سابقة لهذه الصفقة.');
+                    setPieceValidationMessage(t('docformalert.validation_first_statement'));
                     setPieceValidationType('warning');
                 }
             }
@@ -567,7 +567,7 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
                 const latestPrevious = previousStatements[0];
                 if (current.number !== null) {
                     if (current.number !== latestPrevious.parsed.number! + 1) {
-                        setPieceValidationMessage(`تنبيه: خطأ في التسلسل لهذا المستفيد. الرقم المتوقع هو ${latestPrevious.parsed.number! + 1}.`);
+                        setPieceValidationMessage(t('docformalert.validation_seq_beneficiary', { expected: latestPrevious.parsed.number! + 1 }));
                         setPieceValidationType('warning');
                     }
                 }
@@ -576,7 +576,7 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
                     const isSameDateAllowed = (current.date.getTime() === latestPrevious.parsed.date.getTime());
 
                     if (current.date < latestPrevious.parsed.date) {
-                        setPieceValidationMessage(`تنبيه: تاريخ الوضعية يجب أن يكون مساوٍ أو بعد تاريخ الوضعية السابقة (${latestPrevious.parsed.dateStr}).`);
+                        setPieceValidationMessage(t('docformalert.validation_date_before_previous', { date: latestPrevious.parsed.dateStr ?? '' }));
                         setPieceValidationType('warning');
                     }
 
@@ -596,7 +596,7 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
                     );
 
                     if (!isSameDateAllowed && !hasClosingDocs && current.date.getMonth() === latestPrevious.parsed.date.getMonth() && current.date.getFullYear() === latestPrevious.parsed.date.getFullYear()) {
-                        setPieceValidationMessage('تنبيه: لا ينصح بإنشاء وضعيتي أشغال لنفس المستفيد في نفس الشهر (إلا في حالة الوضعية الختامية بنفس تاريخ الاستلام أو وجود ملحق ضبط الكميات النهائية/محضر استلام مؤقت).');
+                        setPieceValidationMessage(t('docformalert.validation_same_month'));
                         setPieceValidationType('warning');
                     }
                 }
@@ -659,7 +659,7 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
                         const isHandoverDate = closingOds && currentDate.getTime() === closingOds.parsedDate!.getTime();
 
                         if (isPausedOnDocDate && !isHandoverDate) {
-                            setPieceValidationMessage('تنبيه: تاريخ وضعية الأشغال داخل فترة توقف الأشغال.');
+                            setPieceValidationMessage(t('docformalert.validation_paused'));
                             setPieceValidationType('warning');
                         }
 
@@ -692,7 +692,7 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
                         }
 
                         if (currentConsumed > durationAllowed) {
-                            setPieceValidationMessage(`تنبيه: تاريخ وضعية الأشغال (${current.dateStr}) خارج مدة الإنجاز (مدة الاستهلاك: ${currentConsumed} يوم من أصل ${durationAllowed} يوم).`);
+                            setPieceValidationMessage(t('docformalert.validation_outside_duration', { date: current.dateStr ?? '', consumed: currentConsumed, allowed: durationAllowed }));
                             setPieceValidationType('warning');
                         }
                     }
@@ -700,7 +700,7 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
             }
         }
     }
-}, [piece, natPiece, idPieceInit, idBeneficiaire, pieces, initialData, ods, beneficiaires, montantPieceStr, idOperation, idRubrique, rubriqueOps, engagements, cps, paiements, lots, lotPieces, saiPai]);
+}, [piece, natPiece, idPieceInit, idBeneficiaire, pieces, initialData, ods, beneficiaires, montantPieceStr, idOperation, idRubrique, rubriqueOps, engagements, cps, paiements, lots, lotPieces, saiPai, t]);
 
     const handleNatPieceChange = (newNatPiece: string) => {
         setNatPiece(newNatPiece);
@@ -819,15 +819,15 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
         if (idPieceInit) {
             const parentPiece = pieces.find(p => p.ID_PIECE === idPieceInit);
             if (!parentPiece) {
-                alert("الوثيقة الأصلية المحددة غير موجودة.");
+                alert(t('docformalert.parent_missing'));
                 return;
             }
             if (parentPiece.ID_OPERATION !== Number(idOperation)) {
-                alert("خطأ: الوثيقة الأصلية المحددة لا تنتمي لنفس العملية.");
+                alert(t('docformalert.parent_wrong_operation'));
                 return;
             }
             if (parentPiece.ID_BENEFICIAIRE !== idBeneficiaire && natPiece !== 'مقرر') {
-                alert("خطأ: مستفيد هذه الوثيقة يجب أن يطابق مستفيد الوثيقة الأصلية المحددة.");
+                alert(t('docformalert.beneficiary_mismatch'));
                 return;
             }
         }
@@ -837,29 +837,29 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
             isValidPrefix = piece.trim().startsWith('قرار فسخ') || piece.trim().startsWith('قرار الفسخ');
         }
         if (natPiece !== 'أخرى' && piece.trim() && !isValidPrefix) {
-            alert(`يجب أن يبدأ موضوع الوثيقة بكلمة "${natPiece === 'قرار فسخ' ? 'قرار فسخ أو قرار الفسخ' : natPiece}"`);
+            alert(t('docformalert.subject_must_start', { term: natPiece === 'قرار فسخ' ? 'قرار فسخ أو قرار الفسخ' : natPiece }));
             return;
         }
 
         if (!idOperation) {
             if (operations.length > 0) {
-                alert("يرجى اختيار عملية.");
+                alert(t('docformalert.select_operation'));
             } else {
-                alert("لا توجد عمليات مسجلة. يرجى إضافة عملية أولاً قبل إضافة وثيقة.");
+                alert(t('docformalert.no_operations'));
             }
             return;
         }
 
         const opExists = operations.some(op => Number(op.ID_OPERATION) === Number(idOperation));
         if (!opExists) {
-            alert("خطأ في سلامة العلاقات: العملية المحددة غير موجودة في قاعدة البيانات.");
+            alert(t('docformalert.fk_operation_missing'));
             return;
         }
 
         if (idBeneficiaire && natPiece !== 'مقرر') {
             const benExists = beneficiaires.some(b => Number(b.ID_BENEFICIAIRE) === Number(idBeneficiaire));
             if (!benExists) {
-                alert("خطأ في سلامة العلاقات: المستفيد المحدد غير موجود في قاعدة البيانات.");
+                alert(t('docformalert.fk_beneficiary_missing'));
                 return;
             }
         }
@@ -867,7 +867,7 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
         if (idScat) {
             const scatExists = scategories.some(sc => Number(sc.ID_SCATEGORIE) === Number(idScat));
             if (!scatExists) {
-                alert("خطأ في سلامة العلاقات: الصنف الفرعي المحدد غير موجود في قاعدة البيانات.");
+                alert(t('docformalert.fk_scat_missing'));
                 return;
             }
         }
@@ -875,7 +875,7 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
         if (idRubrique) {
             const rubExists = rubriques.some(rub => Number(rub.ID_RUBRIQUE) === Number(idRubrique));
             if (!rubExists) {
-                alert("خطأ في سلامة العلاقات: تفصيل الهيكلة المحدد غير موجود في قاعدة البيانات.");
+                alert(t('docformalert.fk_rubrique_missing'));
                 return;
             }
         }
@@ -890,7 +890,7 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
             );
 
             if (duplicate) {
-                alert(`خطأ: توجد وثيقة من نوع "${natPiece}" بنفس الاسم أو الرقم (${normalizedPieceName}) مسجلة بالفعل بالجدول.`);
+                alert(t('docformalert.duplicate_table', { nature: natPiece, name: normalizedPieceName }));
                 return;
             }
         }
@@ -905,7 +905,7 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
             );
 
             if (duplicate) {
-                alert(`خطأ: توجد وثيقة من نوع "${natPiece}" بنفس الاسم أو الرقم (${normalizedPieceName}) مسجلة بالفعل في هذه العملية.`);
+                alert(t('docformalert.duplicate_operation', { nature: natPiece, name: normalizedPieceName }));
                 return;
             }
         }
@@ -913,17 +913,17 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
         const montantPiece = parseCurrency(montantPieceStr);
 
         if (natPiece !== 'مقرر' && natPiece !== 'رفع اليد عن الضمان' && idBeneficiaire && availableAccounts.length > 0 && !idCompte) {
-            alert("يرجى اختيار حساب بنكي للمستفيد.");
+            alert(t('docformalert.select_bank_account'));
             return;
         }
         if (!idScat) {
-            alert("يرجى تحديد الصنف الفرعي.");
+            alert(t('docformalert.select_subcategory'));
             return;
         }
 
         if (natPieceRequiresRubrique) {
             if (!idRubrique) {
-                alert("يرجى تحديد تفصيل الهيكلة لهذه الوثيقة.");
+                alert(t('docformalert.select_structure'));
                 return;
             }
         }

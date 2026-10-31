@@ -58,27 +58,27 @@ const DocumentDetailsPage: React.FC<DocumentDetailsPageProps> = ({ navigate, cur
         try {
             if (data[idField]) {
                 await updateItem(table, data[idField], data);
-                showToast('تم التعديل بنجاح', 'success');
+                showToast(t('det.editSuccess'), 'success');
             } else {
                 await addItem(table, data);
-                showToast('تمت الإضافة بنجاح', 'success');
+                showToast(t('det.addSuccess'), 'success');
             }
             setModalState({ type: null });
         } catch (error) {
-            showToast(`حدث خطأ أثناء الحفظ — السبب: ${errorMessage(error)}`, 'error');
+            showToast(t('det.saveError', { reason: errorMessage(error) }), 'error');
         }
-    }, [addItem, updateItem, showToast]);
+    }, [addItem, updateItem, showToast, t]);
 
     const handleSaveLotPiece = useCallback(async (data: any) => {
         if (!piece) return;
         if (!checkPermission(piece.ID_OPERATION)) {
-            alert('ليس لديك صلاحية التعديل على هذه العملية.');
+            alert(t('det.noEditPermission'));
             return;
         }
         if (data.ID_LOT) {
             const existingLink = db.T_LOT_PIECE.find(lp => lp.ID_LOT === data.ID_LOT && lp.ID_LOT_PIECE !== data.ID_LOT_PIECE);
             if (existingLink) {
-                alert('هذه الحصة مرتبطة بالفعل بوثيقة أخرى أو بنفس الوثيقة.');
+                alert(t('docsalert.lotAlreadyLinked'));
                 return;
             }
         }
@@ -91,41 +91,41 @@ const DocumentDetailsPage: React.FC<DocumentDetailsPageProps> = ({ navigate, cur
                 }
             }
         } catch (error) {
-            showToast(`حدث خطأ أثناء ربط الحصة — السبب: ${errorMessage(error)}`, 'error');
+            showToast(t('docsalert.linkLotError', { reason: errorMessage(error) }), 'error');
         }
-    }, [piece, checkPermission, handleSaveTable, db.T_LOT_PIECE, db.T_LOT_OPERATION, updateItem, showToast]);
+    }, [piece, checkPermission, handleSaveTable, db.T_LOT_PIECE, db.T_LOT_OPERATION, updateItem, showToast, t]);
 
     const handleAddLot = useCallback(() => {
         if (!piece) return;
-        if (loading) { alert('يجب الانتظار حتى يتم تحديث النافذة'); return; }
+        if (loading) { alert(t('det.waitUpdate')); return; }
         if (!['صفقة', 'اتفاقية', 'فاتورة'].includes(piece.NAT_PIECE)) {
-            alert('عذراً، يمكن ربط الحصص فقط بـ "صفقة" أو "اتفاقية" أو "فاتورة".');
+            alert(t('docsalert.lotsOnlyContract'));
             return;
         }
         if (checkPermission(piece.ID_OPERATION)) {
             setModalState({ type: 'LOT_PIECE', timestamp: Date.now() });
         } else {
-            alert('ليس لديك صلاحية الإضافة.');
+            alert(t('docsalert.noAddPermission'));
         }
-    }, [piece, loading, checkPermission]);
+    }, [piece, loading, checkPermission, t]);
 
     const handleAddOds = useCallback(() => {
         if (!piece) return;
-        if (loading) { alert('يجب الانتظار حتى يتم تحديث النافذة'); return; }
+        if (loading) { alert(t('det.waitUpdate')); return; }
         if (!['صفقة', 'اتفاقية'].includes(piece.NAT_PIECE)) {
-            alert('عذراً، يمكن إضافة أوامر خدمة فقط لـ "صفقة" أو "اتفاقية".');
+            alert(t('docsalert.odsOnlyContract'));
             return;
         }
         if (checkPermission(piece.ID_OPERATION)) {
             setModalState({ type: 'ODS', timestamp: Date.now() });
         } else {
-            alert('ليس لديك صلاحية الإضافة.');
+            alert(t('docsalert.noAddPermission'));
         }
-    }, [piece, loading, checkPermission]);
+    }, [piece, loading, checkPermission, t]);
 
     const handleEditLot = useCallback((lp: any) => {
         if (!piece) return;
-        if (!checkPermission(piece.ID_OPERATION)) { alert('ليس لديك صلاحية التعديل.'); return; }
+        if (!checkPermission(piece.ID_OPERATION)) { alert(t('docsalert.noEditPermission')); return; }
         setModalState({
             type: 'LOT_PIECE',
             data: {
@@ -136,12 +136,12 @@ const DocumentDetailsPage: React.FC<DocumentDetailsPageProps> = ({ navigate, cur
             },
             timestamp: Date.now()
         });
-    }, [piece, checkPermission]);
+    }, [piece, checkPermission, t]);
 
     const handleDeleteLot = useCallback(async (lp: any) => {
         if (!piece) return;
-        if (!checkPermission(piece.ID_OPERATION)) { alert('ليس لديك صلاحية الحذف.'); return; }
-        if (!window.confirm('هل أنت متأكد من حذف هذه الحصة المرتبطة؟')) return;
+        if (!checkPermission(piece.ID_OPERATION)) { alert(t('det.noDeletePermission')); return; }
+        if (!window.confirm(t('docsalert.deleteLotConfirm'))) return;
         try {
             await deleteItem('T_LOT_PIECE', lp.ID_LOT_PIECE);
             const remainingLinks = db.T_LOT_PIECE.filter(l => l.ID_LOT === lp.ID_LOT && l.ID_LOT_PIECE !== lp.ID_LOT_PIECE);
@@ -151,29 +151,29 @@ const DocumentDetailsPage: React.FC<DocumentDetailsPageProps> = ({ navigate, cur
                     await updateItem('T_LOT_OPERATION', lot.ID_LOT, { ...lot, ATTRIBUER: false });
                 }
             }
-            showToast('تم حذف الحصة المرتبطة بنجاح', 'success');
+            showToast(t('docsalert.lotDeletedSuccess'), 'success');
         } catch (error) {
-            showToast(`حدث خطأ أثناء الحذف — السبب: ${errorMessage(error)}`, 'error');
+            showToast(t('det.deleteError', { reason: errorMessage(error) }), 'error');
         }
-    }, [piece, checkPermission, deleteItem, updateItem, db.T_LOT_PIECE, db.T_LOT_OPERATION, showToast]);
+    }, [piece, checkPermission, deleteItem, updateItem, db.T_LOT_PIECE, db.T_LOT_OPERATION, showToast, t]);
 
     const handleEditOds = useCallback((ods: any) => {
         if (!piece) return;
-        if (!checkPermission(piece.ID_OPERATION)) { alert('ليس لديك صلاحية التعديل.'); return; }
+        if (!checkPermission(piece.ID_OPERATION)) { alert(t('docsalert.noEditPermission')); return; }
         setModalState({ type: 'ODS', data: ods, timestamp: Date.now() });
-    }, [piece, checkPermission]);
+    }, [piece, checkPermission, t]);
 
     const handleDeleteOds = useCallback(async (ods: any) => {
         if (!piece) return;
-        if (!checkPermission(piece.ID_OPERATION)) { alert('ليس لديك صلاحية الحذف.'); return; }
-        if (!window.confirm('هل أنت متأكد من حذف أمر الخدمة هذا؟')) return;
+        if (!checkPermission(piece.ID_OPERATION)) { alert(t('det.noDeletePermission')); return; }
+        if (!window.confirm(t('docsalert.deleteOdsConfirm'))) return;
         try {
             await deleteItem('T_ODS', ods.ID_ODS);
-            showToast('تم حذف أمر الخدمة بنجاح', 'success');
+            showToast(t('docsalert.odsDeletedSuccess'), 'success');
         } catch (error) {
-            showToast(`حدث خطأ أثناء الحذف — السبب: ${errorMessage(error)}`, 'error');
+            showToast(t('det.deleteError', { reason: errorMessage(error) }), 'error');
         }
-    }, [piece, checkPermission, deleteItem, showToast]);
+    }, [piece, checkPermission, deleteItem, showToast, t]);
 
     const { associatedLotsData, associatedLotObjects, associatedOds, odsCalculations, selectedPieceDetails } = useDocumentDetails(piece, db);
 

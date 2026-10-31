@@ -652,10 +652,9 @@ pub fn import_database(
 
     let tx = conn.transaction().map_err(|e| e.to_string())?;
 
-    // Snapshot the local credentials before the wipe below. The cloud copy no
-    // longer carries password hashes (they live in T_USER_SECRET, unreadable
-    // with the anon key), so without this every mirror would leave local
-    // accounts without a hash and lock the app out while offline.
+    // Snapshot the local credentials before the wipe below. Imported cloud rows
+    // may carry empty PASSWORD values (accounts that never had a hash mirrored),
+    // so preserving the local hashes keeps offline login working.
     tx.execute_batch(
         r#"
         DROP TABLE IF EXISTS temp._goft3_user_pw;

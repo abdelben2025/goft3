@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode, useCa
 import { Database, User, OnlineUser, AppEvent, Operation, Engagement, Paiement } from '../types';
 import { supabase, saveConfiguration, resetConfiguration, isConfigured } from '../services/supabaseClient';
 import { insertUserRow, insertCloudUser } from '../services/authService';
+import { DEFAULT_ADMIN_PASSWORD_HASH } from '../utils/authUtils';
 import { tauriDb } from '../services/tauriService';
 
 // Key for local storage backup
@@ -88,7 +89,8 @@ const TABLE_AR_NAMES: { [key: string]: string } = {
 // to reduce payload size. Every field below exists in the corresponding type,
 // so no accessed property will be missing.
 const TABLE_COLUMNS: { [key: string]: string } = {
-    // No PASSWORD: hashes live only in T_USER_SECRET, which the anon key cannot read.
+    // PASSWORD intentionally omitted: hashes live in T_USER.PASSWORD and are
+    // not fetched into general client state (login queries them separately).
     T_USER: 'ID_USER, USERNAME, ROLE, ALLOWED_PAGES, ALLOWED_OPERATIONS',
     T_BENEFICIAIRE: 'ID_BENEFICIAIRE, BENEFICIAIRE, ACTIVITE, ADRESSE, RC, CODE_FISCALE',
     T_CATEGORIE: 'ID_CATEGORIE, C_CATEGORIE, INT_CATEGORIE',
@@ -113,10 +115,8 @@ const TABLE_COLUMNS: { [key: string]: string } = {
 
 /**
  * Reconciles T_USER against an imported backup instead of replacing it.
- * T_USER_SECRET is keyed by ID_USER with ON DELETE CASCADE, so the old
- * "delete every user, then insert the backup" wiped every password on the
- * system. Rows are matched by ID_USER first and by USERNAME second, so the
- * secret stays attached and only the password-less fields are overwritten.
+ * Rows are matched by ID_USER first and by USERNAME second, so existing
+ * accounts keep their PASSWORD (only the non-password fields are touched).
  */
 const reconcileCloudUsers = async (sb: any, imported: User[] | undefined): Promise<void> => {
     if (!imported || imported.length === 0) return;
@@ -2027,20 +2027,16 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                     await supabase.from(table as string).delete().neq(TABLE_ID_FIELDS[table], 0); 
                 }
                 
-                // The password is set through the RPC: Postgres hashes it, so no
-                // hash is ever created client-side for the cloud copy.
-                const createdAdmin = await insertUserRow(
+                // Create the admin with the seeded default hash directly in
+                // T_USER.PASSWORD (no RPC needed).
+                await insertUserRow(
                     async (payload) => {
                         const { data, error } = await sb.from('T_USER').insert(payload).select().single();
                         if (error) throw error;
                         return data as { ID_USER: number };
                     },
-                    { USERNAME: 'admin', ROLE: 'admin' }
+                    { USERNAME: 'admin', ROLE: 'admin', PASSWORD: DEFAULT_ADMIN_PASSWORD_HASH }
                 );
-                await sb.rpc('set_user_password', {
-                    p_id_user: createdAdmin.ID_USER,
-                    p_password: 'admin123',
-                });
                 broadcastEvent('reset', 'قاعدة البيانات بالكامل');
 
             } catch (e) {
@@ -2102,8 +2098,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                     'T_ODS', 'T_LOT_PIECE', 'T_PAIEMENT'
                 ];
 
-                // Users are reconciled, never replaced: their credentials live in
-                // T_USER_SECRET, which a delete would take with it.
+                // Users are reconciled, never replaced: a wipe would reset every
+                // account's password hash, locking them out.
                 await reconcileCloudUsers(sb, importedDb.T_USER);
 
                 // Probe the live cloud columns BEFORE wiping so we never send a

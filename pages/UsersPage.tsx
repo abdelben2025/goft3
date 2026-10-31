@@ -23,8 +23,9 @@ const UsersPage: React.FC<{ navigate: (page: Page) => void, onGoBack?: () => voi
     const handleSaveUser = async (userData: Omit<User, 'ID_USER' | 'PASSWORD'> | User, plainPassword?: string) => {
         showToast('جاري حفظ البيانات...', 'loading');
         try {
-            // Cloud: the password is hashed inside Postgres, so the row is
-            // written first and the password set afterwards through the RPC.
+            // Cloud: the row is written first (without a hash) and the password
+            // set afterwards via setUserPassword, which derives the hash
+            // client-side and writes it to T_USER.PASSWORD.
             // Local: the SQLite row needs its own hash before it is written.
             const cloud = isDbConfigured && isOnline;
             const payload: Record<string, any> = { ...userData };
@@ -41,8 +42,8 @@ const UsersPage: React.FC<{ navigate: (page: Page) => void, onGoBack?: () => voi
                 showToast('تم تعديل المستخدم بنجاح', 'success');
             } else {
                 // Cloud rows must be inserted through Supabase directly: addItem
-                // falls back to the local SQLite on any error, which would hand us
-                // a workstation-only ID_USER and break set_user_password.
+                // falls back to the local SQLite on any error, which would hand
+                // us a workstation-only ID_USER the cloud never sees.
                 const saved = cloud
                     ? await insertCloudUser(payload)
                     : await insertUserRow(

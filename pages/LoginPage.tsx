@@ -6,39 +6,9 @@ import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
 import Modal from '../components/Modal';
 
-import { signIn, authErrorMessage, SignInResult } from '../services/authService';
+import { signIn, authErrorMessage } from '../services/authService';
 import { configuredHost } from '../services/supabaseClient';
 import { tauriDb } from '../services/tauriService';
-
-/**
- * Turns the server's diagnostic into one sentence a human can act on.
- * verify_login deliberately answers "no" for a missing user, a missing hash and
- * a wrong password alike, so without public.diag_login the screen can only say
- * "wrong username or password" — which is exactly what left this account stuck.
- */
-const explainRejection = (result: SignInResult): string => {
-    const d = result.diagnostic;
-    if (result.source !== 'cloud' || !d) return '';
-
-    if (!d.userFound) {
-        return `لا يوجد مستخدم بهذا الاسم في السحابة (عدد صفوف T_USER: ${d.totalUsers}).`;
-    }
-    if (d.secretState === 'MISSING' || d.secretState === 'EMPTY') {
-        // Which repair applies depends on whether T_USER.PASSWORD still exists:
-        // while it does, 07 can copy every hash across in one statement.
-        const fix = d.hasPasswordColumn
-            ? 'الحل: نفّذ supabase/07_repair_login.sql — ينسخ التجزئات من T_USER.PASSWORD إلى T_USER_SECRET.'
-            : 'العمود T_USER.PASSWORD محذوف، فلا شيء يُنسخ منه. عيّن كلمة مرور بملف supabase/08_reset_admin_password.sql.';
-        return `المستخدم موجود، لكن لا توجد له تجزئة صالحة في T_USER_SECRET (الحالة: ${d.secretState}، الصفوف: ${d.secretRows}). ${fix}`;
-    }
-    if (d.secretState === 'CORRUPT') {
-        return 'التجزئة المخزّنة غير صالحة. الحل: نفّذ supabase/08_reset_admin_password.sql.';
-    }
-    if (d.secretState === 'OK') {
-        return 'المستخدم وتجزئته سليمان في القاعدة ⇒ كلمة المرور نفسها غير مطابقة.';
-    }
-    return '';
-};
 
 interface LoginPageProps {
     onLogin: (user: User) => void;
@@ -116,8 +86,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCloseApp }) => {
                 const where = result.source === 'cloud'
                     ? `تحقق عبر السحابة (${configuredHost || 'غير مهيأ'})`
                     : 'تحقق محلي — البيانات من نسخة الجهاز، لا من السحابة';
-                const why = explainRejection(result);
-                setError(why ? `${t('login.error')} — ${where}\n${why}` : `${t('login.error')} — ${where}`);
+                setError(`${t('login.error')} — ${where}`);
             }
         } catch (err) {
             console.error("Login verification error:", err);

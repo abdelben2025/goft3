@@ -15,7 +15,8 @@ export interface User {
     ROLE: 'admin' | 'user' | 'viewer';
     ALLOWED_PAGES?: string; // JSON string of Page[]
     ALLOWED_OPERATIONS?: string; // JSON string of number[]
-    // Session-only: returned by public.verify_login, never stored.
+    // Session-only, never stored: set when the stored hash is still the
+    // seeded default, forcing a password change.
     NEEDS_PASSWORD_CHANGE?: boolean;
 }
 

@@ -28,8 +28,8 @@ const IdleLockScreen: React.FC<IdleLockScreenProps> = ({ user, onUnlock }) => {
         setBusy(true);
         setError('');
         try {
-            // The cloud copy holds no hash any more, so unlocking re-verifies
-            // through public.verify_login when a connection is available.
+            // Unlock re-verifies through signIn, which prefers the cloud when a
+            // connection is available and falls back to the local hash.
             const result = await signIn(user.USERNAME, password, {
                 isOnline,
                 isDesktop: tauriDb.isAvailable(),

@@ -59,8 +59,9 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
     const handleSaveUser = async (userData: Omit<User, 'ID_USER' | 'PASSWORD'> | User, plainPassword?: string) => {
         showToast('جاري حفظ البيانات...', 'loading');
         try {
-            // Same split as UsersPage: Postgres hashes in cloud mode, the local
-            // SQLite row carries its own hash otherwise.
+            // Same split as UsersPage: cloud rows are written first and the
+            // password set afterwards, while the local SQLite row carries its
+            // own hash up front.
             const cloud = isDbConfigured && isOnline;
             const payload: Record<string, any> = { ...userData };
 
@@ -75,9 +76,9 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
                 }
                 showToast('تم تعديل المستخدم بنجاح', 'success');
             } else {
-                // Cloud rows must go straight to Supabase: addItem falls back to the
-                // local SQLite on any error, returning a workstation-only ID_USER
-                // that makes set_user_password fail on the secret's foreign key.
+                // Cloud rows must go straight to Supabase: addItem falls back to
+                // the local SQLite on any error, returning a workstation-only
+                // ID_USER the cloud never sees.
                 const saved = cloud
                     ? await insertCloudUser(payload)
                     : await insertUserRow(

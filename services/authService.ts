@@ -6,10 +6,10 @@ import { User } from '../types';
 /**
  * Authentication lives in two trust domains:
  *
- *  • cloud — T_USER is authoritative, passwords never leave Postgres
- *            (public.verify_login / public.set_user_password).
- *  • local — the on-disk SQLite copy owns its own T_USER_SECRET-free hash column
- *            and is the only source of truth while offline.
+ *  • cloud — T_USER is authoritative; the bcrypt password hash lives directly
+ *            in T_USER.PASSWORD and is verified client-side. No RPC layer.
+ *  • local — the on-disk SQLite copy owns its own hash in the same column and
+ *            is the only source of truth while offline.
  *
  * The cloud is used only when Supabase is configured AND reachable; anything
  * else falls back to the local database. Keeping that decision in one place is
@@ -21,16 +21,6 @@ export interface AuthFlags {
     isDesktop: boolean;
 }
 
-export interface LoginDiagnostic {
-    /** The username exists in the cloud T_USER at all. */
-    userFound: boolean;
-    totalUsers: number;
-    secretRows: number;
-    /** State of the stored hash — never the hash itself. */
-    secretState: 'MISSING' | 'EMPTY' | 'OK' | 'CORRUPT' | 'UNKNOWN';
-    hasPasswordColumn: boolean;
-}
-
 export interface SignInResult {
     user: User | null;
     /** The stored hash is still the seeded default ⇒ force a change. */
@@ -39,39 +29,24 @@ export interface SignInResult {
     offlineCredentialMissing: boolean;
     /** Which copy answered — needed to tell a server rejection from a local one. */
     source: 'cloud' | 'local';
-    /** Why the cloud rejected the account, when public.diag_login is deployed. */
-    diagnostic?: LoginDiagnostic | null;
 }
 
 const normalize = (username: string) => (username || '').trim().toLowerCase();
 
 /**
- * A pre-migration database still has T_USER.PASSWORD as NOT NULL, while a
- * migrated one no longer has the column at all. Retrying lets the app run on
- * both sides of that migration without a hard deploy ordering.
+ * Inserts a T_USER row, guaranteeing the NOT NULL PASSWORD column is satisfied
+ * even when the caller does not yet supply a hash. Used for both cloud and
+ * local creation.
  */
-const isPasswordColumnError = (err: any): boolean => {
-    const msg = String(err?.message || err?.details || err?.toString?.() || '');
-    const code = String(err?.code || '');
-    return (
-        code === '23502' || // not-null violation on PASSWORD
-        code === 'PGRST204' || // column not found in schema cache
-        code === '42703' || // undefined_column
-        /PASSWORD/i.test(msg)
-    );
-};
-
 export const insertUserRow = async <T>(
     insert: (payload: Record<string, any>) => Promise<T>,
     payload: Record<string, any>
 ): Promise<T> => {
-    try {
-        return await insert({ ...payload });
-    } catch (err) {
-        if (!isPasswordColumnError(err)) throw err;
-        // Column still NOT NULL ⇒ satisfy it with an empty placeholder.
-        return await insert({ ...payload, PASSWORD: '' });
+    const rowPayload = { ...payload };
+    if (rowPayload.PASSWORD === undefined || rowPayload.PASSWORD === null) {
+        rowPayload.PASSWORD = '';
     }
+    return insert(rowPayload);
 };
 
 /**
@@ -177,62 +152,38 @@ const isTransportFailure = (err: any): boolean => {
     );
 };
 
-/**
- * Asks public.diag_login (supabase/09_diagnose_login_rpc.sql) why the account
- * was rejected. Purely diagnostic: every failure here is swallowed, because a
- * missing diagnostic must never turn into a second error on the login screen.
- */
-const diagnoseCloudAccount = async (username: string): Promise<LoginDiagnostic | null> => {
-    try {
-        const { data, error } = await supabase!.rpc('diag_login', { p_username: username });
-        if (error || !data) return null;
-        const row = data as Record<string, any>;
-        return {
-            userFound: row.USER_FOUND === true,
-            totalUsers: Number(row.TOTAL_USERS ?? -1),
-            secretRows: Number(row.SECRET_ROWS ?? -1),
-            secretState: (row.SECRET as LoginDiagnostic['secretState']) || 'UNKNOWN',
-            hasPasswordColumn: row.HAS_PASSWORD_COLUMN === true,
-        };
-    } catch {
-        return null;
-    }
-};
-
 const signInCloud = async (username: string, password: string): Promise<SignInResult> => {
-    const { data, error } = await supabase!.rpc('verify_login', {
-        p_username: username,
-        p_password: password,
-    });
+    const { data, error } = await supabase!
+        .from('T_USER')
+        .select('*')
+        .ilike('USERNAME', username.trim())
+        .limit(1)
+        .maybeSingle();
     if (error) throw error;
+
     if (!data) {
-        // verify_login returns NULL for "no user", "no hash" and "wrong
-        // password" alike, so ask the diagnostic function which one it was.
-        // Absent (not deployed yet) ⇒ null, and the message stays generic.
-        const diagnostic = await diagnoseCloudAccount(username);
-        return {
-            user: null,
-            needsPasswordChange: false,
-            offlineCredentialMissing: false,
-            source: 'cloud',
-            diagnostic,
-        };
+        return { user: null, needsPasswordChange: false, offlineCredentialMissing: false, source: 'cloud' };
     }
 
-    const row = data as Record<string, any>;
+    const hash = (data as Record<string, any>).PASSWORD as string | null | undefined;
+    const { valid } = await verifyPassword(password, hash);
+    if (!valid) {
+        return { user: null, needsPasswordChange: false, offlineCredentialMissing: false, source: 'cloud' };
+    }
+
     const user: User = {
-        ID_USER: Number(row.ID_USER),
-        USERNAME: String(row.USERNAME),
-        ROLE: row.ROLE,
-        ALLOWED_PAGES: row.ALLOWED_PAGES ?? undefined,
-        ALLOWED_OPERATIONS: row.ALLOWED_OPERATIONS ?? undefined,
+        ID_USER: Number((data as Record<string, any>).ID_USER),
+        USERNAME: String((data as Record<string, any>).USERNAME),
+        ROLE: (data as Record<string, any>).ROLE,
+        ALLOWED_PAGES: (data as Record<string, any>).ALLOWED_PAGES ?? undefined,
+        ALLOWED_OPERATIONS: (data as Record<string, any>).ALLOWED_OPERATIONS ?? undefined,
     };
 
     await cacheLocalCredential(user, password);
 
     return {
         user,
-        needsPasswordChange: row.NEEDS_PASSWORD_CHANGE === true,
+        needsPasswordChange: isDefaultPasswordHash(hash),
         offlineCredentialMissing: false,
         source: 'cloud',
     };
@@ -271,19 +222,12 @@ export const signIn = async (
 
 /**
  * Turns a PostgREST/Postgres failure into something the person at the desk can
- * act on. A missing function or a revoked grant is a setup mistake, not a wrong
- * password — reporting it as "verification failed" hides a one-line fix.
+ * act on.
  */
 export const authErrorMessage = (err: any): string => {
     const code = String(err?.code || '');
     const msg = String(err?.message || err?.details || '');
 
-    if (code === 'PGRST202' || code === '42883' || /could not find the function|function .* does not exist/i.test(msg)) {
-        return 'دالة التحقق غير موجودة في قاعدة البيانات. نفّذ supabase/03_password_hardening.sql ثم أعد المحاولة.';
-    }
-    if (code === '42501' || /permission denied/i.test(msg)) {
-        return 'صلاحية تنفيذ verify_login مسحوبة. أعد تنفيذ supabase/03_password_hardening.sql لاستعادة GRANT EXECUTE.';
-    }
     if (code === 'PGRST301' || /invalid api key|jwt|no api key/i.test(msg)) {
         return 'مفتاح الاتصال بقاعدة البيانات غير صالح. أعد إعداد الرابط والمفتاح من شاشة الدخول.';
     }
@@ -295,36 +239,16 @@ export const authErrorMessage = (err: any): string => {
 
 /**
  * A user row that lives only in this workstation's SQLite copy. Writing a
- * secret for it fails the T_USER_SECRET → T_USER foreign key, so the accounts
- * are checked first and the caller can explain the real cause.
+ * password for it cannot touch the cloud since no row exists there.
  */
 export const CLOUD_USER_MISSING = 'USER_NOT_IN_CLOUD';
-
-const assertCloudUserExists = async (idUser: number): Promise<void> => {
-    const sb = supabase;
-    if (!sb) throw new Error('CLOUD_NOT_CONFIGURED');
-
-    const { data, error } = await sb
-        .from('T_USER')
-        .select('ID_USER')
-        .eq('ID_USER', idUser)
-        .maybeSingle();
-    if (error) throw error;
-    if (data) return;
-
-    const missing = new Error(CLOUD_USER_MISSING) as Error & { code: string };
-    missing.code = CLOUD_USER_MISSING;
-    throw missing;
-};
 
 /**
  * Inserts a T_USER row straight into the cloud and returns the stored row.
  *
  * The generic `addItem` cannot be used for this: it swallows a rejected cloud
  * insert and re-writes the row to the local SQLite, so the caller believes it
- * was stored in the cloud and receives a workstation-only ID_USER. Setting a
- * password against that id is what produced the bare foreign key error
- * "violates foreign key constraint t_user_secret_id_user_fkey".
+ * was stored in the cloud and receives a workstation-only ID_USER.
  */
 export const insertCloudUser = async (payload: Record<string, any>): Promise<User> => {
     const sb = supabase;
@@ -340,25 +264,30 @@ export const insertCloudUser = async (payload: Record<string, any>): Promise<Use
 export const MIN_PASSWORD_LENGTH = 8;
 
 /**
- * Sets a password in the cloud. Postgres does the hashing
- * (public.set_user_password), so the hash never crosses the wire.
- * Local / web-offline callers hash in the browser and write the row themselves.
+ * Sets/changes a password. The hash is derived client-side and written straight
+ * to T_USER.PASSWORD in the cloud (when configured) and cached locally.
  */
 export const setUserPassword = async (user: User | { ID_USER: number }, password: string): Promise<void> => {
     if (!password || password.length < MIN_PASSWORD_LENGTH) {
         throw new Error('PASSWORD_TOO_SHORT');
     }
-    if (!supabase) {
-        throw new Error('CLOUD_NOT_CONFIGURED');
+
+    const hash = await hashPassword(password);
+
+    if (supabase) {
+        const { data, error } = await supabase
+            .from('T_USER')
+            .update({ PASSWORD: hash })
+            .eq('ID_USER', user.ID_USER)
+            .select('ID_USER')
+            .maybeSingle();
+        if (error) throw error;
+        if (!data) {
+            const missing = new Error(CLOUD_USER_MISSING) as Error & { code: string };
+            missing.code = CLOUD_USER_MISSING;
+            throw missing;
+        }
     }
-
-    await assertCloudUserExists(user.ID_USER);
-
-    const { error } = await supabase.rpc('set_user_password', {
-        p_id_user: user.ID_USER,
-        p_password: password,
-    });
-    if (error) throw error;
 
     if ('USERNAME' in user) {
         await cacheLocalCredential(user, password);

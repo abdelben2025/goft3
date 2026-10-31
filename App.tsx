@@ -98,8 +98,8 @@ const AuthenticatedApp: React.FC<{
     const [updateBusy, setUpdateBusy] = useState(false);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [mustChangePassword, setMustChangePassword] = useState(() =>
-        // Cloud logins learn this from public.verify_login; offline logins still
-        // hold the hash and can compare it locally.
+        // Cloud logins flag this when the stored hash is the seeded default;
+        // offline logins hold the hash and can compare it locally.
         currentUser.NEEDS_PASSWORD_CHANGE === true || isDefaultPasswordHash(currentUser.PASSWORD)
     );
     const [newPassword, setNewPassword] = useState('');
@@ -129,7 +129,7 @@ const AuthenticatedApp: React.FC<{
             let nextPassword: string | undefined;
 
             if (isDbConfigured && isOnline) {
-                // Postgres hashes it; the client never sees the result.
+                // Hash is derived client-side and written to T_USER.PASSWORD.
                 await setUserPassword(currentUser, newPassword);
             } else {
                 nextPassword = await hashPassword(newPassword);

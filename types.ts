@@ -48,6 +48,7 @@ export interface Categorie {
     ID_CATEGORIE: number;
     C_CATEGORIE: string;
     INT_CATEGORIE: string;
+    INT_CATEGORIE_FR?: string | null;
 }
 
 export interface Scategorie {
@@ -55,6 +56,7 @@ export interface Scategorie {
     ID_CATEGORIE: number;
     C_SCATEGORIE: string;
     INT_SCATEGORIE: string;
+    INT_SCATEGORIE_FR?: string | null;
 }
 
 export interface Operation {
@@ -72,24 +74,30 @@ export interface Operation {
 export interface Rubrique {
     ID_RUBRIQUE: number;
     RUBRIQUE: string;
+    RUBRIQUE_FR?: string;
 }
 
 export interface Direction {
     ID_DIRECTION: number;
     PORTEFEUILLE: string;
     INT_PORTEFEUILLE: string;
+    INT_PORTEFEUILLE_FR?: string;
     ORDONATEUR: string;
     DIRECTION: string;
+    DIRECTION_FR?: string;
     ACTION: string;
     INT_ACTION: string;
+    INT_ACTION_FR?: string;
     SACTION: string | null;
     INT_SACTION: string | null;
+    INT_SACTION_FR?: string | null;
 }
 
 export interface Programme {
     ID_PROGRAMME: number;
     PROGRAMME: string;
     INT_PROGRAMME: string;
+    INT_PROGRAMME_FR?: string | null;
 }
 
 export interface Sprogramme {
@@ -97,6 +105,7 @@ export interface Sprogramme {
     ID_PROGRAMME: number;
     SPROGRAMME: string;
     INT_SPROGRAMME: string;
+    INT_SPROGRAMME_FR?: string | null;
 }
 
 export interface Cp {

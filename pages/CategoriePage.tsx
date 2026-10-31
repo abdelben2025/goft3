@@ -130,6 +130,7 @@ const CategoriePage: React.FC<CategoriePageProps> = ({ navigate, onGoBack, curre
                                 <tr>
                                     <th className="p-3 text-sm font-semibold text-gray-700">{t('col.code')}</th>
                                     <th className="p-3 text-sm font-semibold text-gray-700">{t('col.title')}</th>
+                                    <th className="p-3 text-sm font-semibold text-gray-700">{t('cat.title_fr_label')}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -141,6 +142,7 @@ const CategoriePage: React.FC<CategoriePageProps> = ({ navigate, onGoBack, curre
                                     >
                                         <td className="p-3 text-gray-800">{cat.C_CATEGORIE}</td>
                                         <td className="p-3 text-gray-700">{cat.INT_CATEGORIE}</td>
+                                        <td className="p-3 text-gray-700">{cat.INT_CATEGORIE_FR || ''}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -163,6 +165,7 @@ const CategoriePage: React.FC<CategoriePageProps> = ({ navigate, onGoBack, curre
                                 <tr>
                                     <th className="p-3 text-sm font-semibold text-gray-700">{t('col.code')}</th>
                                     <th className="p-3 text-sm font-semibold text-gray-700">{t('col.title')}</th>
+                                    <th className="p-3 text-sm font-semibold text-gray-700">{t('cat.scat_title_fr_label')}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -170,6 +173,7 @@ const CategoriePage: React.FC<CategoriePageProps> = ({ navigate, onGoBack, curre
                                     <tr key={scat.ID_SCATEGORIE} onClick={() => setSelectedScategorieId(scat.ID_SCATEGORIE)} className={`border-b hover:bg-gray-50 cursor-pointer text-sm ${scat.ID_SCATEGORIE === selectedScategorieId ? 'bg-blue-100' : ''}`}>
                                         <td className="p-3 text-gray-800">{scat.C_SCATEGORIE}</td>
                                         <td className="p-3 text-gray-700">{scat.INT_SCATEGORIE}</td>
+                                        <td className="p-3 text-gray-700">{scat.INT_SCATEGORIE_FR || ''}</td>
                                     </tr>
                                 ))}
                             </tbody>

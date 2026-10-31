@@ -114,6 +114,7 @@ const RubriquePage: React.FC<RubriquePageProps> = ({ navigate, onGoBack, current
                         <tr>
                             <th className="p-3 text-sm font-semibold text-gray-700 uppercase tracking-wider">{t('col.id')}</th>
                             <th className="p-3 text-sm font-semibold text-gray-700 uppercase tracking-wider">{t('col.title')}</th>
+                            <th className="p-3 text-sm font-semibold text-gray-700 uppercase tracking-wider">{t('rub.name_fr_label')}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -121,6 +122,7 @@ const RubriquePage: React.FC<RubriquePageProps> = ({ navigate, onGoBack, current
                             <tr key={r.ID_RUBRIQUE} onClick={() => setSelectedRubriqueId(r.ID_RUBRIQUE)} className={`border-b hover:bg-gray-50 cursor-pointer text-sm ${selectedRubriqueId === r.ID_RUBRIQUE ? 'bg-blue-50' : ''}`}>
                                 <td className="p-3 text-gray-700">{r.ID_RUBRIQUE}</td>
                                 <td className="p-3 font-semibold text-gray-800">{r.RUBRIQUE}</td>
+                                <td className="p-3 text-gray-700">{r.RUBRIQUE_FR || ''}</td>
                             </tr>
                         ))}
                     </tbody>

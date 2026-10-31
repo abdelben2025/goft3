@@ -15,16 +15,19 @@ const AddScategorieForm: React.FC<AddScategorieFormProps> = ({ onClose, onSave, 
     const { t } = useLanguage();
     const [scategorieCode, setScategorieCode] = useState('');
     const [scategorieName, setScategorieName] = useState('');
+    const [scategorieNameFr, setScategorieNameFr] = useState('');
     const [idCategorie, setIdCategorie] = useState<number | ''>(categories[0]?.ID_CATEGORIE || '');
 
     useEffect(() => {
         if (initialData) {
             setScategorieCode(initialData.C_SCATEGORIE);
             setScategorieName(initialData.INT_SCATEGORIE);
+            setScategorieNameFr(initialData.INT_SCATEGORIE_FR ?? '');
             setIdCategorie(initialData.ID_CATEGORIE);
         } else {
             setScategorieCode('');
             setScategorieName('');
+            setScategorieNameFr('');
             setIdCategorie(selectedCategorieId || categories[0]?.ID_CATEGORIE || '');
         }
     }, [initialData, categories, selectedCategorieId]);
@@ -44,6 +47,7 @@ const AddScategorieForm: React.FC<AddScategorieFormProps> = ({ onClose, onSave, 
         const dataToSave: any = {
             C_SCATEGORIE: scategorieCode,
             INT_SCATEGORIE: scategorieName,
+            INT_SCATEGORIE_FR: scategorieNameFr || null,
             ID_CATEGORIE: idCategorie,
         };
 

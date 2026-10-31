@@ -1623,6 +1623,17 @@ export const translations: Record<Language, { [key: string]: string }> = {
         "natureods.resume": "استئناف",
         "natureods.stop": "ايقاف",
         "natureods.closure": "ختام",
+
+        // French-title field labels
+        "prog.title_fr_label": "عنوان البرنامج بالفرنسية",
+        "sprg.title_fr_label": "عنوان البرنامج الفرعي بالفرنسية",
+        "cat.title_fr_label": "عنوان الصنف بالفرنسية",
+        "cat.scat_title_fr_label": "عنوان الصنف الفرعي بالفرنسية",
+        "rub.name_fr_label": "اسم الهيكل بالفرنسية",
+        "dir.direction_fr_label": "المديرية بالفرنسية",
+        "dir.portfolio_title_fr_label": "عنوان الحافظة بالفرنسية",
+        "dir.activity_title_fr_label": "عنوان النشاط بالفرنسية",
+        "dir.subactivity_title_fr_label": "عنوان النشاط الفرعي بالفرنسية",
     },
     fr: {
         // General
@@ -3245,5 +3256,16 @@ export const translations: Record<Language, { [key: string]: string }> = {
         "natureods.resume": "Reprise",
         "natureods.stop": "Arrêt",
         "natureods.closure": "Clôture",
+
+        // French-title field labels
+        "prog.title_fr_label": "Titre du programme en français",
+        "sprg.title_fr_label": "Titre du sous-programme en français",
+        "cat.title_fr_label": "Titre de la catégorie en français",
+        "cat.scat_title_fr_label": "Titre de la sous-catégorie en français",
+        "rub.name_fr_label": "Nom de la structure en français",
+        "dir.direction_fr_label": "Direction en français",
+        "dir.portfolio_title_fr_label": "Titre du portefeuille en français",
+        "dir.activity_title_fr_label": "Titre de l'activité en français",
+        "dir.subactivity_title_fr_label": "Titre de la sous-activité en français",
     },
 };

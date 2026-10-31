@@ -14,16 +14,19 @@ const AddSProgrammeForm: React.FC<AddSProgrammeFormProps> = ({ onClose, onSave, 
     const { t } = useLanguage();
     const [sprogrammeCode, setSProgrammeCode] = useState('');
     const [sprogrammeName, setSProgrammeName] = useState('');
+    const [sprogrammeNameFr, setSProgrammeNameFr] = useState('');
     const [idProgramme, setIdProgramme] = useState<number | ''>(programmes[0]?.ID_PROGRAMME || '');
 
     useEffect(() => {
         if (initialData) {
             setSProgrammeCode(initialData.SPROGRAMME);
             setSProgrammeName(initialData.INT_SPROGRAMME);
+            setSProgrammeNameFr(initialData.INT_SPROGRAMME_FR ?? '');
             setIdProgramme(initialData.ID_PROGRAMME);
         } else {
             setSProgrammeCode('');
             setSProgrammeName('');
+            setSProgrammeNameFr('');
             setIdProgramme(selectedProgrammeId || programmes[0]?.ID_PROGRAMME || '');
         }
     }, [initialData, programmes, selectedProgrammeId]);
@@ -40,12 +43,14 @@ const AddSProgrammeForm: React.FC<AddSProgrammeFormProps> = ({ onClose, onSave, 
         }
 
         setIsSubmitting(true);
-        onSave({
+        const dataToSave: Omit<Sprogramme, 'ID_SPROGRAMME'> = {
             ...(initialData || {}),
             SPROGRAMME: sprogrammeCode,
             INT_SPROGRAMME: sprogrammeName,
+            INT_SPROGRAMME_FR: sprogrammeNameFr || null,
             ID_PROGRAMME: idProgramme,
-        });
+        };
+        onSave(dataToSave);
     };
 
     if (programmes.length === 0) {
@@ -105,6 +110,16 @@ const AddSProgrammeForm: React.FC<AddSProgrammeFormProps> = ({ onClose, onSave, 
                     value={sprogrammeName}
                     onChange={(e) => setSProgrammeName(e.target.value)}
                     required
+                    className="w-full px-3 py-2 mt-1 text-gray-700 bg-gray-100 border border-gray-300 rounded-[20px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+            </div>
+            <div>
+                <label htmlFor="sprogrammeNameFr" className="block text-sm font-medium text-gray-700 text-right">{t('sprg.title_fr_label')}</label>
+                <input
+                    id="sprogrammeNameFr"
+                    type="text"
+                    value={sprogrammeNameFr}
+                    onChange={(e) => setSProgrammeNameFr(e.target.value)}
                     className="w-full px-3 py-2 mt-1 text-gray-700 bg-gray-100 border border-gray-300 rounded-[20px] focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
             </div>

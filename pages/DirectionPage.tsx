@@ -113,8 +113,10 @@ const DirectionPage: React.FC<DirectionPageProps> = ({ navigate, onGoBack, curre
                     <thead className="bg-blue-100">
                         <tr>
                             <th className="p-3 text-sm font-semibold text-gray-700">{t('dir.direction')}</th>
+                            <th className="p-3 text-sm font-semibold text-gray-700">{t('dir.direction_fr_label')}</th>
                             <th className="p-3 text-sm font-semibold text-gray-700">{t('col.portfolio')}</th>
                             <th className="p-3 text-sm font-semibold text-gray-700">{t('col.portfolio_title')}</th>
+                            <th className="p-3 text-sm font-semibold text-gray-700">{t('dir.portfolio_title_fr_label')}</th>
                             <th className="p-3 text-sm font-semibold text-gray-700">{t('col.ordonnateur')}</th>
                         </tr>
                     </thead>
@@ -122,8 +124,10 @@ const DirectionPage: React.FC<DirectionPageProps> = ({ navigate, onGoBack, curre
                         {db.T_DIRECTION.slice().sort((a, b) => a.ID_DIRECTION - b.ID_DIRECTION).map((d: Direction) => (
                             <tr key={d.ID_DIRECTION} onClick={() => setSelectedDirectionId(d.ID_DIRECTION)} className={`border-b hover:bg-gray-50 cursor-pointer text-sm ${selectedDirectionId === d.ID_DIRECTION ? 'bg-blue-50' : ''}`}>
                                 <td className="p-3 font-semibold text-gray-800">{d.DIRECTION}</td>
+                                <td className="p-3 text-gray-700">{d.DIRECTION_FR || ''}</td>
                                 <td className="p-3 text-gray-700">{d.PORTEFEUILLE}</td>
                                 <td className="p-3 text-gray-700">{d.INT_PORTEFEUILLE}</td>
+                                <td className="p-3 text-gray-700">{d.INT_PORTEFEUILLE_FR || ''}</td>
                                 <td className="p-3 text-gray-700">{d.ORDONATEUR}</td>
                             </tr>
                         ))}

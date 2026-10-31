@@ -20,6 +20,10 @@ const AddDirectionForm: React.FC<AddDirectionFormProps> = ({ onClose, onSave, in
         INT_ACTION: '',
         SACTION: '',
         INT_SACTION: '',
+        DIRECTION_FR: '',
+        INT_PORTEFEUILLE_FR: '',
+        INT_ACTION_FR: '',
+        INT_SACTION_FR: '',
     });
 
     useEffect(() => {
@@ -33,6 +37,10 @@ const AddDirectionForm: React.FC<AddDirectionFormProps> = ({ onClose, onSave, in
                 INT_ACTION: initialData.INT_ACTION,
                 SACTION: initialData.SACTION || '',
                 INT_SACTION: initialData.INT_SACTION || '',
+                DIRECTION_FR: initialData.DIRECTION_FR || '',
+                INT_PORTEFEUILLE_FR: initialData.INT_PORTEFEUILLE_FR || '',
+                INT_ACTION_FR: initialData.INT_ACTION_FR || '',
+                INT_SACTION_FR: initialData.INT_SACTION_FR || '',
             });
         } else {
              setFormData({
@@ -44,6 +52,10 @@ const AddDirectionForm: React.FC<AddDirectionFormProps> = ({ onClose, onSave, in
                 INT_ACTION: '',
                 SACTION: '',
                 INT_SACTION: '',
+                DIRECTION_FR: '',
+                INT_PORTEFEUILLE_FR: '',
+                INT_ACTION_FR: '',
+                INT_SACTION_FR: '',
             });
         }
     }, [initialData]);
@@ -64,6 +76,7 @@ const AddDirectionForm: React.FC<AddDirectionFormProps> = ({ onClose, onSave, in
             ...(initialData || {}),
             ...formData,
             INT_SACTION: formData.INT_SACTION || null,
+            INT_SACTION_FR: formData.INT_SACTION_FR || null,
         });
     };
 
@@ -80,6 +93,10 @@ const AddDirectionForm: React.FC<AddDirectionFormProps> = ({ onClose, onSave, in
                 <label className="block text-sm font-medium text-gray-700 text-right">{t('dir.direction')}</label>
                 <input name="DIRECTION" value={formData.DIRECTION} onChange={handleChange} required className="w-full px-3 py-2 mt-1 text-gray-700 bg-gray-100 border border-gray-300 rounded-md" />
             </div>
+            <div>
+                <label className="block text-sm font-medium text-gray-700 text-right">{t('dir.direction_fr_label')}</label>
+                <input name="DIRECTION_FR" value={formData.DIRECTION_FR} onChange={handleChange} className="w-full px-3 py-2 mt-1 text-gray-700 bg-gray-100 border border-gray-300 rounded-md" />
+            </div>
             <div className="grid grid-cols-2 gap-4">
                 <div>
                     <label className="block text-sm font-medium text-gray-700 text-right">{t('dir.portfolio_label')}</label>
@@ -93,6 +110,10 @@ const AddDirectionForm: React.FC<AddDirectionFormProps> = ({ onClose, onSave, in
             <div>
                 <label className="block text-sm font-medium text-gray-700 text-right">{t('dir.portfolio_title_label')}</label>
                 <input name="INT_PORTEFEUILLE" value={formData.INT_PORTEFEUILLE} onChange={handleChange} required className="w-full px-3 py-2 mt-1 text-gray-700 bg-gray-100 border border-gray-300 rounded-md" />
+            </div>
+            <div>
+                <label className="block text-sm font-medium text-gray-700 text-right">{t('dir.portfolio_title_fr_label')}</label>
+                <input name="INT_PORTEFEUILLE_FR" value={formData.INT_PORTEFEUILLE_FR} onChange={handleChange} className="w-full px-3 py-2 mt-1 text-gray-700 bg-gray-100 border border-gray-300 rounded-md" />
             </div>
             <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -109,8 +130,16 @@ const AddDirectionForm: React.FC<AddDirectionFormProps> = ({ onClose, onSave, in
                 <input name="INT_ACTION" value={formData.INT_ACTION} onChange={handleChange} required className="w-full px-3 py-2 mt-1 text-gray-700 bg-gray-100 border border-gray-300 rounded-md" />
             </div>
             <div>
+                <label className="block text-sm font-medium text-gray-700 text-right">{t('dir.activity_title_fr_label')}</label>
+                <input name="INT_ACTION_FR" value={formData.INT_ACTION_FR} onChange={handleChange} className="w-full px-3 py-2 mt-1 text-gray-700 bg-gray-100 border border-gray-300 rounded-md" />
+            </div>
+            <div>
                 <label className="block text-sm font-medium text-gray-700 text-right">{t('dir.subactivity_title')}</label>
                 <input name="INT_SACTION" value={formData.INT_SACTION} onChange={handleChange} className="w-full px-3 py-2 mt-1 text-gray-700 bg-gray-100 border border-gray-300 rounded-md" />
+            </div>
+            <div>
+                <label className="block text-sm font-medium text-gray-700 text-right">{t('dir.subactivity_title_fr_label')}</label>
+                <input name="INT_SACTION_FR" value={formData.INT_SACTION_FR} onChange={handleChange} className="w-full px-3 py-2 mt-1 text-gray-700 bg-gray-100 border border-gray-300 rounded-md" />
             </div>
 
             </div>

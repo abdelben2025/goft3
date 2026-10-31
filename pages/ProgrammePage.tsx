@@ -131,6 +131,7 @@ const ProgrammePage: React.FC<ProgrammePageProps> = ({ navigate, onGoBack, curre
                                 <tr>
                                     <th className="p-3 text-sm font-semibold text-gray-700">{t('col.code')}</th>
                                     <th className="p-3 text-sm font-semibold text-gray-700">{t('col.title')}</th>
+                                    <th className="p-3 text-sm font-semibold text-gray-700">{t('prog.title_fr_label')}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -142,6 +143,7 @@ const ProgrammePage: React.FC<ProgrammePageProps> = ({ navigate, onGoBack, curre
                                     >
                                         <td className="p-3 text-gray-800">{prog.PROGRAMME}</td>
                                         <td className="p-3 text-gray-700">{prog.INT_PROGRAMME}</td>
+                                        <td className="p-3 text-gray-700">{prog.INT_PROGRAMME_FR || ''}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -164,6 +166,7 @@ const ProgrammePage: React.FC<ProgrammePageProps> = ({ navigate, onGoBack, curre
                                 <tr>
                                     <th className="p-3 text-sm font-semibold text-gray-700">{t('col.code')}</th>
                                     <th className="p-3 text-sm font-semibold text-gray-700">{t('col.title')}</th>
+                                    <th className="p-3 text-sm font-semibold text-gray-700">{t('sprg.title_fr_label')}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -171,6 +174,7 @@ const ProgrammePage: React.FC<ProgrammePageProps> = ({ navigate, onGoBack, curre
                                     <tr key={sprog.ID_SPROGRAMME} onClick={() => setSelectedSProgrammeId(sprog.ID_SPROGRAMME)} className={`border-b hover:bg-gray-50 cursor-pointer text-sm ${sprog.ID_SPROGRAMME === selectedSProgrammeId ? 'bg-blue-50' : ''}`}>
                                         <td className="p-3 text-gray-800">{sprog.SPROGRAMME}</td>
                                         <td className="p-3 text-gray-700">{sprog.INT_SPROGRAMME}</td>
+                                        <td className="p-3 text-gray-700">{sprog.INT_SPROGRAMME_FR || ''}</td>
                                     </tr>
                                 ))}
                             </tbody>

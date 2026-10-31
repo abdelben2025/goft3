@@ -13,14 +13,17 @@ const AddCategorieForm: React.FC<AddCategorieFormProps> = ({ onClose, onSave, in
     const { t } = useLanguage();
     const [categorieCode, setCategorieCode] = useState('');
     const [categorieName, setCategorieName] = useState('');
+    const [categorieNameFr, setCategorieNameFr] = useState('');
 
     useEffect(() => {
         if (initialData) {
             setCategorieCode(initialData.C_CATEGORIE);
             setCategorieName(initialData.INT_CATEGORIE);
+            setCategorieNameFr(initialData.INT_CATEGORIE_FR ?? '');
         } else {
             setCategorieCode('');
             setCategorieName('');
+            setCategorieNameFr('');
         }
     }, [initialData]);
 
@@ -34,6 +37,7 @@ const AddCategorieForm: React.FC<AddCategorieFormProps> = ({ onClose, onSave, in
         const dataToSave: any = {
             C_CATEGORIE: categorieCode,
             INT_CATEGORIE: categorieName,
+            INT_CATEGORIE_FR: categorieNameFr || null,
         };
 
         if (initialData && initialData.ID_CATEGORIE) {
@@ -71,6 +75,16 @@ const AddCategorieForm: React.FC<AddCategorieFormProps> = ({ onClose, onSave, in
                     value={categorieName}
                     onChange={(e) => setCategorieName(e.target.value)}
                     required
+                    className="w-full px-3 py-2 mt-1 text-gray-700 bg-gray-100 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+            </div>
+            <div>
+                <label htmlFor="categorieNameFr" className="block text-sm font-medium text-gray-700 text-right">{t('cat.title_fr_label')}</label>
+                <input
+                    id="categorieNameFr"
+                    type="text"
+                    value={categorieNameFr}
+                    onChange={(e) => setCategorieNameFr(e.target.value)}
                     className="w-full px-3 py-2 mt-1 text-gray-700 bg-gray-100 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
             </div>

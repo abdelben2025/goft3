@@ -17,7 +17,7 @@ interface LoginPageProps {
 
 const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCloseApp }) => {
     const { db, saveConfig, isDbConfigured, loading, isOnline, refreshData, onlineUsers } = useData();
-    const { t, dir } = useLanguage();
+    const { t, dir, language, setLanguage } = useLanguage();
     const { showToast } = useToast();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -122,6 +122,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCloseApp }) => {
                         <span>{t('login.closeApp')}</span>
                     </button>
                 )}
+
+                <button
+                    type="button"
+                    onClick={() => setLanguage(language === 'ar' ? 'fr' : 'ar')}
+                    className="absolute top-3 left-3 px-3 py-1 rounded-full border border-gray-400 bg-white/70 hover:bg-white text-gray-700 text-xs font-bold transition-colors cursor-pointer"
+                >
+                    {language === 'ar' ? 'Français' : 'العربية'}
+                </button>
 
                 <div className="text-center">
                     <img src={logoDataUrl} alt="App Logo" className="w-24 h-24 mx-auto mb-4 drop-shadow-md" />

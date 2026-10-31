@@ -3,6 +3,7 @@ import React, { useMemo } from 'react';
 import { Page } from '../types';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
+import { labelCommonFallback } from '../utils/dataLabels';
 
 interface PrintFinancialStatusByStructureCommitmentPageProps {
     navigate: (page: Page, id?: number, tab?: string) => void;
@@ -189,7 +190,7 @@ const PrintFinancialStatusByStructureCommitmentPage: React.FC<PrintFinancialStat
                     <tbody>
                         {rows.map((row: any, index: number) => (
                              <tr key={index}>
-                                <td className="border border-black p-2 text-right w-[35%]">{row.structure}</td>
+                                <td className="border border-black p-2 text-right w-[35%]">{labelCommonFallback(row.structure, t)}</td>
                                 <td className="border border-black p-2">{formatCurrency(row.initialAuth)}</td>
                                 <td className="border border-black p-2">{formatCurrency(row.finalAuth)}</td>
                                 <td className="border border-black p-2">{formatCurrency(row.commitment)}</td>

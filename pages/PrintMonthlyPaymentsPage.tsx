@@ -4,6 +4,7 @@ import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
 import { formatCurrency } from '../utils/currencyUtils';
 import { normalizeDate } from '../utils/dateUtils';
+import { labelCommonFallback } from '../utils/dataLabels';
 
 interface PrintMonthlyPaymentsPageProps {
     navigate: (page: Page) => void;
@@ -78,8 +79,8 @@ const PrintMonthlyPaymentsPage: React.FC<PrintMonthlyPaymentsPageProps> = ({ nav
 
                 return {
                     ...p,
-                    opName: op ? `${op.N_OPERATION} - ${op.INT_OPERATION}` : 'غير معروف',
-                    pieceName: piece ? piece.PIECE : 'غير معروف',
+                    opName: op ? `${op.N_OPERATION} - ${op.INT_OPERATION}` : labelCommonFallback('غير معروف', t),
+                    pieceName: piece ? piece.PIECE : labelCommonFallback('غير معروف', t),
                     engRef: eng ? `${eng.N_ENG} / ${eng.ANNEE}` : '---',
                     beneficiaryName: ben ? ben.BENEFICIAIRE : '---',
                     isAccepted: !!p.DATE_ADMIS
@@ -88,7 +89,7 @@ const PrintMonthlyPaymentsPage: React.FC<PrintMonthlyPaymentsPageProps> = ({ nav
             .sort((a: any, b: any) => {
                 return (a.DATE_PAI || '').localeCompare(b.DATE_PAI || '');
             });
-    }, [db, selectedYear, selectedMonth, statusFilter, selectedAction]);
+    }, [db, selectedYear, selectedMonth, statusFilter, selectedAction, t]);
 
     const totalAmount = useMemo(() => {
         return filteredData.reduce((sum, item) => sum + item.MONTANT_PAI, 0);

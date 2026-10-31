@@ -11,7 +11,7 @@ import ConfirmActionModal from '../components/ConfirmActionModal';
 import AddOperationForm from '../components/forms/AddOperationForm';
 import { exportToFormattedExcel } from '../utils/exportToCsv';
 import { formatCurrency } from '../utils/currencyUtils';
-import { labelOperationStatus } from '../utils/dataLabels';
+import { labelOperationStatus, labelCommonFallback } from '../utils/dataLabels';
 import CustomDropdown from '../components/CustomDropdown';
 import ExcelJS from 'exceljs';
 import { Search, X } from 'lucide-react';
@@ -306,14 +306,14 @@ const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onU
 
         Object.keys(grouped).sort().forEach(catCode => {
             const scatsInCat = grouped[catCode];
-            const catName = scatsInCat[Object.keys(scatsInCat)[0]][Object.keys(scatsInCat[Object.keys(scatsInCat)[0]])[0]][Object.keys(scatsInCat[Object.keys(scatsInCat)[0]][Object.keys(scatsInCat[Object.keys(scatsInCat)[0]])[0]])[0]][0].catInt || catCode;
+            const catName = labelCommonFallback(scatsInCat[Object.keys(scatsInCat)[0]][Object.keys(scatsInCat[Object.keys(scatsInCat)[0]])[0]][Object.keys(scatsInCat[Object.keys(scatsInCat)[0]][Object.keys(scatsInCat[Object.keys(scatsInCat)[0]])[0]])[0]][0].catInt || catCode, t);
             const catOpsCount = Object.values(scatsInCat).reduce((sum, scat) => sum + Object.values(scat).reduce((s, prg) => s + Object.values(prg).reduce((x, arr) => x + arr.length, 0), 0), 0);
 
             tableRows.push({ type: 'catHeader', id: `cat-${catCode}`, catCode, catName, count: catOpsCount });
 
             Object.keys(scatsInCat).sort().forEach(scatCode => {
                 const programsInScat = scatsInCat[scatCode];
-                const scatName = scatCode === 'NO_SCAT' ? 'مبالغ غير موزعة' : (programsInScat[Object.keys(programsInScat)[0]][Object.keys(programsInScat[Object.keys(programsInScat)[0]])[0]][0].scatInt || scatCode);
+                const scatName = labelCommonFallback(scatCode === 'NO_SCAT' ? 'مبالغ غير موزعة' : (programsInScat[Object.keys(programsInScat)[0]][Object.keys(programsInScat[Object.keys(programsInScat)[0]])[0]][0].scatInt || scatCode), t);
                 const scatOpsCount = Object.values(programsInScat).reduce((s, prg) => s + Object.values(prg).reduce((x, arr) => x + arr.length, 0), 0);
 
                 tableRows.push({ type: 'scatHeader', id: `scat-${catCode}-${scatCode}`, scatCode, scatName, count: scatOpsCount });

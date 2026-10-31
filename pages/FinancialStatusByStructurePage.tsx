@@ -8,6 +8,7 @@ import { formatCurrency } from '../utils/currencyUtils';
 import CustomDropdown from '../components/CustomDropdown';
 import ExcelJS from 'exceljs';
 import { saveWorkbook } from '../utils/exportXlsx';
+import { labelCommonFallback } from '../utils/dataLabels';
 
 interface FinancialStatusByStructurePageProps {
     navigate: (page: Page, id?: number, extra?: string) => void;
@@ -427,7 +428,7 @@ const FinancialStatusByStructurePage: React.FC<FinancialStatusByStructurePagePro
                                 id={`rubric-row-${row.id}`}
                                 className={`border-b hover:bg-gray-50 text-sm transition-all duration-300 ${highlightRubricId === row.id ? 'bg-amber-50 ring-2 ring-amber-300 ring-inset' : ''}`}
                             >
-                                <td className="p-3 text-gray-800 font-medium">{row.structure}</td>
+                                <td className="p-3 text-gray-800 font-medium">{labelCommonFallback(row.structure, t)}</td>
                                 <td className="p-3 text-gray-600">{formatCurrency(row.initialAuth)}</td>
                                 <td className="p-3 text-gray-600 font-bold">{formatCurrency(row.finalAuth)}</td>
                                 <td className="p-3 text-blue-600 font-bold">{formatCurrency(row.commitment)}</td>

@@ -3,6 +3,7 @@ import { Ods, LotOperation } from '../../types';
 import { normalizeDate, compareDates, getCurrentDate } from '../../utils/dateUtils';
 import { DateInputField } from '../DateInputField';
 import { useLanguage } from '../../context/LanguageContext';
+import { labelNatureOds } from '../../utils/dataLabels';
 
 interface AddOdsFormProps {
     onClose: () => void;
@@ -222,7 +223,7 @@ const AddOdsForm: React.FC<AddOdsFormProps> = ({ onClose, onSave, pieceId, initi
                         required
                         className="w-full px-3 py-2 mt-1 text-gray-700 bg-gray-100 border border-gray-300 rounded-[20px]"
                     >
-                        {natureOdsOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                        {natureOdsOptions.map(opt => <option key={opt} value={opt}>{labelNatureOds(opt, t)}</option>)}
                     </select>
                 </div>
                  <div>

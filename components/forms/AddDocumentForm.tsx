@@ -5,6 +5,7 @@ import { DateInputField } from '../DateInputField';
 import { formatCurrency, parseCurrency, formatAmountInput, formatCurrencyForInput } from '../../utils/currencyUtils';
 import CustomDropdown from '../CustomDropdown';
 import { useLanguage } from '../../context/LanguageContext';
+import { labelNaturePiece } from '../../utils/dataLabels';
 
 
 interface AddDocumentFormProps {
@@ -1103,7 +1104,7 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
                 <div>
                     <label htmlFor="natPiece" className="block text-sm font-medium text-gray-700 text-right">{t('docform.nature')}</label>
                     <select id="natPiece" value={natPiece} onChange={e => handleNatPieceChange(e.target.value)} required className="w-full h-9 px-3 py-1 mt-1 text-center text-xs text-gray-700 bg-gray-100 border border-gray-300 rounded-[20px] focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        {pieceTypes.map(type => <option key={type} value={type}>{type}</option>)}
+                        {pieceTypes.map(type => <option key={type} value={type}>{labelNaturePiece(type, t)}</option>)}
                     </select>
                 </div>
 

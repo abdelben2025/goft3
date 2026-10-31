@@ -4,6 +4,7 @@ import { useData } from '../context/DataContext';
 import { Page } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import { formatCurrency } from '../utils/currencyUtils';
+import { labelNaturePiece } from '../utils/dataLabels';
 import BeneficiaryDetailsModal from './BeneficiaryDetailsModal';
 
 interface GlobalSearchProps {
@@ -105,7 +106,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose, navigate }
         if (active('piece')) {
             db.T_PIECE.forEach(p => {
                 if ((p.PIECE || '').toLowerCase().includes(q) || (p.NAT_PIECE || '').toLowerCase().includes(q)) {
-                    foundResults.push({ type: 'piece', data: p, label: p.PIECE, secondary: `${p.NAT_PIECE} - ${formatCurrency(p.MONTANT_PIECE)}`, id: p.ID_OPERATION, page: 'DOCUMENTS' });
+                    foundResults.push({ type: 'piece', data: p, label: p.PIECE, secondary: `${labelNaturePiece(p.NAT_PIECE, t)} - ${formatCurrency(p.MONTANT_PIECE)}`, id: p.ID_OPERATION, page: 'DOCUMENTS' });
                 }
             });
         }

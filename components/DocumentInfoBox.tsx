@@ -3,6 +3,7 @@ import { Piece, Database } from '../types';
 import { formatCurrency } from '../utils/currencyUtils';
 import { normalizeDate } from '../utils/dateUtils';
 import { useLanguage } from '../context/LanguageContext';
+import { labelNaturePiece } from '../utils/dataLabels';
 
 interface DocumentInfoBoxProps {
     piece: Piece;
@@ -29,7 +30,7 @@ const DocumentInfoBox: React.FC<DocumentInfoBoxProps> = ({ piece, details, odsCa
                     {piece.NAT_PIECE === 'قرار فسخ' && details?.basePiece ? details.basePiece.PIECE : piece.PIECE}
                 </h3>
                 <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${details?.isAmendment ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>
-                    {details?.isAmendment ? details.amendmentLabel : piece.NAT_PIECE}
+                    {details?.isAmendment ? details.amendmentLabel : labelNaturePiece(piece.NAT_PIECE, t)}
                 </span>
             </div>
 

@@ -3,6 +3,7 @@ import { FileText } from 'lucide-react';
 import { Page } from '../types';
 import { formatCurrency } from '../utils/currencyUtils';
 import { useLanguage } from '../context/LanguageContext';
+import { labelOperationStatus } from '../utils/dataLabels';
 
 interface OperationRowProps {
     op: any;
@@ -35,7 +36,7 @@ const OperationRow: React.FC<OperationRowProps> = ({ op, isSelected, onSelect, n
                         : 'bg-rose-50 text-rose-700 border-rose-100'
                 }`}>
                     {op.status === 'جارية' ? <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 ml-1.5 animate-pulse"></span> : null}
-                    {op.status}
+                    {labelOperationStatus(op.status, t)}
                 </span>
             </td>
             <td className="p-3">

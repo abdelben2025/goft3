@@ -4,6 +4,7 @@ import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
 import { formatCurrency } from '../utils/currencyUtils';
 import { normalizeDate } from '../utils/dateUtils';
+import { labelCommonFallback } from '../utils/dataLabels';
 
 interface PrintMonthlyCommitmentsPageProps {
     navigate: (page: Page) => void;
@@ -82,8 +83,8 @@ const PrintMonthlyCommitmentsPage: React.FC<PrintMonthlyCommitmentsPageProps> = 
                 
                 return {
                     ...e,
-                    opName: op ? `${op.N_OPERATION} - ${op.INT_OPERATION}` : 'غير معروف',
-                    pieceName: piece ? piece.PIECE : 'غير معروف',
+                    opName: op ? `${op.N_OPERATION} - ${op.INT_OPERATION}` : labelCommonFallback('غير معروف', t),
+                    pieceName: piece ? piece.PIECE : labelCommonFallback('غير معروف', t),
                     beneficiaryName: ben ? ben.BENEFICIAIRE : '---',
                     isVisaed: !!(e.N_VISA_CB && e.DATE_VISA_CB)
                 };
@@ -93,7 +94,7 @@ const PrintMonthlyCommitmentsPage: React.FC<PrintMonthlyCommitmentsPageProps> = 
                 const dateB = b.DATE_VISA_CB || b.DATE_ENG || '';
                 return dateA.localeCompare(dateB);
             });
-    }, [db, selectedYear, selectedMonth, statusFilter, selectedAction]);
+    }, [db, selectedYear, selectedMonth, statusFilter, selectedAction, t]);
 
     const totalAmount = useMemo(() => {
         return filteredData.reduce((sum, item) => sum + getItemAmount(item), 0);

@@ -1,6 +1,7 @@
 import React from 'react';
 import { formatCurrency } from '../utils/currencyUtils';
 import { useLanguage } from '../context/LanguageContext';
+import { labelNaturePiece } from '../utils/dataLabels';
 
 export interface DocumentRowProps {
     piece: any;
@@ -72,7 +73,7 @@ const DocumentRow = React.memo<DocumentRowProps>(({
             <td className="p-1 text-center">
                 {piece.isContextOnly ? (
                     <span className="inline-flex items-center px-1 py-0.5 rounded text-[8px] font-bold bg-gray-100 text-gray-500 border border-gray-200">
-                        {piece.NAT_PIECE} ({t('doc.reference')})
+                        {labelNaturePiece(piece.NAT_PIECE, t)} ({t('doc.reference')})
                     </span>
                 ) : (
                     <span className={`inline-flex items-center px-1 py-0.5 rounded text-[8px] font-bold ${
@@ -85,7 +86,7 @@ const DocumentRow = React.memo<DocumentRowProps>(({
                         piece.NAT_PIECE === 'حكم قضائي' ? 'bg-green-100 text-green-600' :
                         'bg-gray-100 text-gray-600'
                     }`}>
-                        {piece.NAT_PIECE}
+                        {labelNaturePiece(piece.NAT_PIECE, t)}
                     </span>
                 )}
             </td>

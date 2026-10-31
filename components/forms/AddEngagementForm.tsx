@@ -4,6 +4,7 @@ import { normalizeDate, compareDates, getCurrentDate } from '../../utils/dateUti
 import { DateInputField } from '../DateInputField';
 import { formatCurrency, parseCurrency, formatAmountInput, formatCurrencyForInput } from '../../utils/currencyUtils';
 import { useLanguage } from '../../context/LanguageContext';
+import { labelNatureEng } from '../../utils/dataLabels';
 
 interface AddEngagementFormProps {
     onClose: () => void;
@@ -505,7 +506,7 @@ const AddEngagementForm: React.FC<AddEngagementFormProps> = ({ onClose, onSave, 
                             required 
                             className="w-full h-9 px-1 py-1 mt-1 text-center text-gray-700 bg-gray-100 border border-gray-300 rounded-[20px]"
                         >
-                            {natureEngOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                            {natureEngOptions.map(opt => <option key={opt} value={opt}>{labelNatureEng(opt, t)}</option>)}
                         </select>
                     </div>
                 </div>

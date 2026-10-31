@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Page } from '../types';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
+import { labelCommonFallback } from '../utils/dataLabels';
 
 interface PrintOperationsTablePageProps {
     navigate: (page: Page) => void;
@@ -167,13 +168,13 @@ const PrintOperationsTablePage: React.FC<PrintOperationsTablePageProps> = ({ nav
 
         Object.keys(grouped).sort().forEach(catCode => {
             const scatsInCat = grouped[catCode];
-            const catName = scatsInCat[Object.keys(scatsInCat)[0]][Object.keys(scatsInCat[Object.keys(scatsInCat)[0]])[0]][Object.keys(scatsInCat[Object.keys(scatsInCat)[0]][Object.keys(scatsInCat[Object.keys(scatsInCat)[0]])[0]])[0]][0].catInt || catCode;
+            const catName = labelCommonFallback(scatsInCat[Object.keys(scatsInCat)[0]][Object.keys(scatsInCat[Object.keys(scatsInCat)[0]])[0]][Object.keys(scatsInCat[Object.keys(scatsInCat)[0]][Object.keys(scatsInCat[Object.keys(scatsInCat)[0]])[0]])[0]][0].catInt || catCode, t);
             
             tableRows.push({ type: 'catHeader', id: `cat-${catCode}`, catCode, catName });
 
             Object.keys(scatsInCat).sort().forEach(scatCode => {
                 const programsInScat = scatsInCat[scatCode];
-                const scatName = scatCode === 'NO_SCAT' ? 'مبالغ غير موزعة' : (programsInScat[Object.keys(programsInScat)[0]][Object.keys(programsInScat[Object.keys(programsInScat)[0]])[0]][0].scatInt || scatCode);
+                const scatName = labelCommonFallback(scatCode === 'NO_SCAT' ? 'مبالغ غير موزعة' : (programsInScat[Object.keys(programsInScat)[0]][Object.keys(programsInScat[Object.keys(programsInScat)[0]])[0]][0].scatInt || scatCode), t);
                 
                 tableRows.push({ type: 'scatHeader', id: `scat-${catCode}-${scatCode}`, scatCode, scatName });
 
@@ -241,7 +242,7 @@ const PrintOperationsTablePage: React.FC<PrintOperationsTablePageProps> = ({ nav
         }, { aeFinale: 0, totalEngagements: 0, totalEngagementsCurrentYear: 0, remainingAE: 0, totalPaiements: 0, cpFinaleCurrentYear: 0, paiementsCurrentYear: 0, remainingCP: 0 });
 
         return { rows: tableRows, grandTotal };
-    }, [calculatedOperations, selectedActivity, searchQuery, selectedStatus, selectedTypeOp]);
+    }, [calculatedOperations, selectedActivity, searchQuery, selectedStatus, selectedTypeOp, t]);
 
     if (loading) return <div className="p-8 text-center">{t('loading')}</div>;
     

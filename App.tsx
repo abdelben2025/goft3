@@ -730,7 +730,11 @@ const App: React.FC = () => {
     }, [navigationHistory]);
 
     if (showSplash) {
-        return <SplashScreen />;
+        return (
+            <LanguageProvider>
+                <SplashScreen />
+            </LanguageProvider>
+        );
     }
 
     return (

@@ -291,7 +291,7 @@ CREATE INDEX IF NOT EXISTS idx_piece_compte            ON public.T_PIECE (ID_COM
 CREATE INDEX IF NOT EXISTS idx_piece_scategorie        ON public.T_PIECE (ID_SCATEGORIE);
 CREATE INDEX IF NOT EXISTS idx_piece_rubrique          ON public.T_PIECE (ID_RUBRIQUE);
 
-CREATE INDEX IF NOT EXISTS idx_bordereau_piece         ON public.T_BORDEREAU (ID_PIECE);
+//CREATE INDEX IF NOT EXISTS idx_bordereau_piece         ON public.T_BORDEREAU (ID_PIECE);
 
 CREATE INDEX IF NOT EXISTS idx_engagement_operation    ON public.T_ENGAGEMENT (ID_OPERATION);
 CREATE INDEX IF NOT EXISTS idx_engagement_piece        ON public.T_ENGAGEMENT (ID_PIECE);

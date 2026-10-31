@@ -2106,6 +2106,26 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 // T_USER_SECRET, which a delete would take with it.
                 await reconcileCloudUsers(sb, importedDb.T_USER);
 
+                // Probe the live cloud columns BEFORE wiping so we never send a
+                // column the current schema no longer has (PostgREST rejects the
+                // whole batch instead of ignoring the extras, e.g. the legacy
+                // BORDEREAU_PIECE column was dropped from T_PIECE).
+                const liveTableColumns: Record<string, Set<string>> = {};
+                for (const tableName of tableOrder) {
+                    const rows = importedDb[tableName];
+                    if (!rows || rows.length === 0) continue;
+                    try {
+                        const { data } = await sb.from(tableName as string).select('*').limit(1);
+                        const first = Array.isArray(data) && data[0];
+                        liveTableColumns[tableName] = new Set(first ? Object.keys(first) : []);
+                    } catch {
+                        // Fall back to our known projection if the probe fails
+                        liveTableColumns[tableName] = new Set(
+                            (TABLE_COLUMNS[tableName] || '').split(',').map(c => c.trim()).filter(Boolean)
+                        );
+                    }
+                }
+
                 for (const tableName of tableOrder) {
                     const rows = importedDb[tableName];
                     if (!rows || rows.length === 0) continue;
@@ -2118,15 +2138,21 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                         .split(',')
                         .map(column => column.trim())
                         .filter(Boolean);
-                    const payload = allowed.length
+                    // Only send columns that exist in the live cloud schema.
+                    const liveCols = liveTableColumns[tableName];
+                    const filteredAllowed = liveCols && liveCols.size > 0
+                        ? allowed.filter(column => liveCols.has(column))
+                        : allowed;
+                    const payload = filteredAllowed.length
                         ? (rows as any[]).map(row => {
                             const projected: Record<string, any> = {};
-                            for (const column of allowed) {
+                            for (const column of filteredAllowed) {
                                 if (column in row) projected[column] = row[column];
                             }
                             return projected;
-                        })
+                        }).filter(row => Object.keys(row).length > 0)
                         : rows;
+                    if (payload.length === 0) continue;
 
                     const { error } = await (sb as any).from(tableName as string).insert(payload as any);
                     // Name the table: a bare "import failed" says nothing about

@@ -1,1 +1,0 @@
-Cross-cutting TypeScript helpers for the app: password hashing, currency/date/Arabic text formatting, ODS deadline calculations, file export/save, and Tauri update checking.

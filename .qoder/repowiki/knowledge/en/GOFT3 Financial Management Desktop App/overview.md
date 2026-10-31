@@ -1,1 +1,0 @@
-Dual-runtime desktop application (Electron + Tauri) wrapping a React/TypeScript financial management UI with Supabase and SQLite backends.

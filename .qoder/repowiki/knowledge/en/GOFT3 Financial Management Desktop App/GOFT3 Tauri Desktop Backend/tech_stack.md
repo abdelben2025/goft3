@@ -1,1 +1,0 @@
-Tauri 2 (Rust backend) + rusqlite (bundled SQLite, WAL mode) + aes-gcm/pbkdf2/sha2 for AES-256-GCM backups with PBKDF2-HMAC-SHA256 (200k rounds); Windows EFS via `windows-sys` for at-rest DB encryption; tauri-plugin-updater pointing at a GitHub Releases `latest.json` with a minisign public key.

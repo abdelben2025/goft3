@@ -759,6 +759,17 @@ pub fn import_database(
                     if !existing_cols.contains(k.as_str()) {
                         continue;
                     }
+                    // T_USER.PASSWORD is NOT NULL locally and is owned by this
+                    // machine, not by the payload: map any missing/nulled
+                    // password to an empty-string placeholder so the row is not
+                    // dropped by the NOT NULL constraint. The value is restored
+                    // from the local snapshot below.
+                    if tbl == "T_USER" && k == "PASSWORD" && v.is_null() {
+                        cols.push(k.clone());
+                        placeholders.push("?");
+                        vals.push(rusqlite::types::Value::Text(String::new()));
+                        continue;
+                    }
                     cols.push(k.clone());
                     placeholders.push("?");
                     vals.push(json_to_sql(v));
@@ -799,14 +810,15 @@ pub fn import_database(
 
     // Locally cached credentials always win over the empty placeholder that
     // rows mirrored from the cloud carry (see the T_USER branch above).
+    // ID_USER is re-assigned on reinsert, so match on USERNAME first.
     tx.execute(
         r#"
         UPDATE T_USER
            SET PASSWORD = COALESCE(
                 (SELECT p.PASSWORD FROM _goft3_user_pw p
-                  WHERE p.ID_USER = T_USER.ID_USER AND p.PASSWORD <> ''),
-                (SELECT p.PASSWORD FROM _goft3_user_pw p
                   WHERE p.USERNAME = T_USER.USERNAME AND p.PASSWORD <> ''),
+                (SELECT p.PASSWORD FROM _goft3_user_pw p
+                  WHERE p.ID_USER = T_USER.ID_USER AND p.PASSWORD <> ''),
                 T_USER.PASSWORD)
          WHERE PASSWORD = '';
         "#,

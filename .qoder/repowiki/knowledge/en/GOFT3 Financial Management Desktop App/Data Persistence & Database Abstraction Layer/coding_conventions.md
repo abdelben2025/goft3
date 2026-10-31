@@ -1,4 +1,0 @@
-- Tauri command invocations go through the shared `invokeTauri<T>` helper that wraps `@tauri-apps/api/core`'s `invoke` in a try/catch and logs failures before rethrowing.
-- Each Tauri method accepts a `table: keyof Database` parameter cast to string at call sites, keeping the Rust-facing API aligned with the shared `Database` type.
-- Supabase configuration is gated by runtime checks against `localStorage` keys prefixed with `goft3_`, and any mutation triggers `window.location.reload()` to re-evaluate module-level exports.
-- Database objects are exposed as named exports (`supabase`, `tauriDb`) rather than default exports, enabling selective tree-shaking of unused backends.

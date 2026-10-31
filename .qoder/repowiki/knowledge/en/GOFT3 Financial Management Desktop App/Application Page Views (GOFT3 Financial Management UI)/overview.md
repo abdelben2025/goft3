@@ -1,1 +1,0 @@
-React page components that render the GOFT3 financial management application's screens — operations, documents, beneficiaries, financial status, reports, print layouts, and admin settings.

@@ -1,5 +1,0 @@
-- Each context file exports a `*Provider` component plus a `use*` hook that throws when used outside its provider, following the standard React context pattern.
-- Heavy tables (`T_OPERATION`, `T_ENGAGEMENT`, `T_PAIEMENT`) are split into separate state slices while a memoized `db` object merges them back for compatibility with code expecting a flat `Database` shape.
-- Table metadata (column projections, ID field names, Arabic labels) is centralized in module-level constant maps (`TABLE_COLUMNS`, `TABLE_ID_FIELDS`, `TABLE_AR_NAMES`) rather than scattered across components.
-- Derived UI data is computed with `useMemo` over `db` slices (e.g. `useDocumentDetails`, `useNotifications`) instead of being stored in context state.
-- User-facing strings are looked up through the `t()` function from `LanguageContext` using dot-notation keys defined in `i18n/translations.ts`; missing keys fall back to the raw key string.

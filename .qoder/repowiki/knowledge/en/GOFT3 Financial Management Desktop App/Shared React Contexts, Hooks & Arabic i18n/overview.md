@@ -1,1 +1,0 @@
-Provides the app-wide React contexts (data, language, toast), derived data hooks, and Arabic-only translation resources consumed by all pages.

@@ -1,1 +1,0 @@
-Provides the application's data layer with a Supabase client for cloud storage, a Tauri-backed SQLite adapter for desktop mode, and the canonical SQL schema defining all tables.

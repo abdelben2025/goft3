@@ -1,1 +1,0 @@
-React Context API for global state; `@tanstack/react-query` for cached table queries; Supabase client for cloud DB and realtime `postgres_changes`; Tauri IPC (`tauriDb`) for local SQLite mirroring; localStorage as fallback backup.

@@ -1,6 +1,0 @@
-The module exposes two parallel persistence backends behind a shared `Database` type from `../types`:
-- `supabaseClient.ts` — browser-side client that lazily constructs an `@supabase/supabase-js` client only when URL/key are present in `localStorage` (keys `goft3_supabase_url`, `goft3_supabase_key`), exposing `isConfigured`, `saveConfiguration`, and `resetConfiguration` which reload the page on change.
-- `tauriService.ts` — desktop-side adapter that dynamically imports `@tauri-apps/api/core` inside a safe `invokeTauri` wrapper and forwards CRUD/backup/export commands (`get_database`, `add_item`, `upsert_item`, `update_item`, `delete_item`, `delete_operation_cascade`, `import_database`, `export_database`, `save_backup`, `read_backup`, `export_sqlite_db`, `export_supabase_sqlite`, `get_local_db_path`) to Rust commands via `isTauri()` detection.
-- `dbSchema.ts` — single source of truth for the PostgreSQL DDL (`createTablesSQL` template literal) used to bootstrap the Supabase schema; it is not executed by the app but copied into Supabase's SQL Editor.
-- `database.ts` is a deprecated placeholder redirecting callers to `supabaseClient.ts`.
-Dependency direction: consumers import either backend; neither backend depends on the other. The Tauri path depends on the shared `Database` type, while the Supabase path is framework-only.

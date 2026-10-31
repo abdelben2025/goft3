@@ -1,3 +1,0 @@
-- Cross-platform runtime selection is done at the service boundary: the `services` module abstracts data access so pages never import Electron or Tauri APIs directly.
-- Arabic-first RTL layout is enforced globally in `index.tsx` by auto-setting `dir='auto'` on all inputs/textareas and overriding `window.confirm`/`alert` to restore focus after native dialogs.
-- Shared state lives in React contexts from `shared_runtime` (data, language, toast) rather than component-local state, and is consumed via derived hooks instead of direct context access.

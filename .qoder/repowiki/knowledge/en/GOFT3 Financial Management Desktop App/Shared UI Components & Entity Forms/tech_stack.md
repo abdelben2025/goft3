@@ -1,1 +1,0 @@
-React functional components with TypeScript interfaces; Tailwind CSS utility classes for styling; framer-motion (`motion`, `AnimatePresence`) for page/modal transitions; Bootstrap Icons (`bi-*`) for iconography.

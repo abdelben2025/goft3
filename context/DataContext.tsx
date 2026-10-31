@@ -1108,7 +1108,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                         id: Math.random().toString(36).substr(2, 9),
                         username: u.username,
                         actionType: 'login',
-                        description: 'دخل إلى النظام',
+                        description: t('ctxevent.loginJoined'),
                         timestamp: new Date().toISOString()
                     };
                     setRecentEvents(prev => [ev, ...prev].slice(0, 10));
@@ -1120,7 +1120,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                         id: Math.random().toString(36).substr(2, 9),
                         username: u.username,
                         actionType: 'logout',
-                        description: 'غادر النظام',
+                        description: t('ctxevent.logoutLeft'),
                         timestamp: new Date().toISOString()
                     };
                     setRecentEvents(prev => [ev, ...prev].slice(0, 10));
@@ -1145,7 +1145,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         });
         presenceChannelRef.current = channel;
         return channel;
-    }, [isOnline]);
+    }, [isOnline, t]);
 
     useEffect(() => {
         if (isOnline && supabase) {
@@ -1952,7 +1952,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 enqueueForSupabaseSync('DELETE_OP', 'T_OPERATION_CASCADE', { id });
             }
 
-            broadcastEvent('delete', 'عملية وكافة ملحقاتها', op?.INT_OPERATION);
+            broadcastEvent('delete', t('ctxevent.deleteOperationAllAttachments'), op?.INT_OPERATION);
             return { message: 'Operation deleted' };
         } catch (err: any) {
             console.error("Tauri deleteOperation error:", err);
@@ -1978,7 +1978,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                     const op = db.T_OPERATION.find(o => o.ID_OPERATION === id);
                     const newOps = db.T_OPERATION.filter(o => o.ID_OPERATION !== id);
                     setOperations(newOps);
-                    broadcastEvent('delete', 'عملية وكافة ملحقاتها', op?.INT_OPERATION);
+                    broadcastEvent('delete', t('ctxevent.deleteOperationAllAttachments'), op?.INT_OPERATION);
                 }
                 return { message: 'Operation deleted' };
             } catch (err: any) {
@@ -2039,7 +2039,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                     },
                     { USERNAME: 'admin', ROLE: 'admin', PASSWORD: DEFAULT_ADMIN_PASSWORD_HASH }
                 );
-                broadcastEvent('reset', 'قاعدة البيانات بالكامل');
+                broadcastEvent('reset', t('ctxevent.resetDbFull'));
 
             } catch (e) {
                 console.error("Reset failed", e);
@@ -2162,7 +2162,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                         throw new Error(`إدراج ${tableName}: ${error.message}${hint}`);
                     }
                 }
-                broadcastEvent('import', 'قاعدة بيانات كاملة من ملف');
+                broadcastEvent('import', t('ctxevent.importDbFromFile'));
                 alert(t('ctxalert.importSuccess'));
             } catch (e) {
                 console.error("Import failed:", e);

@@ -101,7 +101,7 @@ const LotsReportPage: React.FC<LotsReportPageProps> = ({ navigate, currentUser, 
                 </tbody>
             </table>
         `;
-        exportToFormattedExcel(tableHtml, 'تقرير_الحصص');
+        exportToFormattedExcel(tableHtml, t('lotxl.file_name'));
     };
 
     return (

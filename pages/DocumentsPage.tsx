@@ -763,16 +763,16 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
         }
 
         const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('الوثائق');
+        const worksheet = workbook.addWorksheet(t('docxl.sheetName'));
         worksheet.views = [{ rightToLeft: true }];
 
         // Define columns
         worksheet.columns = [
             { header: '#', key: 'index', width: 6 },
-            { header: t('col.document'), key: 'document', width: 40 },
-            { header: 'الطبيعة', key: 'nature', width: 25 },
-            { header: 'الحالة', key: 'status', width: 15 },
-            { header: 'تفصيل الهيكلة', key: 'structure', width: 30 },
+            { header: t('docxl.colSubject'), key: 'document', width: 40 },
+            { header: t('docxl.colNature'), key: 'nature', width: 25 },
+            { header: t('col.status'), key: 'status', width: 15 },
+            { header: t('col.structure'), key: 'structure', width: 30 },
             { header: t('col.beneficiary'), key: 'beneficiary', width: 30 },
             { header: t('col.amount'), key: 'amount', width: 22 }
         ];
@@ -800,7 +800,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
         for (const row of flattenedRows) {
             if (row.type === 'operation') {
                 const opt = row.data;
-                const opText = `العملية: ${opt?.N_OPERATION} - ${opt?.INT_OPERATION}`;
+                const opText = t('docxl.opRow', { num: opt?.N_OPERATION, title: opt?.INT_OPERATION });
                 const addedRow = worksheet.addRow({ index: opText });
                 
                 // Merge columns A to G (1 to 7) for operation title
@@ -823,7 +823,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                 };
             } else if (row.type === 'totals') {
                 const { totalCommitment, totalPayment } = row.data;
-                const totalText = `مجموع الالتزام = ${formatCurrencyForExcel(totalCommitment)} دج    |    مجموع الدفع = ${formatCurrencyForExcel(totalPayment)} دج`;
+                const totalText = `${t('doc.total_commitment', { amount: formatCurrencyForExcel(totalCommitment) })} دج    |    ${t('doc.total_payment', { amount: formatCurrencyForExcel(totalPayment) })} دج`;
                 const addedRow = worksheet.addRow({ index: totalText });
                 
                 // Merge columns A to G
@@ -915,7 +915,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
             }
         }
 
-        await saveWorkbook(workbook, `جدول_الوثائق_${new Date().toISOString().split('T')[0]}.xlsx`);
+        await saveWorkbook(workbook, t('docxl.exportFileName', { date: new Date().toISOString().split('T')[0] }));
     };
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -972,11 +972,11 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                 await runInTransaction(async () => {
                     for (const [index, row] of (json as any[]).entries()) {
                         try {
-                            const n_operation = row['رقم العملية']?.trim();
-                            const piece_text = row['موضوع الوثيقة']?.trim();
-                            const nat_piece = row['طبيعة الوثيقة']?.trim();
-                            const linked_piece_name = row['الوثيقة المرتبط بها']?.trim();
-                            const montant_str = String(row['المبلغ'] || '0').replace(',', '.');
+                            const n_operation = row[t('docxl.colOpNumber')]?.trim();
+                            const piece_text = row[t('docxl.colSubject')]?.trim();
+                            const nat_piece = row[t('docxl.colNature')]?.trim();
+                            const linked_piece_name = row[t('docxl.colLinkedPiece')]?.trim();
+                            const montant_str = String(row[t('col.amount')] || '0').replace(',', '.');
                             const montant = parseFloat(montant_str);
 
                             if (!n_operation || !piece_text || !nat_piece || isNaN(montant)) {
@@ -1030,18 +1030,18 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
 
                             let id_beneficiaire: number | null = null;
                             let id_compte: number | null = null;
-                            if (row['المستفيد'] && nat_piece !== 'مقرر') {
-                                const beneficiaire = db.T_BENEFICIAIRE.find(b => b.BENEFICIAIRE.trim().toLowerCase() === String(row['المستفيد']).trim().toLowerCase());
+                            if (row[t('col.beneficiary')] && nat_piece !== 'مقرر') {
+                                const beneficiaire = db.T_BENEFICIAIRE.find(b => b.BENEFICIAIRE.trim().toLowerCase() === String(row[t('col.beneficiary')]).trim().toLowerCase());
                                 if (!beneficiaire) {
-                                    errors.push(t('docalert.import_row_beneficiary_not_found', { row: index + 2, name: row['المستفيد'] }));
+                                    errors.push(t('docalert.import_row_beneficiary_not_found', { row: index + 2, name: row[t('col.beneficiary')] }));
                                     errorCount++; continue;
                                 }
                                 id_beneficiaire = beneficiaire.ID_BENEFICIAIRE;
 
-                                if (row['رقم الحساب']) {
-                                    const compte = db.T_COMPTE_BANCAIRE.find(acc => acc.ID_BENEFICIAIRE === id_beneficiaire && acc.RIB === String(row['رقم الحساب']).trim());
+                                if (row[t('docxl.colAccount')]) {
+                                    const compte = db.T_COMPTE_BANCAIRE.find(acc => acc.ID_BENEFICIAIRE === id_beneficiaire && acc.RIB === String(row[t('docxl.colAccount')]).trim());
                                     if (!compte) {
-                                        errors.push(t('docalert.import_row_account_not_found', { row: index + 2, account: row['رقم الحساب'] }));
+                                        errors.push(t('docalert.import_row_account_not_found', { row: index + 2, account: row[t('docxl.colAccount')] }));
                                         errorCount++; continue;
                                     }
                                     id_compte = compte.ID_COMPTE;
@@ -1052,10 +1052,10 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                             }
                             
                             let id_scat: number | null = null;
-                            if (row['رمز الصنف الفرعي']) {
-                                const scategorie = db.T_SCATEGORIE.find(sc => sc.C_SCATEGORIE === String(row['رمز الصنف الفرعي']).trim());
+                            if (row[t('docxl.colSubCategory')]) {
+                                const scategorie = db.T_SCATEGORIE.find(sc => sc.C_SCATEGORIE === String(row[t('docxl.colSubCategory')]).trim());
                                 if (!scategorie) {
-                                    errors.push(t('docalert.import_row_scat_not_found', { row: index + 2, code: row['رمز الصنف الفرعي'] }));
+                                    errors.push(t('docalert.import_row_scat_not_found', { row: index + 2, code: row[t('docxl.colSubCategory')] }));
                                     errorCount++; continue;
                                 }
                                 id_scat = scategorie.ID_SCATEGORIE;
@@ -1065,10 +1065,10 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                             }
                             
                             let id_rubrique: number | null = null;
-                            if (row['تفصيل الهيكلة']) {
-                                const rubrique = db.T_RUBRIQUE.find(r => r.RUBRIQUE === row['تفصيل الهيكلة'].trim());
+                            if (row[t('col.structure')]) {
+                                const rubrique = db.T_RUBRIQUE.find(r => r.RUBRIQUE === row[t('col.structure')].trim());
                                 if (!rubrique) {
-                                    errors.push(t('docalert.import_row_rubrique_not_found', { row: index + 2, name: row['تفصيل الهيكلة'] }));
+                                    errors.push(t('docalert.import_row_rubrique_not_found', { row: index + 2, name: row[t('col.structure')] }));
                                     errorCount++; continue;
                                 }
                                 id_rubrique = rubrique.ID_RUBRIQUE;
@@ -1084,7 +1084,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                                 NAT_PIECE: nat_piece, ID_OPERATION: id_operation, PIECE: piece_text,
                                 ID_BENEFICIAIRE: id_beneficiaire, ID_COMPTE: id_compte, MONTANT_PIECE: montant,
                                 ID_SCATEGORIE: id_scat, ID_RUBRIQUE: id_rubrique,
-                                DELAI_EX_JOURS: row['مدة الإنجاز (بالأيام)'] || null,
+                                DELAI_EX_JOURS: row[t('docxl.colDuration')] || null,
                                 ID_PIECE_INIT: id_piece_init, N_VISA_CM: null, DATE_VISA_CM: null,
                                 SAI_ENG: saiEng, SAI_PAI: saiPai
                             });
@@ -1125,20 +1125,20 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
 
     const handleDownloadDocumentTemplate = async () => {
         const headers = [
-            'رقم العملية', 
-            'موضوع الوثيقة', 
-            'طبيعة الوثيقة', 
-            'المبلغ', 
-            'المستفيد', 
-            'رقم الحساب', 
-            'رمز الصنف الفرعي', 
-            'تفصيل الهيكلة', 
-            'مدة الإنجاز (بالأيام)',
-            'الوثيقة المرتبط بها'
+            t('docxl.colOpNumber'),
+            t('docxl.colSubject'),
+            t('docxl.colNature'),
+            t('col.amount'),
+            t('col.beneficiary'),
+            t('docxl.colAccount'),
+            t('docxl.colSubCategory'),
+            t('col.structure'),
+            t('docxl.colDuration'),
+            t('docxl.colLinkedPiece')
         ];
         
         const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('Template');
+        const worksheet = workbook.addWorksheet(t('docxl.templateSheetName'));
         worksheet.addRow(headers);
         
         // Style headers
@@ -1146,7 +1146,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
         worksheet.getRow(1).alignment = { horizontal: 'center' };
         worksheet.views = [{ rightToLeft: true }]; // Arabic friendly
 
-        await saveWorkbook(workbook, 'نموذج_استيراد_الوثائق.xlsx');
+        await saveWorkbook(workbook, t('docxl.templateFileName'));
     };
 
     const handleNavigateToDoc = useCallback((type: 'ENG' | 'PAI', p: any) => {

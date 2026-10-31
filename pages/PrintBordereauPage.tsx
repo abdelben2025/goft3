@@ -93,7 +93,7 @@ const PrintBordereauPage: React.FC<PrintBordereauPageProps> = ({ navigate, opera
         const { bordereau, engagements } = printData;
 
         const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('جدول إرسال');
+        const worksheet = workbook.addWorksheet(t('print.bordereau_title'));
         worksheet.views = [{ rightToLeft: true }];
 
         const borderStyle: Partial<ExcelJS.Borders> = {
@@ -108,7 +108,7 @@ const PrintBordereauPage: React.FC<PrintBordereauPageProps> = ({ navigate, opera
         const normalFont = { name: 'Amiri', size: 10 };
 
         // 1. Republic Title
-        const titleRow = worksheet.addRow(['الجمهورية الجزائرية الديمقراطية الشعبية']);
+        const titleRow = worksheet.addRow([t('print.header.republic')]);
         worksheet.mergeCells(titleRow.number, 1, titleRow.number, 5);
         titleRow.getCell(1).font = { ...boldFont, size: 14 };
         titleRow.getCell(1).alignment = centerAlign;
@@ -116,11 +116,11 @@ const PrintBordereauPage: React.FC<PrintBordereauPageProps> = ({ navigate, opera
 
         // 2. Ministry Info
         const info = [
-            'وزارة الأشغال العمومية',
-            'و المنشآت القاعدية',
-            'مديرية الأشغال العمومية',
-            'لولاية غليزان',
-            `رقم: ................... / م أ ع / ${bordereau?.ANNEE || new Date().getFullYear()}`
+            t('print.bordereau.ministry_1'),
+            t('print.bordereau.ministry_2'),
+            t('print.bordereau.ministry_3'),
+            t('print.bordereau.ministry_4'),
+            t('print.bordereau.ref_num', { year: bordereau?.ANNEE || new Date().getFullYear() })
         ];
         info.forEach((text) => {
             const row = worksheet.addRow([text]);
@@ -129,21 +129,21 @@ const PrintBordereauPage: React.FC<PrintBordereauPageProps> = ({ navigate, opera
         });
 
         // Date
-        const dateRow = worksheet.addRow(['غليزان في: .........................']);
+        const dateRow = worksheet.addRow([t('print.relizane_in')]);
         worksheet.mergeCells(dateRow.number, 1, dateRow.number, 5);
         dateRow.getCell(1).font = boldFont;
         dateRow.getCell(1).alignment = { horizontal: 'left' };
         worksheet.addRow([]);
 
         // 3. To...
-        const toRow = worksheet.addRow(['إلى السيد(ة): المراقب الميزانياتي لدى ولاية غليزان']);
+        const toRow = worksheet.addRow([t('print.bordereau.to_controller')]);
         worksheet.mergeCells(toRow.number, 1, toRow.number, 5);
         toRow.getCell(1).font = { ...boldFont, size: 12 };
         toRow.getCell(1).alignment = centerAlign;
         worksheet.addRow([]);
 
         // 4. Main Title "Bordereau"
-        const mainTitleRow = worksheet.addRow(['جدول إرسال']);
+        const mainTitleRow = worksheet.addRow([t('print.bordereau_title')]);
         worksheet.mergeCells(mainTitleRow.number, 1, mainTitleRow.number, 5);
         mainTitleRow.height = 40;
         mainTitleRow.getCell(1).font = { ...boldFont, size: 24 };
@@ -157,7 +157,7 @@ const PrintBordereauPage: React.FC<PrintBordereauPageProps> = ({ navigate, opera
         };
         worksheet.addRow([]);
 
-        const introRow = worksheet.addRow(['تجدون طي هذا الجدول بطاقات الالتزام و الوثائق المرفقة التالية:']);
+        const introRow = worksheet.addRow([t('print.bordereau.intro')]);
         worksheet.mergeCells(introRow.number, 1, introRow.number, 5);
         introRow.getCell(1).font = boldFont;
         introRow.getCell(1).alignment = { horizontal: 'right' };
@@ -165,11 +165,11 @@ const PrintBordereauPage: React.FC<PrintBordereauPageProps> = ({ navigate, opera
 
         // 5. Table Header
         const headerRow = worksheet.addRow([
-            'رقم بطاقة الالتزام',
-            'الصنف',
-            'موضوع الالتزام',
-            'الوثائق الثبوتية المرفقة بكل بطاقة',
-            'ملاحظة'
+            t('col.eng_no'),
+            t('col.categorie'),
+            t('borxl.subject'),
+            t('print.bordereau.supporting_docs'),
+            t('col.observation')
         ]);
         headerRow.eachCell(cell => {
             cell.font = boldFont;
@@ -183,7 +183,7 @@ const PrintBordereauPage: React.FC<PrintBordereauPageProps> = ({ navigate, opera
             const op = db.T_OPERATION.find(o => o.ID_OPERATION === opId);
             const opEngs = groupedEngagements[opId];
             
-            const groupRow = worksheet.addRow([`رقم العملية: ${op?.N_OPERATION?.startsWith('N') ? op.N_OPERATION : `N ${op?.N_OPERATION || ''}`}`]);
+            const groupRow = worksheet.addRow([t('print.bordereau.operation_number', { op: op?.N_OPERATION?.startsWith('N') ? op.N_OPERATION : `N ${op?.N_OPERATION || ''}` })]);
             worksheet.mergeCells(groupRow.number, 1, groupRow.number, 5);
             groupRow.getCell(1).font = boldFont;
             groupRow.getCell(1).border = borderStyle;
@@ -212,7 +212,7 @@ const PrintBordereauPage: React.FC<PrintBordereauPageProps> = ({ navigate, opera
 
         // 7. Footer
         const totalRow = worksheet.addRow([
-            'مجموع البطاقات',
+            t('print.bordereau.total_cards'),
             engagements.length.toString().padStart(2, '0'),
             '', '', ''
         ]);
@@ -224,7 +224,7 @@ const PrintBordereauPage: React.FC<PrintBordereauPageProps> = ({ navigate, opera
 
         worksheet.addRow([]);
         worksheet.addRow([]);
-        const footerRow = worksheet.addRow(['الآمر بالصرف']);
+        const footerRow = worksheet.addRow([t('print.ordonnateur_sign')]);
         worksheet.mergeCells(footerRow.number, 1, footerRow.number, 5);
         footerRow.getCell(1).font = { ...boldFont, size: 12, underline: true };
         footerRow.getCell(1).alignment = { horizontal: 'right' };

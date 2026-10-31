@@ -681,12 +681,12 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
         let headers: string[] = [];
         let fileName = '';
         switch (type) {
-            case 'LOTS': headers = ['رقم الحصة', 'عنوان الحصة', 'المبلغ الأولي', 'المبلغ النهائي', 'حالة الإسناد']; fileName = 'نموذج_الحصص.xlsx'; break;
-            case 'ENGAGEMENTS': headers = ['رقم الإلتزام', 'السنة', 'طبيعة الإلتزام', 'موضوع الإلتزام', 'موضوع الوثيقة', 'المبلغ', 'تاريخ الإلتزام', 'رقم التأشيرة', 'تاريخ التأشيرة']; fileName = 'نموذج_الإلتزامات.xlsx'; break;
-            case 'PAIEMENTS': headers = ['رقم الدفع', 'السنة', 'موضوع الدفع', 'وثيقة الدفع', 'المبلغ', 'تاريخ الدفع', 'رقم الحوالة', 'تاريخ الحوالة', 'تاريخ القبول', 'مبلغ الأشغال', 'تسبيق جزافي', 'تسبيق تموين', 'اقتطاع ضمان', 'عقوبة تأخير', 'اقتطاع آخر', 'تسديد تسبيق جزافي', 'تسديد تسبيق تموين']; fileName = 'نموذج_الدفعات.xlsx'; break;
+            case 'LOTS': headers = [t('det.colLotNo'), t('det.colLotTitle'), t('det.colInitialAmount'), t('det.colFinalAmount'), t('detxl.colAssignStatus')]; fileName = t('detxl.fileLotsTemplate'); break;
+            case 'ENGAGEMENTS': headers = [t('detxl.colEngNumber'), t('col.year'), t('detxl.colEngNature'), t('detxl.colEngSubject'), t('detxl.colDocSubject'), t('col.amount'), t('detxl.colEngDate'), t('col.visa_no'), t('col.visa_date')]; fileName = t('detxl.fileEngagementsTemplate'); break;
+            case 'PAIEMENTS': headers = [t('detxl.colPayNumber'), t('col.year'), t('detxl.colPaySubject'), t('detxl.colPayDoc'), t('col.amount'), t('detxl.colPayDate'), t('col.mandat_no'), t('col.mandat_date'), t('detxl.colAcceptanceDate'), t('detxl.colWorksAmount'), t('detxl.colAdvanceFlat'), t('detxl.colAdvanceSupply'), t('detxl.colDeductionGuarantee'), t('detxl.colPenaltyDelay'), t('detxl.colOtherDeduction'), t('detxl.colRepayAdvanceFlat'), t('detxl.colRepayAdvanceSupply')]; fileName = t('detxl.filePaymentsTemplate'); break;
         }
         const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('Template');
+        const worksheet = workbook.addWorksheet(t('detxl.sheetTemplate'));
         worksheet.addRow(headers);
         await saveWorkbook(workbook, fileName);
     };
@@ -729,21 +729,21 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                 let successCount = 0;
                 await runInTransaction(async () => {
                     for (const row of json) {
-                        const nLot = String(row['رقم الحصة'] || '').trim();
-                        const intituleLot = String(row['عنوان الحصة'] || '').trim();
+                        const nLot = String(row[t('det.colLotNo')] || '').trim();
+                        const intituleLot = String(row[t('det.colLotTitle')] || '').trim();
                         if (!nLot || !intituleLot) continue;
                         if (lots.find(l => l.N_LOT === nLot)) continue;
                         await addItem('T_LOT_OPERATION', {
                             ID_OPERATION: operationId, N_LOT: nLot, INTITULE_LOT: intituleLot,
-                            MONTANT_INITIALE_LOT: parseCurrency(row['المبلغ الأولي']), MONTANT_FINALE_LOT: parseCurrency(row['المبلغ النهائي']),
-                            ATTRIBUER: String(row['حالة الإسناد'] || '').trim() === 'مسندة'
+                            MONTANT_INITIALE_LOT: parseCurrency(row[t('det.colInitialAmount')]), MONTANT_FINALE_LOT: parseCurrency(row[t('det.colFinalAmount')]),
+                            ATTRIBUER: String(row[t('detxl.colAssignStatus')] || '').trim() === 'مسندة'
                         });
                         successCount++;
                     }
                 });
                 if (successCount > 0) {
                     showToast(t('det.lotsImported', { count: successCount }), 'success');
-                    broadcastEvent('import', `عدد ${successCount} من الحصص للعملية`);
+                    broadcastEvent('import', t('detxl.lotsImportedEvent', { count: successCount }));
                 }
             } catch { alert(t('det.fileReadFailed')); } finally { if(event.target) event.target.value = ''; }
         };
@@ -787,10 +787,10 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                 if (json.length === 0) return;
 
                 json.sort((a, b) => {
-                    const yearA = parseInt(a['السنة']) || 0;
-                    const yearB = parseInt(b['السنة']) || 0;
+                    const yearA = parseInt(a[t('col.year')]) || 0;
+                    const yearB = parseInt(b[t('col.year')]) || 0;
                     if (yearA !== yearB) return yearA - yearB;
-                    return (parseInt(a['رقم الإلتزام']) || 0) - (parseInt(b['رقم الإلتزام']) || 0);
+                    return (parseInt(a[t('detxl.colEngNumber')]) || 0) - (parseInt(b[t('detxl.colEngNumber')]) || 0);
                 });
 
                 const nextNumbersByYear: Record<string, number> = {};
@@ -798,9 +798,9 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
 
                 for (const [idx, row] of json.entries()) {
                     const rowNum = idx + 2;
-                    const nEngStr = String(row['رقم الإلتزام'] || '').trim();
-                    const annee = String(row['السنة'] || '').trim();
-                    const pieceName = String(row['موضوع الوثيقة'] || '').trim();
+                    const nEngStr = String(row[t('detxl.colEngNumber')] || '').trim();
+                    const annee = String(row[t('col.year')] || '').trim();
+                    const pieceName = String(row[t('detxl.colDocSubject')] || '').trim();
                     
                     if (!nEngStr || !annee || !pieceName) {
                         errors.push(t('det.rowMissingBasic', { row: rowNum }));
@@ -836,20 +836,20 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                 let successCount = 0;
                 await runInTransaction(async () => {
                     for (const row of json) {
-                        const piece = operationPieces.find(p => p.PIECE.trim() === String(row['موضوع الوثيقة']).trim());
+                        const piece = operationPieces.find(p => p.PIECE.trim() === String(row[t('detxl.colDocSubject')]).trim());
                         if (piece) {
                             await addItem('T_ENGAGEMENT', {
                                 ID_OPERATION: operationId, 
                                 ID_PIECE: piece.ID_PIECE, 
-                                N_ENG: String(row['رقم الإلتزام']).trim().padStart(2, '0'), 
-                                ANNEE: String(row['السنة']).trim(),
-                                NATURE_ENG: String(row['طبيعة الإلتزام'] || '').trim(), 
-                                OBJET_ENG: String(row['موضوع الإلتزام'] || '').trim(),
-                                MONTANT_ENG: parseCurrency(row['المبلغ']), 
+                                N_ENG: String(row[t('detxl.colEngNumber')]).trim().padStart(2, '0'), 
+                                ANNEE: String(row[t('col.year')]).trim(),
+                                NATURE_ENG: String(row[t('detxl.colEngNature')] || '').trim(), 
+                                OBJET_ENG: String(row[t('detxl.colEngSubject')] || '').trim(),
+                                MONTANT_ENG: parseCurrency(row[t('col.amount')]), 
                                 AE_ENG: 0, TOTAL_ENG_ANTERIEURE: 0, SOLDE_ANTERIEURE: 0, SOLDE_RELIQUAT: 0, 
-                                DATE_ENG: normalizeDate(row['تاريخ الإلتزام']), 
-                                N_VISA_CB: String(row['رقم التأشيرة'] || ''), 
-                                DATE_VISA_CB: normalizeDate(row['تاريخ التأشيرة'])
+                                DATE_ENG: normalizeDate(row[t('detxl.colEngDate')]), 
+                                N_VISA_CB: String(row[t('col.visa_no')] || ''), 
+                                DATE_VISA_CB: normalizeDate(row[t('col.visa_date')])
                             });
                             
                             if (!piece.SAI_ENG) {
@@ -902,10 +902,10 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                 if (json.length === 0) return;
 
                 json.sort((a, b) => {
-                    const yearA = parseInt(a['السنة']) || 0;
-                    const yearB = parseInt(b['السنة']) || 0;
+                    const yearA = parseInt(a[t('col.year')]) || 0;
+                    const yearB = parseInt(b[t('col.year')]) || 0;
                     if (yearA !== yearB) return yearA - yearB;
-                    return (parseInt(a['رقم الدفع']) || 0) - (parseInt(b['رقم الدفع']) || 0);
+                    return (parseInt(a[t('detxl.colPayNumber')]) || 0) - (parseInt(b[t('detxl.colPayNumber')]) || 0);
                 });
 
                 const nextNumbersByYear: Record<string, number> = {};
@@ -913,9 +913,9 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
 
                 for (const [idx, row] of json.entries()) {
                     const rowNum = idx + 2;
-                    const nPaiStr = String(row['رقم الدفع'] || '').trim();
-                    const annee = String(row['السنة'] || '').trim();
-                    const pieceName = String(row['وثيقة الدفع'] || '').trim();
+                    const nPaiStr = String(row[t('detxl.colPayNumber')] || '').trim();
+                    const annee = String(row[t('col.year')] || '').trim();
+                    const pieceName = String(row[t('detxl.colPayDoc')] || '').trim();
 
                     if (!nPaiStr || !annee || !pieceName) {
                         errors.push(t('det.rowMissingData', { row: rowNum }));
@@ -957,7 +957,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                 let successCount = 0;
                 await runInTransaction(async () => {
                     for (const row of json) {
-                        const piece = operationPieces.find(p => p.PIECE.trim() === String(row['وثيقة الدفع']).trim());
+                        const piece = operationPieces.find(p => p.PIECE.trim() === String(row[t('detxl.colPayDoc')]).trim());
                         if (piece) {
                             const relatedEngId = ['فاتورة', 'حكم قضائي'].includes(piece.NAT_PIECE)
                                 ? (engagements.find(e => e.ID_PIECE === piece.ID_PIECE)?.ID_ENGAGEMENT || engagements.find(e => e.ID_PIECE === piece.ID_PIECE_INIT)?.ID_ENGAGEMENT)
@@ -967,23 +967,23 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                                 ID_OPERATION: operationId, 
                                 ID_ENG: relatedEngId!, 
                                 ID_PIECE: piece.ID_PIECE, 
-                                N_PAI: String(row['رقم الدفع']).trim().padStart(2, '0'), 
-                                ANNEE: String(row['السنة']).trim(),
-                                DATE_PAI: normalizeDate(row['تاريخ الدفع']), 
-                                OBJET_PAI: String(row['موضوع الدفع'] || '').trim(), 
-                                MONTANT_PAI: parseCurrency(row['المبلغ']),
+                                N_PAI: String(row[t('detxl.colPayNumber')]).trim().padStart(2, '0'), 
+                                ANNEE: String(row[t('col.year')]).trim(),
+                                DATE_PAI: normalizeDate(row[t('detxl.colPayDate')]), 
+                                OBJET_PAI: String(row[t('detxl.colPaySubject')] || '').trim(), 
+                                MONTANT_PAI: parseCurrency(row[t('col.amount')]),
                                 TOTAL_PAI: 0, 
-                                N_MANDAT: String(row['رقم الحوالة'] || ''), 
-                                DATE_MANDAT: normalizeDate(row['تاريخ الحوالة']), 
-                                DATE_ADMIS: normalizeDate(row['تاريخ القبول']),
-                                MONTANT_TRAVAUX_REALISES: parseCurrency(row['مبلغ الأشغال']), 
-                                AVANCE_FORFAITAIRE: parseCurrency(row['تسبيق جزافي']),
-                                AVANCE_APPROVISIONNEMENT: parseCurrency(row['تسبيق تموين']), 
-                                RETENUE_GARANTIE: parseCurrency(row['اقتطاع ضمان']),
-                                PENALITE_RETARD: parseCurrency(row['عقوبة تأخير']), 
-                                AUTRE_DEDUCTION: parseCurrency(row['اقتطاع آخر']),
-                                REMBOURSEMENT_AVANCE_FORFAITAIRE: parseCurrency(row['تسديد تسبيق جزافي']), 
-                                REMBOURSEMENT_AVANCE_APPROVISIONNEMENT: parseCurrency(row['تسديد تسبيق تموين']),
+                                N_MANDAT: String(row[t('col.mandat_no')] || ''), 
+                                DATE_MANDAT: normalizeDate(row[t('col.mandat_date')]), 
+                                DATE_ADMIS: normalizeDate(row[t('detxl.colAcceptanceDate')]),
+                                MONTANT_TRAVAUX_REALISES: parseCurrency(row[t('detxl.colWorksAmount')]), 
+                                AVANCE_FORFAITAIRE: parseCurrency(row[t('detxl.colAdvanceFlat')]),
+                                AVANCE_APPROVISIONNEMENT: parseCurrency(row[t('detxl.colAdvanceSupply')]), 
+                                RETENUE_GARANTIE: parseCurrency(row[t('detxl.colDeductionGuarantee')]),
+                                PENALITE_RETARD: parseCurrency(row[t('detxl.colPenaltyDelay')]), 
+                                AUTRE_DEDUCTION: parseCurrency(row[t('detxl.colOtherDeduction')]),
+                                REMBOURSEMENT_AVANCE_FORFAITAIRE: parseCurrency(row[t('detxl.colRepayAdvanceFlat')]), 
+                                REMBOURSEMENT_AVANCE_APPROVISIONNEMENT: parseCurrency(row[t('detxl.colRepayAdvanceSupply')]),
                             });
 
                             if (!piece.SAI_PAI) {

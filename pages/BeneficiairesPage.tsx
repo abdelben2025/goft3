@@ -172,7 +172,7 @@ const BeneficiairesPage: React.FC<BeneficiairesPageProps> = ({ navigate, onGoBac
     
         const headers = [t('col.beneficiary'), t('col.address'), t('col.rc'), t('col.tax_id')];
         for (let i = 1; i <= maxAccounts; i++) {
-            headers.push(`رقم الحساب ${i}`, `البنك ${i}`);
+            headers.push(t('bensxl.account_no', { num: i }), t('bensxl.bank', { num: i }));
         }
     
         const styles = `<style> table, th, td { border: 1px solid black; border-collapse: collapse; text-align: right; padding: 5px; font-family: Arial, sans-serif; vertical-align: middle; } th { background-color: #DDEBF7; font-weight: bold; text-align: center; } td { mso-number-format:"\\@"; } </style>`;
@@ -252,8 +252,8 @@ const BeneficiairesPage: React.FC<BeneficiairesPageProps> = ({ navigate, onGoBac
                 await runInTransaction(async () => {
                     for (const [index, row] of (json as any[]).entries()) {
                         try {
-                            const beneficiaire = row['الإسم المستفيد']?.trim();
-                            const adresse = row['العنوان']?.trim();
+                            const beneficiaire = row[t('col.beneficiary')]?.trim();
+                            const adresse = row[t('col.address')]?.trim();
 
                             if (!beneficiaire || !adresse) {
                                 errors.push(t('bensalert.missingFields', { row: index + 2 }));
@@ -271,15 +271,15 @@ const BeneficiairesPage: React.FC<BeneficiairesPageProps> = ({ navigate, onGoBac
                             const beneficiaryData = {
                                 BENEFICIAIRE: beneficiaire,
                                 ADRESSE: adresse,
-                                RC: row['رقم السجل'] || null,
-                                CODE_FISCALE: row['التعريف الجبائي'] || null,
+                                RC: row[t('col.rc')] || null,
+                                CODE_FISCALE: row[t('col.tax_id')] || null,
                             };
 
                             const accounts: { rib: string, banque: string }[] = [];
                             let hasAccount = false;
                             for (let i = 1; i <= 10; i++) { // Check for up to 10 accounts
-                                const rib = row[`رقم الحساب ${i}`];
-                                const banque = row[`البنك ${i}`];
+                                const rib = row[t('bensxl.account_no', { num: i })];
+                                const banque = row[t('bensxl.bank', { num: i })];
                                 if (rib && banque) {
                                     accounts.push({ rib: String(rib).trim(), banque: String(banque).trim() });
                                     hasAccount = true;

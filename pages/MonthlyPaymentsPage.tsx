@@ -195,7 +195,7 @@ const MonthlyPaymentsPage: React.FC<MonthlyPaymentsPageProps> = ({ navigate, onG
         worksheet.getRow(1).alignment = { horizontal: 'center' };
         worksheet.getColumn('amount').numFmt = '#,##0.00';
 
-        await saveWorkbook(workbook, `دفوعات_${months.find(m => m.value === selectedMonth)?.label}_${selectedYear}.xlsx`);
+        await saveWorkbook(workbook, `${t('mpayxl.file_prefix')}${months.find(m => m.value === selectedMonth)?.label}_${selectedYear}.xlsx`);
     };
 
     return (

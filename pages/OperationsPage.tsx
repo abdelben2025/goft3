@@ -710,12 +710,12 @@ const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onU
                 await runInTransaction(async () => {
                     for (const [index, row] of (json as any[]).entries()) {
                         try {
-                            const nOperation = String(row['رقم العملية'] || '').trim();
-                            const intOperation = String(row['عنوان العملية'] || '').trim();
-                            const cCategorie = String(row['رمز الصنف'] || '').trim();
-                            const status: 'جارية' | 'مغلقة' = String(row['الحالة'] || 'جارية').trim() === 'مغلقة' ? 'مغلقة' : 'جارية';
-                            const cScategorie = String(row['رمز الصنف الفرعي الأولي'] || '').trim();
-                            const montantInitiale = parseFloat(row['المبلغ الأولي']);
+                            const nOperation = String(row[t('op.lbl_op_number')] || '').trim();
+                            const intOperation = String(row[t('op.lbl_op_title')] || '').trim();
+                            const cCategorie = String(row[t('opxl.colCatCode')] || '').trim();
+                            const status: 'جارية' | 'مغلقة' = String(row[t('col.status')] || 'جارية').trim() === 'مغلقة' ? 'مغلقة' : 'جارية';
+                            const cScategorie = String(row[t('opxl.colScatCode')] || '').trim();
+                            const montantInitiale = parseFloat(row[t('det.colInitialAmount')]);
 
                             if (!nOperation || !intOperation || !cCategorie || !cScategorie || isNaN(montantInitiale)) {
                                 errors.push(t('op.error_missing_fields', { row: index + 2 }));
@@ -736,7 +736,7 @@ const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onU
 
                             const operationData = {
                                 N_OPERATION: nOperation,
-                                N_OPERATION_ANCIEN: String(row['رقم العملية القديم'] || '').trim() || null,
+                                N_OPERATION_ANCIEN: String(row[t('op.lbl_op_old_number')] || '').trim() || null,
                                 INT_OPERATION: intOperation,
                                 ID_CATEGORIE: categorie.ID_CATEGORIE,
                                 status: status,

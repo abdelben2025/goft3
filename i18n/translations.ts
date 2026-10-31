@@ -1635,11 +1635,6 @@ export const translations: Record<Language, { [key: string]: string }> = {
         "dir.activity_title_fr_label": "عنوان النشاط بالفرنسية",
         "dir.subactivity_title_fr_label": "عنوان النشاط الفرعي بالفرنسية",
 
-        // Migration SQL UI
-        "btn.copy": "نسخ",
-        "btn.copied": "تم النسخ",
-        "settings.migrate_fr_title": "ترحيل حقول العناوين بالفرنسية (SQL)",
-        "settings.migrate_fr_hint": "انسخ هذا الكود وشغّله في محرر SQL لقاعدة Supabase (Database → SQL Editor) لإضافة أعمدة العناوين بالفرنسية إلى الجداول الأساسية.",
     },
     fr: {
         // General
@@ -3274,10 +3269,5 @@ export const translations: Record<Language, { [key: string]: string }> = {
         "dir.activity_title_fr_label": "Titre de l'activité en français",
         "dir.subactivity_title_fr_label": "Titre de la sous-activité en français",
 
-        // Migration SQL UI
-        "btn.copy": "Copier",
-        "btn.copied": "Copié",
-        "settings.migrate_fr_title": "Migration des champs d'adresses en français (SQL)",
-        "settings.migrate_fr_hint": "Copiez ce code et exécutez-le dans l'éditeur SQL de la base Supabase (Database → SQL Editor) pour ajouter les colonnes d'adresses en français aux tables principales.",
     },
 };

@@ -23,26 +23,7 @@ const EXPORT_TABLES = [
     'T_ODS', 'T_LOT_PIECE', 'T_PAIEMENT', 'T_COMPTE_BANCAIRE', 'T_BORDEREAU',
 ];
 
-const FR_TITLES_SQL = `ALTER TABLE public.T_PROGRAMME
-  ADD COLUMN IF NOT EXISTS INT_PROGRAMME_FR text;
 
-ALTER TABLE public.T_SPROGRAMME
-  ADD COLUMN IF NOT EXISTS INT_SPROGRAMME_FR text;
-
-ALTER TABLE public.T_CATEGORIE
-  ADD COLUMN IF NOT EXISTS INT_CATEGORIE_FR text;
-
-ALTER TABLE public.T_SCATEGORIE
-  ADD COLUMN IF NOT EXISTS INT_SCATEGORIE_FR text;
-
-ALTER TABLE public.T_RUBRIQUE
-  ADD COLUMN IF NOT EXISTS RUBRIQUE_FR text;
-
-ALTER TABLE public.T_DIRECTION
-  ADD COLUMN IF NOT EXISTS DIRECTION_FR text,
-  ADD COLUMN IF NOT EXISTS INT_PORTEFEUILLE_FR text,
-  ADD COLUMN IF NOT EXISTS INT_ACTION_FR text,
-  ADD COLUMN IF NOT EXISTS INT_SACTION_FR text;`;
 
 interface SettingsPageProps {
     navigate: (page: Page, operationId?: number) => void;
@@ -63,7 +44,6 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
     const [isConfigOpen, setIsConfigOpen] = useState(false);
     const [setupUrl, setSetupUrl] = useState('');
     const [setupKey, setSetupKey] = useState('');
-    const [copied, setCopied] = useState(false);
     const [checkingUpdate, setCheckingUpdate] = useState(false);
     const [downloadProgress, setDownloadProgress] = useState<number | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -689,36 +669,6 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ navigate, onGoBack, current
                         </motion.div>
                     )}
 
-                    {activeTab === 'tables' && (
-                        <motion.div
-                            key="fr-sql"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            className="bg-white p-6 rounded-xl shadow-sm border border-gray-200"
-                        >
-                            <h3 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-2">
-                                <i className="bi bi-database-fill-add text-emerald-600"></i>
-                                {t('settings.migrate_fr_title')}
-                            </h3>
-                            <p className="text-sm text-gray-600 mb-4">{t('settings.migrate_fr_hint')}</p>
-                            <div className="relative">
-                                <pre className="bg-gray-900 text-emerald-200 text-xs leading-relaxed p-4 rounded-lg overflow-auto max-h-72 whitespace-pre-wrap" dir="ltr">{FR_TITLES_SQL}</pre>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        navigator.clipboard.writeText(FR_TITLES_SQL).then(() => {
-                                            setCopied(true);
-                                            setTimeout(() => setCopied(false), 2000);
-                                        });
-                                    }}
-                                    className="absolute top-2 right-2 px-3 py-1 rounded-md bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 transition-colors"
-                                >
-                                    {copied ? t('btn.copied') : t('btn.copy')}
-                                </button>
-                            </div>
-                        </motion.div>
-                    )}
                 </AnimatePresence>
             </div>
 

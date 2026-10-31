@@ -22,7 +22,6 @@ const PAGE_NAMES: { [key in Page]?: string } = {
     'PROJECT_TRACKING': 'متابعة المشاريع',
     'PAYMENT_CLAIMS': 'مطالبات الدفع',
     'AE_INSUFFICIENCY': 'نقص اعتمادات الالتزام',
-    'UNREGISTERED_DOCUMENTS': 'الوثائق غير المسجلة',
     'CUSTOM_REPORT': 'تقرير مخصص',
     'VISAED_ENGAGEMENTS': 'الالتزامات المؤشرة',
     'APPENDIX_01': 'الملحق 01',

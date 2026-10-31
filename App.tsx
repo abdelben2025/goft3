@@ -34,7 +34,6 @@ const PrintProjectTrackingPage = lazy(() => import('./pages/PrintProjectTracking
 const PaymentClaimsPage = lazy(() => import('./pages/PaymentClaimsPage'));
 const PrintPaymentClaimsPage = lazy(() => import('./pages/PrintPaymentClaimsPage'));
 const AeInsufficiencyPage = lazy(() => import('./pages/AeInsufficiencyPage'));
-const UnregisteredDocumentsPage = lazy(() => import('./pages/UnregisteredDocumentsPage'));
 const LotsReportPage = lazy(() => import('./pages/LotsReportPage'));
 const PrintAeInsufficiencyPage = lazy(() => import('./pages/PrintAeInsufficiencyPage'));
 const PrintBordereauPage = lazy(() => import('./pages/PrintBordereauPage'));
@@ -268,7 +267,6 @@ const AuthenticatedApp: React.FC<{
             'PROJECT_TRACKING',
             'PAYMENT_CLAIMS',
             'AE_INSUFFICIENCY',
-            'UNREGISTERED_DOCUMENTS',
             'LOTS_REPORT',
             'PRINT_ENGAGEMENT', 'PRINT_PAIEMENT', 'PRINT_CERTIFICAT',
             'PRINT_MANDAT', 'PRINT_DECLARATION', 'PRINT_MANDAT_TABLE',
@@ -355,8 +353,6 @@ const AuthenticatedApp: React.FC<{
                 return <PaymentClaimsPage navigate={navigate} currentUser={currentUser} onGoBack={onGoBack} />;
             case 'AE_INSUFFICIENCY':
                 return <AeInsufficiencyPage navigate={navigate} currentUser={currentUser} onGoBack={onGoBack} />;
-            case 'UNREGISTERED_DOCUMENTS':
-                return <UnregisteredDocumentsPage navigate={navigate} currentUser={currentUser} onGoBack={onGoBack} />;
             case 'LOTS_REPORT':
                 return <LotsReportPage navigate={navigate} currentUser={currentUser} onGoBack={onGoBack} />;
             case 'CUSTOM_REPORT':

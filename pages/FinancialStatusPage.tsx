@@ -235,9 +235,6 @@ const FinancialStatusPage: React.FC<FinancialStatusPageProps> = ({ navigate, onG
                     <button onClick={() => navigate('AE_INSUFFICIENCY')} className="bg-red-500 text-white px-2 py-0.5 rounded-[20px] hover:bg-red-600 transition-colors text-xs">
                         <i className="bi bi-exclamation-triangle mr-1"></i> {t('btn.ae_insufficiency')}
                     </button>
-                    <button onClick={() => navigate('UNREGISTERED_DOCUMENTS')} className="bg-amber-500 text-white px-2 py-0.5 rounded-[20px] hover:bg-amber-600 transition-colors text-xs">
-                        <i className="bi bi-file-earmark-lock2 mr-1"></i> الوثائق غير المسجلة
-                    </button>
                     <button onClick={() => navigate('VISAED_ENGAGEMENTS')} className="bg-teal-500 text-white px-2 py-0.5 rounded-[20px] hover:bg-teal-600 transition-colors text-xs">
                         <i className="bi bi-table mr-1"></i> جدول الإلتزامات المؤشرة
                     </button>

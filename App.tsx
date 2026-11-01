@@ -202,11 +202,18 @@ const AuthenticatedApp: React.FC<{
             console.warn('Post-login refreshData skipped:', err);
         });
 
-        // Auto check for updates on mount
+        // Auto check for updates on mount. Delayed briefly so the network state
+        // has settled after login; errors are swallowed (the user can still
+        // check manually from Settings).
         const runUpdateCheck = async () => {
-            const result = await checkForUpdates();
-            if (result?.hasUpdate) {
-                setUpdateInfo(result);
+            try {
+                await new Promise(r => setTimeout(r, 2500));
+                const result = await checkForUpdates();
+                if (result?.hasUpdate) {
+                    setUpdateInfo(result);
+                }
+            } catch (e) {
+                console.warn('Login auto update check failed:', e);
             }
         };
         runUpdateCheck();

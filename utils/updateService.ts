@@ -43,15 +43,14 @@ export const checkForUpdates = async (): Promise<UpdateInfo | null> => {
         return { hasUpdate: false, latestVersion: currentVersion, downloadUrl: '', notSupported: true };
     }
 
-    if (typeof navigator !== 'undefined' && !navigator.onLine) {
-        console.log('App is offline: Skipping update check.');
-        return { hasUpdate: false, latestVersion: currentVersion, downloadUrl: '', offline: true };
-    }
-
-    // NOTE: We intentionally do NOT pre-flight the endpoint from JS. A browser
-    // fetch from the webview is subject to CORS and fails even when the endpoint
-    // is fine, producing a false "cannot reach update server". We rely on the
-    // Tauri updater's own Rust network stack (check()) instead.
+    // NOTE: We intentionally do NOT rely on navigator.onLine here. Inside the
+    // Tauri WebView it can be stale/false right after login even when the
+    // network is available, which would silently skip the check. We rely on the
+    // Tauri updater's own Rust network stack (check()) instead — it handles
+    // offline/failure gracefully and returns a proper error we can surface.
+    // NOTE: We also do NOT pre-flight the endpoint from JS. A browser fetch from
+    // the webview is subject to CORS and fails even when the endpoint is fine,
+    // producing a false "cannot reach update server".
     try {
         const { check } = await import('@tauri-apps/plugin-updater');
         const update = await check();

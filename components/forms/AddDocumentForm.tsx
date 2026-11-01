@@ -805,6 +805,46 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
         }
     };
 
+    // Rebuild the subject into the standard shape when the user leaves the field
+    // (only when adding a new document, not when editing an existing one).
+    const autoFormatSubject = useCallback(() => {
+        if (initialData) return;
+        const raw = piece.trim();
+        if (!raw) return;
+
+        // 1. Extract the date (DD/MM/YYYY, DD-MM-YYYY, DD.MM.YYYY ...)
+        const dateMatch = raw.match(/(\d{1,2})[/.-](\d{1,2})[/.-](\d{2,4})/);
+        const date = dateMatch
+            ? `${dateMatch[1].padStart(2, '0')}/${dateMatch[2].padStart(2, '0')}/${dateMatch[3]}`
+            : '';
+
+        // 2. Strip the date portion to keep the "type + number" prefix
+        let prefixText = raw;
+        if (dateMatch) {
+            prefixText = raw.slice(0, dateMatch.index).replace(/في:\s*$/i, '').trim();
+        }
+
+        // 3. Extract the number part after "رقم" / "رقم:"
+        let numberPart = '';
+        let labelPart = prefixText;
+        const numMatch = prefixText.match(/رقم:?\s*(.*)$/i);
+        if (numMatch) {
+            numberPart = numMatch[1].trim();
+            labelPart = prefixText.slice(0, numMatch.index).replace(/رقم:?\s*$/i, '').trim();
+        }
+
+        // 4. Clean trailing colons from the label (keeps compound types like
+        //    "مقرر التغطية المالية" intact)
+        labelPart = labelPart.replace(/:+$/i, '').trim();
+        if (!labelPart) return;
+
+        // 5. Rebuild the subject in the standard shape
+        const parts = [labelPart];
+        if (numberPart) parts.push(`رقم: ${numberPart}`);
+        if (date) parts.push(`في: ${date}`);
+        setPiece(parts.join(' '));
+    }, [piece, initialData]);
+
 
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -1147,6 +1187,7 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
                         id="piece" 
                         value={piece} 
                         onChange={(e) => handlePieceTextChange({ target: { value: e.target.value } } as any)} 
+                        onBlur={autoFormatSubject}
                         required 
                         spellCheck={true}
                         className="w-full h-9 px-3 py-1 mt-1 text-center text-xs text-gray-700 bg-gray-100 border border-gray-300 rounded-[20px] focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase disabled:bg-gray-200" 

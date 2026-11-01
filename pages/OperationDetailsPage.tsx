@@ -18,7 +18,7 @@ import AddBordereauForm from '../components/forms/AddBordereauForm';
 import { formatCurrency, parseCurrency } from '../utils/currencyUtils';
 import { normalizeDate } from '../utils/dateUtils';
 import { exportToFormattedExcel } from '../utils/exportToCsv';
-import { labelNatureEng } from '../utils/dataLabels';
+import { labelNatureEng, pickLocalLabel } from '../utils/dataLabels';
 import CustomDropdown from '../components/CustomDropdown';
 
 import ExcelJS from 'exceljs';
@@ -38,7 +38,7 @@ interface OperationDetailsPageProps {
 const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, operationId, initialTab, onGoBack, currentUser }) => {
     const { db, loading, addItem, updateItem, deleteItem, runInTransaction, broadcastEvent } = useData();
     const { showToast } = useToast();
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
 
     const operation: Operation | undefined = db.T_OPERATION.find(op => Number(op.ID_OPERATION) === Number(operationId));
 
@@ -1042,7 +1042,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                         </div>
                         <h2 className="text-sm md:text-base font-bold text-gray-800 leading-tight">{operation.INT_OPERATION}</h2>
                         <div className="flex gap-4 mt-2 text-[10px] font-medium text-gray-500 uppercase tracking-wider">
-                            <span><i className="bi bi-folder-fill ml-1 text-blue-400"></i>{t('det.categoryLabel')} {categorie?.INT_CATEGORIE}</span>
+                            <span><i className="bi bi-folder-fill ml-1 text-blue-400"></i>{t('det.categoryLabel')} {pickLocalLabel(categorie, 'INT_CATEGORIE', 'INT_CATEGORIE_FR', '', language)}</span>
                         </div>
                     </div>
                 </div>
@@ -1244,7 +1244,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                                 <tbody className="divide-y divide-gray-100">
                                     {rubriquesOp.map(ro => (
                                         <tr key={ro.ID_RUBRIQUE_OP} className="hover:bg-blue-50/30 transition-colors group">
-                                            <td className="px-4 py-3 text-xs font-bold text-gray-800">{db.T_RUBRIQUE.find(r => r.ID_RUBRIQUE === ro.ID_RUBRIQUE)?.RUBRIQUE}</td>
+                                            <td className="px-4 py-3 text-xs font-bold text-gray-800">{(() => { const rub = db.T_RUBRIQUE.find(r => r.ID_RUBRIQUE === ro.ID_RUBRIQUE); return pickLocalLabel(rub, 'RUBRIQUE', 'RUBRIQUE_FR', '', language); })()}</td>
                                             <td className="px-4 py-3 text-xs font-medium text-gray-600">{formatCurrency(ro.MONTANT_INITIALE)}</td>
                                             <td className="px-4 py-3 text-xs font-bold text-blue-600">{formatCurrency(ro.MONTANT_FINALE ?? ro.MONTANT_INITIALE)}</td>
                                             {!isViewer && (
@@ -1300,7 +1300,7 @@ const OperationDetailsPage: React.FC<OperationDetailsPageProps> = ({ navigate, o
                                         return (
                                             <tr key={so.ID_SCATEGORIE_OP} className="hover:bg-blue-50/30 transition-colors group">
                                                 <td className="px-4 py-3 text-xs font-mono font-bold text-gray-500">{scat?.C_SCATEGORIE}</td>
-                                                <td className="px-4 py-3 text-xs font-bold text-gray-800">{scat?.INT_SCATEGORIE}</td>
+                                                <td className="px-4 py-3 text-xs font-bold text-gray-800">{pickLocalLabel(scat, 'INT_SCATEGORIE', 'INT_SCATEGORIE_FR', '', language)}</td>
                                                 <td className="px-4 py-3 text-xs font-medium text-gray-600">{formatCurrency(so.MONTANT_INITIALE)}</td>
                                                 <td className="px-4 py-3 text-xs font-bold text-purple-600">{formatCurrency(so.MONTANT_FINALE ?? so.MONTANT_INITIALE)}</td>
                                                 {!isViewer && (

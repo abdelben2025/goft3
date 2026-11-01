@@ -12,7 +12,7 @@ import AddDocumentForm from '../components/forms/AddDocumentForm';
 import AddEngagementForm from '../components/forms/AddEngagementForm';
 import AddPaiementForm from '../components/forms/AddPaiementForm';
 import { formatCurrency } from '../utils/currencyUtils';
-import { labelNaturePiece } from '../utils/dataLabels';
+import { labelNaturePiece, pickLocalLabel } from '../utils/dataLabels';
 import CustomDropdown from '../components/CustomDropdown';
 import ExcelJS from 'exceljs';
 import { saveWorkbook } from '../utils/exportXlsx';
@@ -44,7 +44,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
     const { db, loading, addItem, updateItem, deleteItem, runInTransaction, connectionError, integrityIssues, refreshData } = useData();
 
     const { showToast } = useToast();
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const [isRetrying, setIsRetrying] = useState<boolean>(false);
 
     const handleRetry = useCallback(async () => {
@@ -1459,7 +1459,7 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ navigate, initialOperatio
                                                     >
                                                         <option value="">{t('doc.all')}</option>
                                                         {uniqueRubrics.map(rub => (
-                                                            <option key={rub.ID_RUBRIQUE} value={String(rub.ID_RUBRIQUE)}>{rub.RUBRIQUE}</option>
+                                                            <option key={rub.ID_RUBRIQUE} value={String(rub.ID_RUBRIQUE)}>{pickLocalLabel(rub, 'RUBRIQUE', 'RUBRIQUE_FR', '', language)}</option>
                                                         ))}
                                                     </select>
                                                 </div>

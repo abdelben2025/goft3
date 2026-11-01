@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Rubrique, RubriqueOp } from '../../types';
 import { formatCurrency, parseCurrency, formatAmountInput, formatCurrencyForInput } from '../../utils/currencyUtils';
 import { useLanguage } from '../../context/LanguageContext';
+import { pickLocalLabel } from '../../utils/dataLabels';
 
 interface AddRubriqueOpFormProps {
     onClose: () => void;
@@ -12,7 +13,7 @@ interface AddRubriqueOpFormProps {
 }
 
 const AddRubriqueOpForm: React.FC<AddRubriqueOpFormProps> = ({ onClose, onSave, operationId, rubriques, initialData }) => {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const [idRubrique, setIdRubrique] = useState<number | ''>(rubriques[0]?.ID_RUBRIQUE || '');
     const [montantInitialeStr, setMontantInitialeStr] = useState('0');
     const [montantFinaleStr, setMontantFinaleStr] = useState<string>('');
@@ -75,7 +76,7 @@ const AddRubriqueOpForm: React.FC<AddRubriqueOpFormProps> = ({ onClose, onSave, 
                     <option value="">{t('rub.select_placeholder')}</option>
                     {rubriques.map(r => (
                         <option key={r.ID_RUBRIQUE} value={r.ID_RUBRIQUE}>
-                            {r.RUBRIQUE}
+                            {pickLocalLabel(r, 'RUBRIQUE', 'RUBRIQUE_FR', '', language)}
                         </option>
                     ))}
                 </select>

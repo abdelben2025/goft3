@@ -4,6 +4,7 @@ import { Operation, Categorie, Scategorie, Rubrique } from '../../types';
 import { formatCurrency, parseCurrency, formatAmountInput, formatCurrencyForInput } from '../../utils/currencyUtils';
 import { Plus, Trash2 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
+import { pickLocalLabel } from '../../utils/dataLabels';
 
 interface AddOperationFormProps {
     onClose: () => void;
@@ -19,7 +20,7 @@ interface AddOperationFormProps {
 }
 
 const AddOperationForm: React.FC<AddOperationFormProps> = ({ onClose, onSave, categories, scategories, rubriques, initialData }) => {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const [nOperation, setNOperation] = useState('');
     const [nOperationAncien, setNOperationAncien] = useState('');
     const [intOperation, setIntOperation] = useState('');
@@ -382,7 +383,7 @@ const AddOperationForm: React.FC<AddOperationFormProps> = ({ onClose, onSave, ca
                         >
                             {categories.map(cat => (
                                 <option key={cat.ID_CATEGORIE} value={cat.ID_CATEGORIE}>
-                                    {cat.INT_CATEGORIE}
+                                    {pickLocalLabel(cat, 'INT_CATEGORIE', 'INT_CATEGORIE_FR', '', language)}
                                 </option>
                             ))}
                         </select>
@@ -406,7 +407,7 @@ const AddOperationForm: React.FC<AddOperationFormProps> = ({ onClose, onSave, ca
                             <option value="">{t('op.select_subcat_placeholder')}</option>
                             {availableScategories.map(scat => (
                                 <option key={scat.ID_SCATEGORIE} value={scat.ID_SCATEGORIE}>
-                                    {scat.INT_SCATEGORIE}
+                                    {pickLocalLabel(scat, 'INT_SCATEGORIE', 'INT_SCATEGORIE_FR', '', language)}
                                 </option>
                             ))}
                         </select>
@@ -586,7 +587,7 @@ const AddOperationForm: React.FC<AddOperationFormProps> = ({ onClose, onSave, ca
                                                     <option value="">{t('op.select_rubrique_placeholder')}</option>
                                                     {rubriques.map(rub => (
                                                         <option key={rub.ID_RUBRIQUE} value={rub.ID_RUBRIQUE}>
-                                                            {rub.RUBRIQUE}
+                                                            {pickLocalLabel(rub, 'RUBRIQUE', 'RUBRIQUE_FR', '', language)}
                                                         </option>
                                                     ))}
                                                 </select>

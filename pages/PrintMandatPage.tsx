@@ -4,6 +4,7 @@ import { Page } from '../types';
 import { useData } from '../context/DataContext';
 import { formatCurrency, numberToArabicWords } from '../utils/currencyUtils';
 import { useLanguage } from '../context/LanguageContext';
+import { pickLocalLabel } from '../utils/dataLabels';
 
 interface PrintMandatPageProps {
     navigate: (page: Page, id?: number, tab?: string) => void;
@@ -12,7 +13,7 @@ interface PrintMandatPageProps {
 
 const PrintMandatPage: React.FC<PrintMandatPageProps> = ({ navigate, paiementId }) => {
     const { db, loading } = useData();
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
 
     const printData = useMemo(() => {
         if (loading || !paiementId) return null;
@@ -306,8 +307,8 @@ const PrintMandatPage: React.FC<PrintMandatPageProps> = ({ navigate, paiementId 
                             <td className="border border-black align-top p-1 text-center">{engagement.N_ENG}/{engagement.ANNEE}</td>
                             <td className="border border-black align-top p-1 text-center">{sprogramme?.SPROGRAMME}</td>
                             <td className="border border-black align-top p-1 text-center text-[12px]">
-                                <p>{t('col.categorie')}: {categorie?.C_CATEGORIE} {categorie?.INT_CATEGORIE}</p>
-                                <p>{t('col.sub_categorie')}: {scategorie?.C_SCATEGORIE} {scategorie?.INT_SCATEGORIE}</p>
+                                <p>{t('col.categorie')}: {categorie?.C_CATEGORIE} {pickLocalLabel(categorie, 'INT_CATEGORIE', 'INT_CATEGORIE_FR', '', language)}</p>
+                                <p>{t('col.sub_categorie')}: {scategorie?.C_SCATEGORIE} {pickLocalLabel(scategorie, 'INT_SCATEGORIE', 'INT_SCATEGORIE_FR', '', language)}</p>
                             </td>
                             <td className="border border-black align-top p-1 text-center text-[12px]">{formatCurrency(montantBrut)}</td>
                             <td className="border border-black align-top p-1 text-center"></td>

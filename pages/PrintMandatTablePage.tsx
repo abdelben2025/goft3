@@ -3,6 +3,7 @@ import React, { useMemo } from 'react';
 import { Page } from '../types';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
+import { pickLocalLabel } from '../utils/dataLabels';
 
 interface PrintMandatTablePageProps {
     navigate: (page: Page, id?: number, tab?: string) => void;
@@ -20,7 +21,7 @@ const formatCurrency = (amount: number | null | undefined) => {
 
 const PrintMandatTablePage: React.FC<PrintMandatTablePageProps> = ({ navigate, paiementId }) => {
     const { db, loading } = useData();
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
 
     const printData = useMemo(() => {
         if (loading || !paiementId) return null;
@@ -60,7 +61,7 @@ const PrintMandatTablePage: React.FC<PrintMandatTablePageProps> = ({ navigate, p
             programmeFre: sprogrammeCode,
             imputation: {
                 classe: `الصنف: ${categorie.C_CATEGORIE} تثبيتات عينية`,
-                sousClasse: `الصنف الفرعي: ${scategorie.C_SCATEGORIE} ${scategorie.INT_SCATEGORIE}`,
+                sousClasse: `الصنف الفرعي: ${scategorie.C_SCATEGORIE} ${pickLocalLabel(scategorie, 'INT_SCATEGORIE', 'INT_SCATEGORIE_FR', '', language)}`,
             },
             numFicheEng: `${engagement.N_ENG}/${engagement.ANNEE}`,
             montantMandat: paiement.MONTANT_PAI,
@@ -78,7 +79,7 @@ const PrintMandatTablePage: React.FC<PrintMandatTablePageProps> = ({ navigate, p
             actionName
         };
 
-    }, [db, loading, paiementId]);
+    }, [db, loading, paiementId, language]);
 
     const printStyles = `
         body { font-family: 'Amiri', serif; direction: rtl; }

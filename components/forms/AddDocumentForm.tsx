@@ -5,7 +5,7 @@ import { DateInputField } from '../DateInputField';
 import { formatCurrency, parseCurrency, formatAmountInput, formatCurrencyForInput } from '../../utils/currencyUtils';
 import CustomDropdown from '../CustomDropdown';
 import { useLanguage } from '../../context/LanguageContext';
-import { labelNaturePiece } from '../../utils/dataLabels';
+import { labelNaturePiece, pickLocalLabel } from '../../utils/dataLabels';
 
 
 interface AddDocumentFormProps {
@@ -32,7 +32,7 @@ interface AddDocumentFormProps {
 const pieceTypes = ["مقرر", "اتفاقية", "صفقة", "ملحق", "قرار فسخ", "وضعية الأشغال", "فاتورة", "وضعية التسبيق الجزافي", "وضعية التسبيق على التموين", "قرار", "حكم قضائي", "رفع اليد عن الضمان", "أخرى"];
 
 const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, operations, beneficiaires, comptesBancaires, pieces, engagements, paiements, cps, rubriques, rubriqueOps, scategories, scategorieOps, initialData, lots, lotPieces, ods = [], selectedOperationId }) => {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     // Basic fields state
     const [natPiece, setNatPiece] = useState(pieceTypes[0]);
     const [idOperation, setIdOperation] = useState<number | ''>('');
@@ -1232,7 +1232,7 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
                             <option value="">{t('docform.select_subcategory')}</option>
                             {availableScategoriesForOperation.map(s => (
                                 <option key={s.ID_SCATEGORIE} value={s.ID_SCATEGORIE}>
-                                    {s.C_SCATEGORIE} / {s.INT_SCATEGORIE}
+                                    {s.C_SCATEGORIE} / {pickLocalLabel(s, 'INT_SCATEGORIE', 'INT_SCATEGORIE_FR', '', language)}
                                 </option>
                             ))}
                         </select>
@@ -1249,7 +1249,7 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
                             <option value="">{t('docform.select')}</option>
                             {availableRubriquesForOperation.map(r => (
                                 <option key={r.ID_RUBRIQUE} value={r.ID_RUBRIQUE}>
-                                    {r.RUBRIQUE}
+                                    {pickLocalLabel(r, 'RUBRIQUE', 'RUBRIQUE_FR', '', language)}
                                 </option>
                             ))}
                         </select>

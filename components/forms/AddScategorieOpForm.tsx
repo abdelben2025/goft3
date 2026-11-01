@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Scategorie, ScategorieOp } from '../../types';
 import { formatCurrency, parseCurrency, formatAmountInput, formatCurrencyForInput } from '../../utils/currencyUtils';
 import { useLanguage } from '../../context/LanguageContext';
+import { pickLocalLabel } from '../../utils/dataLabels';
 
 interface AddScategorieOpFormProps {
     onClose: () => void;
@@ -12,7 +13,7 @@ interface AddScategorieOpFormProps {
 }
 
 const AddScategorieOpForm: React.FC<AddScategorieOpFormProps> = ({ onClose, onSave, operationId, scategories, initialData }) => {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const [idScategorie, setIdScategorie] = useState<number | ''>(scategories[0]?.ID_SCATEGORIE || '');
     const [montantInitialeStr, setMontantInitialeStr] = useState('0');
     const [montantFinaleStr, setMontantFinaleStr] = useState('0');
@@ -73,7 +74,7 @@ const AddScategorieOpForm: React.FC<AddScategorieOpFormProps> = ({ onClose, onSa
                     <option value="">{t('op.select_subcat_placeholder')}</option>
                     {scategories.map(s => (
                         <option key={s.ID_SCATEGORIE} value={s.ID_SCATEGORIE}>
-                            {s.C_SCATEGORIE} / {s.INT_SCATEGORIE}
+                            {s.C_SCATEGORIE} / {pickLocalLabel(s, 'INT_SCATEGORIE', 'INT_SCATEGORIE_FR', '', language)}
                         </option>
                     ))}
                 </select>

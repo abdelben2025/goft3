@@ -3,6 +3,7 @@ import React, { useMemo } from 'react';
 import { Page } from '../types';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
+import { pickLocalLabel } from '../utils/dataLabels';
 
 interface PrintPaiementPageProps {
     navigate: (page: Page, id?: number, tab?: string) => void;
@@ -20,7 +21,7 @@ const formatCurrency = (amount: number | null | undefined) => {
 
 const PrintPaiementPage: React.FC<PrintPaiementPageProps> = ({ navigate, paiementId }) => {
     const { db, loading } = useData();
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
 
     const printData = useMemo(() => {
         if (loading || !paiementId) return null;
@@ -259,8 +260,8 @@ const PrintPaiementPage: React.FC<PrintPaiementPageProps> = ({ navigate, paiemen
                     <tbody>
                         <tr>
                             <td className="border border-black p-2 text-right h-24 align-top text-lg">
-                                {categorie && <p>{t('col.categorie')}: {categorie.C_CATEGORIE} {categorie.INT_CATEGORIE}</p>}
-                                {scategorie && <p className="pr-4">{t('col.sub_categorie')}: {scategorie.C_SCATEGORIE} {scategorie.INT_SCATEGORIE}</p>}
+                                {categorie && <p>{t('col.categorie')}: {categorie.C_CATEGORIE} {pickLocalLabel(categorie, 'INT_CATEGORIE', 'INT_CATEGORIE_FR', '', language)}</p>}
+                                {scategorie && <p className="pr-4">{t('col.sub_categorie')}: {scategorie.C_SCATEGORIE} {pickLocalLabel(scategorie, 'INT_SCATEGORIE', 'INT_SCATEGORIE_FR', '', language)}</p>}
                             </td>
                             <td className="border border-black p-2 align-top font-bold text-lg">{formatCurrency(paiement.MONTANT_PAI)}</td>
                             <td className="border border-black p-2"></td>

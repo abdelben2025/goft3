@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Scategorie, Categorie } from '../../types';
 import { useLanguage } from '../../context/LanguageContext';
+import { pickLocalLabel } from '../../utils/dataLabels';
 
 interface AddScategorieFormProps {
     onClose: () => void;
@@ -12,7 +13,7 @@ interface AddScategorieFormProps {
 }
 
 const AddScategorieForm: React.FC<AddScategorieFormProps> = ({ onClose, onSave, initialData, categories, selectedCategorieId }) => {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const [scategorieCode, setScategorieCode] = useState('');
     const [scategorieName, setScategorieName] = useState('');
     const [scategorieNameFr, setScategorieNameFr] = useState('');
@@ -91,7 +92,7 @@ const AddScategorieForm: React.FC<AddScategorieFormProps> = ({ onClose, onSave, 
                      <option value="">{t('cat.select_parent_placeholder')}</option>
                     {categories.map(c => (
                         <option key={c.ID_CATEGORIE} value={c.ID_CATEGORIE}>
-                            {c.INT_CATEGORIE}
+                            {pickLocalLabel(c, 'INT_CATEGORIE', 'INT_CATEGORIE_FR', '', language)}
                         </option>
                     ))}
                 </select>

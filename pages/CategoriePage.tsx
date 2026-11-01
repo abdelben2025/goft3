@@ -5,6 +5,7 @@ import { useData } from '../context/DataContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
 import { errorMessage } from '../utils/errorMessage';
+import { pickLocalLabel } from '../utils/dataLabels';
 import PageWrapper from '../components/PageWrapper';
 import Modal from '../components/Modal';
 import ConfirmActionModal from '../components/ConfirmActionModal';
@@ -20,7 +21,7 @@ interface CategoriePageProps {
 const CategoriePage: React.FC<CategoriePageProps> = ({ navigate, onGoBack, currentUser }) => {
     const { db, loading, addItem, updateItem, deleteItem } = useData();
     const { showToast } = useToast();
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const [selectedCategorieId, setSelectedCategorieId] = useState<number | null>(db.T_CATEGORIE[0]?.ID_CATEGORIE || null);
     const [selectedScategorieId, setSelectedScategorieId] = useState<number | null>(null);
 
@@ -141,7 +142,7 @@ const CategoriePage: React.FC<CategoriePageProps> = ({ navigate, onGoBack, curre
                                         onClick={() => { setSelectedCategorieId(cat.ID_CATEGORIE); setSelectedScategorieId(null); }}
                                     >
                                         <td className="p-3 text-gray-800">{cat.C_CATEGORIE}</td>
-                                        <td className="p-3 text-gray-700">{cat.INT_CATEGORIE}</td>
+                                        <td className="p-3 text-gray-700">{pickLocalLabel(cat, 'INT_CATEGORIE', 'INT_CATEGORIE_FR', '', language)}</td>
                                         <td className="p-3 text-gray-700">{cat.INT_CATEGORIE_FR || ''}</td>
                                     </tr>
                                 ))}
@@ -172,7 +173,7 @@ const CategoriePage: React.FC<CategoriePageProps> = ({ navigate, onGoBack, curre
                                 {db.T_SCATEGORIE.filter(scat => scat.ID_CATEGORIE === selectedCategorieId).sort((a, b) => a.ID_SCATEGORIE - b.ID_SCATEGORIE).map(scat => (
                                     <tr key={scat.ID_SCATEGORIE} onClick={() => setSelectedScategorieId(scat.ID_SCATEGORIE)} className={`border-b hover:bg-gray-50 cursor-pointer text-sm ${scat.ID_SCATEGORIE === selectedScategorieId ? 'bg-blue-100' : ''}`}>
                                         <td className="p-3 text-gray-800">{scat.C_SCATEGORIE}</td>
-                                        <td className="p-3 text-gray-700">{scat.INT_SCATEGORIE}</td>
+                                        <td className="p-3 text-gray-700">{pickLocalLabel(scat, 'INT_SCATEGORIE', 'INT_SCATEGORIE_FR', '', language)}</td>
                                         <td className="p-3 text-gray-700">{scat.INT_SCATEGORIE_FR || ''}</td>
                                     </tr>
                                 ))}

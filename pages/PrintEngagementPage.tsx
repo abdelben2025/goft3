@@ -4,6 +4,7 @@ import { Page } from '../types';
 import { useData } from '../context/DataContext';
 import { normalizeDate } from '../utils/dateUtils';
 import { useLanguage } from '../context/LanguageContext';
+import { pickLocalLabel } from '../utils/dataLabels';
 
 interface PrintEngagementPageProps {
     navigate: (page: Page, id?: number, tab?: string) => void;
@@ -22,7 +23,7 @@ const formatCurrency = (amount: number | null | undefined | string) => {
 
 const PrintEngagementPage: React.FC<PrintEngagementPageProps> = ({ navigate, engagementId }) => {
     const { db, loading } = useData();
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
 
     const printData = useMemo(() => {
         if (loading || !engagementId) return null;
@@ -267,8 +268,8 @@ const PrintEngagementPage: React.FC<PrintEngagementPageProps> = ({ navigate, eng
                         <tbody>
                             <tr className="h-16">
                                 <td className="border border-black align-top text-center p-1 leading-tight">
-                                    <p className="mb-1"><b>{t('col.categorie')}:</b> {printData.categorie?.C_CATEGORIE} {printData.categorie?.INT_CATEGORIE}</p>
-                                    <p><b>{t('col.sub_categorie')}:</b> {printData.scategorie?.C_SCATEGORIE} {printData.scategorie?.INT_SCATEGORIE}</p>
+                                    <p className="mb-1"><b>{t('col.categorie')}:</b> {printData.categorie?.C_CATEGORIE} {pickLocalLabel(printData.categorie, 'INT_CATEGORIE', 'INT_CATEGORIE_FR', '', language)}</p>
+                                    <p><b>{t('col.sub_categorie')}:</b> {printData.scategorie?.C_SCATEGORIE} {pickLocalLabel(printData.scategorie, 'INT_SCATEGORIE', 'INT_SCATEGORIE_FR', '', language)}</p>
                                 </td>
                                 <td className="border border-black font-bold">{formatCurrency(budgetAmount)}</td>
                                 <td className="border border-black">{formatCurrency(displayedTotalEng)}</td>

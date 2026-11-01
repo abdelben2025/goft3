@@ -322,14 +322,15 @@ const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onU
                     const sprogramsInPrg = programsInScat[prgCode];
 
                     // Program header: shown once per program, before its sub-programs.
-                    // Its count = number of programs belonging to this sub-category.
-                    tableRows.push({ type: 'prgHeader', id: `prg-${catCode}-${scatCode}-${prgCode}`, prgCode, count: Object.keys(programsInScat).length });
+                    // Its count = number of operations belonging to this program.
+                    const prgOpsCount = Object.values(sprogramsInPrg).reduce((sum, arr) => sum + arr.length, 0);
+                    tableRows.push({ type: 'prgHeader', id: `prg-${catCode}-${scatCode}-${prgCode}`, prgCode, count: prgOpsCount });
 
                     Object.keys(sprogramsInPrg).sort().forEach(sprgCode => {
                         const opsInSprg = sprogramsInPrg[sprgCode];
                         
-                        // Sub-program Header: count = number of sub-programs belonging to this program.
-                        tableRows.push({ type: 'sprgHeader', id: `sprg-${catCode}-${scatCode}-${prgCode}-${sprgCode}`, prgCode, sprgCode, count: Object.keys(sprogramsInPrg).length });
+                        // Sub-program Header: count = number of operations belonging to this sub-program.
+                        tableRows.push({ type: 'sprgHeader', id: `sprg-${catCode}-${scatCode}-${prgCode}-${sprgCode}`, prgCode, sprgCode, count: opsInSprg.length });
 
                         tableRows.push(...opsInSprg);
                         
@@ -598,11 +599,11 @@ const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onU
                 </tr>`;
             } else if (item.type === 'prgHeader') {
                 tableHtml += `<tr style="background-color: #c3d6f5; font-weight: bold;">
-                    <td colspan="10">${t('op.export_program_header', { program: item.prgCode })} — ${t('op.count_programs', { count: item.count })}</td>
+                    <td colspan="10">${t('op.program_label', { code: item.prgCode })} — ${t('op.count_operations', { count: item.count })}</td>
                 </tr>`;
             } else if (item.type === 'sprgHeader') {
                 tableHtml += `<tr style="background-color: #9ba7de; font-weight: bold;">
-                    <td colspan="10">${t('op.subprogram_label', { code: item.sprgCode })} — ${t('op.count_subprograms', { count: item.count })}</td>
+                    <td colspan="10">${t('op.subprogram_label_full', { code: item.sprgCode, program: item.prgCode })} — ${t('op.count_operations', { count: item.count })}</td>
                 </tr>`;
             } else if (item.type === 'sprgSubtotal') {
                 tableHtml += `<tr class="subtotal" style="font-weight: bold;">
@@ -992,8 +993,8 @@ const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onU
                                             <td colSpan={11} className="p-1 px-10 text-right">
                                                 <span className="inline-flex items-center">
                                                     <span className="w-2 h-2 rounded-full bg-gray-400 ml-2"></span>
-                                                    {t('op.col_group_program', { program: item.prgCode })}
-                                                    <span className="text-[10px] bg-gray-300 text-gray-700 rounded-full px-2 py-0.5 mr-2">{t('op.count_programs', { count: item.count })}</span>
+                                                    {t('op.program_label', { code: item.prgCode })}
+                                                    <span className="text-[10px] bg-gray-300 text-gray-700 rounded-full px-2 py-0.5 mr-2">{t('op.count_operations', { count: item.count })}</span>
                                                 </span>
                                             </td>
                                         </tr>
@@ -1005,8 +1006,8 @@ const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onU
                                             <td colSpan={11} className="p-1 px-12 text-right">
                                                 <span className="inline-flex items-center">
                                                     <span className="w-2 h-2 rounded-full bg-gray-300 ml-2"></span>
-                                                    {t('op.subprogram_label', { code: item.sprgCode })}
-                                                    <span className="text-[10px] bg-gray-200 text-gray-600 rounded-full px-2 py-0.5 mr-2">{t('op.count_subprograms', { count: item.count })}</span>
+                                                    {t('op.subprogram_label_full', { code: item.sprgCode, program: item.prgCode })}
+                                                    <span className="text-[10px] bg-gray-200 text-gray-600 rounded-full px-2 py-0.5 mr-2">{t('op.count_operations', { count: item.count })}</span>
                                                 </span>
                                             </td>
                                         </tr>

@@ -1637,11 +1637,8 @@ export const translations: Record<Language, { [key: string]: string }> = {
         "dir.subactivity_title_fr_label": "عنوان النشاط الفرعي بالفرنسية",
 
         // Program header labels
-        "op.col_group_program": "البرنامج: {program}",
-        "op.count_programs": "{count} برامج",
-        "op.export_program_header": "البرنامج: {program}",
-        "op.count_subprograms": "{count} برامج فرعية",
-        "op.subprogram_label": "البرنامج الفرعي رقم: {code}",
+        "op.program_label": "البرنامج رقم {code} التابع للصنف الفرعي",
+        "op.subprogram_label_full": "البرنامج الفرعي رقم {code} التابع للبرنامج رقم {program}",
 
     },
     fr: {
@@ -3279,11 +3276,8 @@ export const translations: Record<Language, { [key: string]: string }> = {
         "dir.subactivity_title_fr_label": "Titre de la sous-action en français",
 
         // Program header labels
-        "op.col_group_program": "Programme : {program}",
-        "op.count_programs": "{count} programmes",
-        "op.export_program_header": "Programme : {program}",
-        "op.count_subprograms": "{count} sous-programmes",
-        "op.subprogram_label": "Sous-programme n° : {code}",
+        "op.program_label": "Programme n° {code} dépendant de la sous-catégorie",
+        "op.subprogram_label_full": "Sous-programme n° {code} dépendant du programme n° {program}",
 
     },
 };

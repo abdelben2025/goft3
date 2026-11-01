@@ -845,6 +845,14 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
         setPiece(parts.join(' '));
     }, [piece, initialData]);
 
+    // Extract and normalize the document number so that "12 / 2025", "12/2025"
+    // and "12/ 2025" are treated as identical. Returns '' when there is no number.
+    const extractNormalizedNumber = useCallback((text: string): string => {
+        const match = text.match(/رقم:?\s*(.*?)(?=\s*في:|\s*$)/i);
+        if (!match) return '';
+        return match[1].replace(/\s+/g, '');
+    }, []);
+
 
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -921,32 +929,22 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
             }
         }
 
-        const normalizedPieceName = piece.trim();
-        const restrictedTypes = ['صفقة', 'اتفاقية', 'فاتورة'];
-        if (restrictedTypes.includes(natPiece)) {
+        if (natPiece !== 'أخرى') {
+            const normalizedNumber = extractNormalizedNumber(piece);
+            // Search across ALL operations (not just the same operation) so that
+            // the same source document cannot be added twice under different
+            // number formatting ("12 / 2025" vs "12/2025").
             const duplicate = pieces.find(p =>
                 p.NAT_PIECE === natPiece &&
-                p.PIECE.trim().toLowerCase() === normalizedPieceName.toLowerCase() &&
-                p.ID_PIECE !== initialData?.ID_PIECE
+                p.ID_PIECE !== initialData?.ID_PIECE &&
+                (
+                    (normalizedNumber && extractNormalizedNumber(p.PIECE) === normalizedNumber) ||
+                    (!normalizedNumber && p.PIECE.trim().toLowerCase() === piece.trim().toLowerCase())
+                )
             );
 
             if (duplicate) {
-                alert(t('docformalert.duplicate_table', { nature: natPiece, name: normalizedPieceName }));
-                return;
-            }
-        }
-
-        const uniqueTypes = ['مقرر', 'قرار'];
-        if (uniqueTypes.includes(natPiece)) {
-            const duplicate = pieces.find(p =>
-                p.ID_OPERATION === Number(idOperation) &&
-                p.NAT_PIECE === natPiece &&
-                p.PIECE.trim().toLowerCase() === normalizedPieceName.toLowerCase() &&
-                p.ID_PIECE !== initialData?.ID_PIECE
-            );
-
-            if (duplicate) {
-                alert(t('docformalert.duplicate_operation', { nature: natPiece, name: normalizedPieceName }));
+                alert(t('docformalert.duplicate_table', { nature: natPiece, name: normalizedNumber || piece.trim() }));
                 return;
             }
         }

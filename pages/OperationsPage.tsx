@@ -321,6 +321,9 @@ const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onU
                 Object.keys(programsInScat).sort().forEach(prgCode => {
                     const sprogramsInPrg = programsInScat[prgCode];
 
+                    // Program header: shown once per program, before its sub-programs
+                    tableRows.push({ type: 'prgHeader', id: `prg-${catCode}-${scatCode}-${prgCode}`, prgCode, count: Object.keys(sprogramsInPrg).length });
+
                     Object.keys(sprogramsInPrg).sort().forEach(sprgCode => {
                         const opsInSprg = sprogramsInPrg[sprgCode];
                         
@@ -591,6 +594,10 @@ const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onU
             } else if (item.type === 'scatHeader') {
                 tableHtml += `<tr style="background-color: #bbd7fc; font-weight: bold;">
                     <td colspan="10">${t('op.export_scat_header', { name: item.scatName })} ${item.scatCode !== 'NO_SCAT' ? `(${item.scatCode})` : ''}</td>
+                </tr>`;
+            } else if (item.type === 'prgHeader') {
+                tableHtml += `<tr style="background-color: #c3d6f5; font-weight: bold;">
+                    <td colspan="10">${t('op.export_program_header', { program: item.prgCode })} — ${t('op.count_programs', { count: item.count })}</td>
                 </tr>`;
             } else if (item.type === 'sprgHeader') {
                 tableHtml += `<tr style="background-color: #9ba7de; font-weight: bold;">
@@ -974,6 +981,19 @@ const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onU
                                                 <i className="bi bi-arrow-return-left ml-2 text-blue-400"></i>
                                                 {t('op.col_group_scat', { name: item.scatName })} {item.scatCode !== 'NO_SCAT' ? `(${item.scatCode})` : ''}
                                                 <span className="text-[10px] bg-blue-100 text-blue-700 rounded-full px-2 py-0.5 mr-2">{t('op.count_operations', { count: item.count })}</span>
+                                            </td>
+                                        </tr>
+                                    );
+                                }
+                                if (item.type === 'prgHeader') {
+                                    return (
+                                        <tr key={item.id} className="bg-gray-200/60 text-gray-600 font-semibold text-[10px] uppercase tracking-widest border-b border-gray-200">
+                                            <td colSpan={11} className="p-1 px-10 text-right">
+                                                <span className="inline-flex items-center">
+                                                    <span className="w-2 h-2 rounded-full bg-gray-400 ml-2"></span>
+                                                    {t('op.col_group_program', { program: item.prgCode })}
+                                                    <span className="text-[10px] bg-gray-300 text-gray-700 rounded-full px-2 py-0.5 mr-2">{t('op.count_programs', { count: item.count })}</span>
+                                                </span>
                                             </td>
                                         </tr>
                                     );

@@ -35,7 +35,7 @@ const AddRubriqueForm: React.FC<AddRubriqueFormProps> = ({ onClose, onSave, init
         onSave({
             ...(initialData || {}),
             RUBRIQUE: rubriqueName,
-            RUBRIQUE_FR: rubriqueNameFr || undefined,
+            RUBRIQUE_FR: rubriqueNameFr?.toUpperCase() || undefined,
         });
     };
 
@@ -65,7 +65,7 @@ const AddRubriqueForm: React.FC<AddRubriqueFormProps> = ({ onClose, onSave, init
                     id="rubriqueNameFr"
                     type="text"
                     value={rubriqueNameFr}
-                    onChange={(e) => setRubriqueNameFr(e.target.value)}
+                    onChange={(e) => setRubriqueNameFr(e.target.value.toUpperCase())}
                     className="w-full px-3 py-2 mt-1 text-gray-700 bg-gray-100 border border-gray-300 rounded-[20px] focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
             </div>

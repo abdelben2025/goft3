@@ -60,9 +60,11 @@ const AddDirectionForm: React.FC<AddDirectionFormProps> = ({ onClose, onSave, in
         }
     }, [initialData]);
 
+    const FR_FIELDS = ['DIRECTION_FR', 'INT_PORTEFEUILLE_FR', 'INT_ACTION_FR', 'INT_SACTION_FR', 'ORDONATEUR', 'ACTION', 'SACTION', 'PORTEFEUILLE'];
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        const nextValue = FR_FIELDS.includes(name) ? value.toUpperCase() : value;
+        setFormData(prev => ({ ...prev, [name]: nextValue }));
     };
 
     const [isSubmitting, setIsSubmitting] = useState(false);

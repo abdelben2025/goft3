@@ -48,7 +48,7 @@ const AddScategorieForm: React.FC<AddScategorieFormProps> = ({ onClose, onSave, 
         const dataToSave: any = {
             C_SCATEGORIE: scategorieCode,
             INT_SCATEGORIE: scategorieName,
-            INT_SCATEGORIE_FR: scategorieNameFr || null,
+            INT_SCATEGORIE_FR: scategorieNameFr?.toUpperCase() || null,
             ID_CATEGORIE: idCategorie,
         };
 
@@ -125,7 +125,7 @@ const AddScategorieForm: React.FC<AddScategorieFormProps> = ({ onClose, onSave, 
                     id="scategorieNameFr"
                     type="text"
                     value={scategorieNameFr}
-                    onChange={(e) => setScategorieNameFr(e.target.value)}
+                    onChange={(e) => setScategorieNameFr(e.target.value.toUpperCase())}
                     className="w-full px-3 py-2 mt-1 text-gray-700 bg-gray-100 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
             </div>

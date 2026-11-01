@@ -47,7 +47,7 @@ const AddSProgrammeForm: React.FC<AddSProgrammeFormProps> = ({ onClose, onSave, 
             ...(initialData || {}),
             SPROGRAMME: sprogrammeCode,
             INT_SPROGRAMME: sprogrammeName,
-            INT_SPROGRAMME_FR: sprogrammeNameFr || null,
+            INT_SPROGRAMME_FR: sprogrammeNameFr?.toUpperCase() || null,
             ID_PROGRAMME: idProgramme,
         };
         onSave(dataToSave);
@@ -119,7 +119,7 @@ const AddSProgrammeForm: React.FC<AddSProgrammeFormProps> = ({ onClose, onSave, 
                     id="sprogrammeNameFr"
                     type="text"
                     value={sprogrammeNameFr}
-                    onChange={(e) => setSProgrammeNameFr(e.target.value)}
+                    onChange={(e) => setSProgrammeNameFr(e.target.value.toUpperCase())}
                     className="w-full px-3 py-2 mt-1 text-gray-700 bg-gray-100 border border-gray-300 rounded-[20px] focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
             </div>

@@ -37,7 +37,7 @@ const AddCategorieForm: React.FC<AddCategorieFormProps> = ({ onClose, onSave, in
         const dataToSave: any = {
             C_CATEGORIE: categorieCode,
             INT_CATEGORIE: categorieName,
-            INT_CATEGORIE_FR: categorieNameFr || null,
+            INT_CATEGORIE_FR: categorieNameFr?.toUpperCase() || null,
         };
 
         if (initialData && initialData.ID_CATEGORIE) {
@@ -84,7 +84,7 @@ const AddCategorieForm: React.FC<AddCategorieFormProps> = ({ onClose, onSave, in
                     id="categorieNameFr"
                     type="text"
                     value={categorieNameFr}
-                    onChange={(e) => setCategorieNameFr(e.target.value)}
+                    onChange={(e) => setCategorieNameFr(e.target.value.toUpperCase())}
                     className="w-full px-3 py-2 mt-1 text-gray-700 bg-gray-100 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
             </div>

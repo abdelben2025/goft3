@@ -602,7 +602,7 @@ const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onU
                 </tr>`;
             } else if (item.type === 'sprgHeader') {
                 tableHtml += `<tr style="background-color: #9ba7de; font-weight: bold;">
-                    <td colspan="10">${t('op.export_sprg_header', { program: item.prgCode, subprogram: item.sprgCode })} — ${t('op.count_subprograms', { count: item.count })}</td>
+                    <td colspan="10">${t('op.subprogram_label', { code: item.sprgCode })} — ${t('op.count_subprograms', { count: item.count })}</td>
                 </tr>`;
             } else if (item.type === 'sprgSubtotal') {
                 tableHtml += `<tr class="subtotal" style="font-weight: bold;">
@@ -1005,7 +1005,7 @@ const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onU
                                             <td colSpan={11} className="p-1 px-12 text-right">
                                                 <span className="inline-flex items-center">
                                                     <span className="w-2 h-2 rounded-full bg-gray-300 ml-2"></span>
-                                                    {t('op.col_group_sprogram', { program: item.prgCode, subprogram: item.sprgCode })}
+                                                    {t('op.subprogram_label', { code: item.sprgCode })}
                                                     <span className="text-[10px] bg-gray-200 text-gray-600 rounded-full px-2 py-0.5 mr-2">{t('op.count_subprograms', { count: item.count })}</span>
                                                 </span>
                                             </td>

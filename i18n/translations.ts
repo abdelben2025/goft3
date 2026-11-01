@@ -1641,6 +1641,7 @@ export const translations: Record<Language, { [key: string]: string }> = {
         "op.count_programs": "{count} برامج",
         "op.export_program_header": "البرنامج: {program}",
         "op.count_subprograms": "{count} برامج فرعية",
+        "op.subprogram_label": "البرنامج الفرعي رقم: {code}",
 
     },
     fr: {
@@ -3282,6 +3283,7 @@ export const translations: Record<Language, { [key: string]: string }> = {
         "op.count_programs": "{count} programmes",
         "op.export_program_header": "Programme : {program}",
         "op.count_subprograms": "{count} sous-programmes",
+        "op.subprogram_label": "Sous-programme n° : {code}",
 
     },
 };

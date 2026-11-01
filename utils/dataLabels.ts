@@ -12,6 +12,20 @@ const opStatusKeys: Record<string, string> = {
 const natureEngKeys: Record<string, string> = {
     'التزام': 'nature.engagement',
     'سحب': 'nature.withdrawal',
+    'تغطية مالية': 'nature.eng.couverture',
+    'تفريد': 'nature.eng.individualisation',
+    'تغيير هيكلة الكلفة': 'nature.eng.restructuration',
+    'التسجيل': 'nature.eng.inscription',
+    'فسخ': 'nature.eng.resiliation',
+    'إعادة التقييم': 'nature.eng.reevaluation',
+    'اعادة التقييم': 'nature.eng.reevaluation',
+    'إنخفاض التقييم': 'nature.eng.devaluation',
+    'انخفاض التقييم': 'nature.eng.devaluation',
+    'غلق': 'nature.eng.cloture',
+    'إعادة الترتيب': 'nature.eng.reclassement',
+    'إلغاء': 'nature.eng.annulation',
+    'الغاء': 'nature.eng.annulation',
+    'أخرى': 'nature.eng.autres',
 };
 
 const naturePieceKeys: Record<string, string> = {
@@ -21,6 +35,14 @@ const naturePieceKeys: Record<string, string> = {
     'فاتورة': 'nature.invoice',
     'مقرر': 'nature.decision',
     'وضعية الأشغال': 'nature.work_statement',
+    'قرار فسخ': 'nature.piece.decision_resiliation',
+    'وضعية التسبيق الجزافي': 'nature.piece.situation_avance_forfaitaire',
+    'وضعية التسبيق على التموين': 'nature.piece.situation_avance_approvisionnement',
+    'قرار نزع الملكية': 'nature.piece.expropriation',
+    'حكم قضائي': 'nature.piece.jugement',
+    'وضعية استرداد الضمان': 'nature.piece.remboursement_garantie',
+    'رفع اليد عن الضمان': 'nature.piece.remboursement_garantie',
+    'أخرى': 'nature.piece.autres',
 };
 
 const natureOdsKeys: Record<string, string> = {

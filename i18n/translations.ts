@@ -882,7 +882,7 @@ export const translations: Record<Language, { [key: string]: string }> = {
         "login.onlineBlocked": "تم منع تسجيل الدخول: المستخدم «{name}» متصل الآن",
         "login.noCachedCredential": "لا توجد بيانات دخول محفوظة لهذا الحساب على هذا الجهاز. اتصل بالإنترنت وسجّل الدخول مرة واحدة قبل استعمال الوضع المحلي.",
         "login.noLocalData": "لا توجد بيانات محلية محفوظة. يجب الاتصال بالإنترنت لتسجيل الدخول لأول مرة.",
-        "login.checkCloud": "تحقق عبر السحابة ({host})",
+        "login.checkCloud": "", // تحقق عبر السحابة ({host})
         "login.notConfiguredHost": "غير مهيأ",
         "login.checkLocal": "تحقق محلي — البيانات من نسخة الجهاز، لا من السحابة",
         "login.closeAppTitle": "إغلاق البرنامج",
@@ -1637,8 +1637,28 @@ export const translations: Record<Language, { [key: string]: string }> = {
         "dir.subactivity_title_fr_label": "عنوان النشاط الفرعي بالفرنسية",
 
         // Program header labels
-        "op.program_label": "البرنامج رقم {code} التابع للصنف الفرعي",
-        "op.subprogram_label_full": "البرنامج الفرعي رقم {code} التابع للبرنامج رقم {program}",
+        "op.program_label": "البرنامج رقم {code} ",
+        "op.subprogram_label_full": "البرنامج الفرعي رقم {code} ",
+
+        // Engagement/document nature labels
+        "nature.eng.couverture": "تغطية مالية",
+        "nature.eng.individualisation": "تفريد",
+        "nature.eng.restructuration": "تغيير هيكلة الكلفة",
+        "nature.eng.inscription": "التسجيل",
+        "nature.eng.resiliation": "فسخ",
+        "nature.eng.reevaluation": "إعادة التقييم",
+        "nature.eng.devaluation": "إنخفاض التقييم",
+        "nature.eng.cloture": "غلق",
+        "nature.eng.reclassement": "إعادة الترتيب",
+        "nature.eng.annulation": "إلغاء",
+        "nature.eng.autres": "أخرى",
+        "nature.piece.decision_resiliation": "قرار فسخ",
+        "nature.piece.situation_avance_forfaitaire": "وضعية التسبيق الجزافي",
+        "nature.piece.situation_avance_approvisionnement": "وضعية التسبيق على التموين",
+        "nature.piece.expropriation": "قرار نزع الملكية",
+        "nature.piece.jugement": "حكم قضائي",
+        "nature.piece.remboursement_garantie": "وضعية استرداد الضمان",
+        "nature.piece.autres": "أخرى",
 
     },
     fr: {
@@ -3276,8 +3296,28 @@ export const translations: Record<Language, { [key: string]: string }> = {
         "dir.subactivity_title_fr_label": "Titre de la sous-action en français",
 
         // Program header labels
-        "op.program_label": "Programme n° {code} dépendant de la sous-catégorie",
-        "op.subprogram_label_full": "Sous-programme n° {code} dépendant du programme n° {program}",
+        "op.program_label": "Programme n° {code} ",
+        "op.subprogram_label_full": "Sous-programme n° {code} ",
+
+        // Engagement/document nature labels
+        "nature.eng.couverture": "Couverture financière",
+        "nature.eng.individualisation": "Individualisation",
+        "nature.eng.restructuration": "Restructuration",
+        "nature.eng.inscription": "Inscription",
+        "nature.eng.resiliation": "Résiliation",
+        "nature.eng.reevaluation": "Réévaluation",
+        "nature.eng.devaluation": "Dévaluation",
+        "nature.eng.cloture": "Clôturé",
+        "nature.eng.reclassement": "Reclassement",
+        "nature.eng.annulation": "Annulé",
+        "nature.eng.autres": "Autres",
+        "nature.piece.decision_resiliation": "Décision de résiliation",
+        "nature.piece.situation_avance_forfaitaire": "Situation avance forfaitaire",
+        "nature.piece.situation_avance_approvisionnement": "Situation avance sur approvisionnement",
+        "nature.piece.expropriation": "Arrêté d'expropriation",
+        "nature.piece.jugement": "Jugement juridique",
+        "nature.piece.remboursement_garantie": "Situation remboursement de garantie",
+        "nature.piece.autres": "Autres",
 
     },
 };

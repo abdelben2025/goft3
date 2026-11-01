@@ -4,7 +4,7 @@ import { normalizeDate, compareDates, getCurrentDate } from '../../utils/dateUti
 import { DateInputField } from '../DateInputField';
 import { formatCurrency, parseCurrency, formatAmountInput, formatCurrencyForInput } from '../../utils/currencyUtils';
 import { useLanguage } from '../../context/LanguageContext';
-import { labelNatureEng } from '../../utils/dataLabels';
+import { labelNatureEng, labelNaturePiece } from '../../utils/dataLabels';
 
 interface AddEngagementFormProps {
     onClose: () => void;
@@ -526,7 +526,7 @@ const AddEngagementForm: React.FC<AddEngagementFormProps> = ({ onClose, onSave, 
                         className="w-full h-9 px-1 py-1 mt-1 text-xs text-center text-gray-700 bg-gray-100 border border-gray-300 rounded-[20px]"
                     >
                         <option value="">{availablePieces.length > 0 ? t('engform.selectDocument') : t('engform.noDocuments')}</option>
-                        {availablePieces.map(p => <option key={p.ID_PIECE} value={p.ID_PIECE}>{p.PIECE} ({p.NAT_PIECE})</option>)}
+                        {availablePieces.map(p => <option key={p.ID_PIECE} value={p.ID_PIECE}>{p.PIECE} ({labelNaturePiece(p.NAT_PIECE, t)})</option>)}
                     </select>
                 </div>
                 <div>

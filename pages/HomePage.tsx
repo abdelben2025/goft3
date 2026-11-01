@@ -356,19 +356,8 @@ const HomePage: React.FC<HomePageProps> = ({ navigate, currentUser }) => {
                         compact
                     />
                 </div>
-            </motion.div>
-
-            {!selectedFilter && notifications.length > 0 && (
-                <motion.div
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2, duration: 0.2 }}
-                    className="w-full flex items-center justify-center gap-2 text-gray-400 text-sm mt-2 mb-4 select-none"
-                >
-                    <i className="bi bi-hand-index-thumb-fill text-base animate-bounce"></i>
-                    <span>{t('home.click_hint')}</span>
-                </motion.div>
-            )}
+				              
+            </motion.div> 
 
             {selectedFilter && filteredNotifications.length === 0 && (
                 <motion.div

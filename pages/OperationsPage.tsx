@@ -964,8 +964,8 @@ const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onU
                             {displayData.rows.slice(0, visibleCount).map(item => {
                                 if (item.type === 'catHeader') {
                                     return (
-                                        <tr key={item.id} className="bg-blue-600 text-white font-bold text-sm">
-                                            <td colSpan={11} className="p-2.5 px-4 text-right shadow-inner">
+                                        <tr key={item.id} className="bg-blue-600 text-white font-bold text-sm text-center">
+                                            <td colSpan={11} className="p-2.5 px-4 text-center shadow-inner">
                                                 <div className="flex items-center gap-2">
                                                     <i className="bi bi-folder-fill"></i>
                                                     <span>{t('op.col_group_cat', { name: item.catName })}</span>
@@ -979,7 +979,7 @@ const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onU
                                 if (item.type === 'scatHeader') {
                                     return (
                                         <tr key={item.id} className="bg-blue-50 text-blue-800 font-bold text-xs border-y border-blue-100 italic">
-                                            <td colSpan={11} className="p-2 px-8 text-right underline decoration-blue-200 decoration-2 underline-offset-2">
+                                            <td colSpan={11} className="p-2 px-8 text-center underline decoration-blue-200 decoration-2 underline-offset-2">
                                                 <i className="bi bi-arrow-return-left ml-2 text-blue-400"></i>
                                                 {t('op.col_group_scat', { name: item.scatName })} {item.scatCode !== 'NO_SCAT' ? `(${item.scatCode})` : ''}
                                                 <span className="text-[10px] bg-blue-100 text-blue-700 rounded-full px-2 py-0.5 mr-2">{t('op.count_operations', { count: item.count })}</span>
@@ -989,8 +989,8 @@ const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onU
                                 }
                                 if (item.type === 'prgHeader') {
                                     return (
-                                        <tr key={item.id} className="bg-gray-200/60 text-gray-600 font-semibold text-[10px] uppercase tracking-widest border-b border-gray-200">
-                                            <td colSpan={11} className="p-1 px-10 text-right">
+                                        <tr key={item.id} className="bg-gray-200/60 text-gray-600 font-semibold text-[10px] uppercase text-center tracking-widest border-b border-gray-200">
+                                            <td colSpan={11} className="p-1 px-10 text-center">
                                                 <span className="inline-flex items-center">
                                                     <span className="w-2 h-2 rounded-full bg-gray-400 ml-2"></span>
                                                     {t('op.program_label', { code: item.prgCode })}
@@ -1003,7 +1003,7 @@ const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onU
                                 if (item.type === 'sprgHeader') {
                                     return (
                                         <tr key={item.id} className="bg-gray-50/50 text-gray-500 font-medium text-[10px] uppercase tracking-widest border-b border-gray-100">
-                                            <td colSpan={11} className="p-1 px-12 text-right">
+                                            <td colSpan={11} className="p-1 px-12 text-center">
                                                 <span className="inline-flex items-center">
                                                     <span className="w-2 h-2 rounded-full bg-gray-300 ml-2"></span>
                                                     {t('op.subprogram_label_full', { code: item.sprgCode, program: item.prgCode })}
@@ -1017,7 +1017,7 @@ const OperationsPage: React.FC<OperationsPageProps> = ({ navigate, onGoBack, onU
                                     const isScat = item.type === 'subtotal';
                                     return (
                                         <tr key={item.id} className={`${isScat ? 'bg-gray-100' : 'bg-gray-50'} font-bold text-xs border-b border-gray-200`}>
-                                            <td colSpan={3} className="p-3 text-left pl-6">{item.label}</td>
+                                            <td colSpan={3} className="p-3 text-center pl-6">{item.label}</td>
                                             <td className="p-3">{formatCurrency(item.aeFinale)}</td>
                                             <td className="p-3">{formatCurrency(item.totalEngagements)}</td>
                                             <td className="p-3 text-amber-700">{formatCurrency(item.totalEngagementsCurrentYear)}</td>

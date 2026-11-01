@@ -84,9 +84,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCloseApp }) => {
                 // The same wording covers a server rejection and a local one, which
                 // is exactly what makes "the user exists but cannot log in" opaque.
                 const where = result.source === 'cloud'
-                    ? t('login.checkCloud', { host: configuredHost || t('login.notConfiguredHost') })
+                    ? t('', { host: configuredHost || t('login.notConfiguredHost') }) // login.checkCloud
                     : t('login.checkLocal');
-                setError(`${t('login.error')} — ${where}`);
+                setError(`${t('login.error')}  ${where}`);
             }
         } catch (err) {
             console.error("Login verification error:", err);

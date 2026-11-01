@@ -4,6 +4,7 @@ import { normalizeDate, getCurrentDate } from '../../utils/dateUtils';
 import { DateInputField } from '../DateInputField';
 import { formatCurrency, parseCurrency, formatAmountInput, formatCurrencyForInput } from '../../utils/currencyUtils';
 import { useLanguage } from '../../context/LanguageContext';
+import { labelNaturePiece } from '../../utils/dataLabels';
 
 const parseWorkStatementNumber = (text?: string): number | null => {
     if (!text) return null;
@@ -503,7 +504,7 @@ const AddPaiementForm: React.FC<AddPaiementFormProps> = ({ onClose, onSave, oper
                         <select id="idPiece" value={idPiece} onChange={e => handlePieceChange(Number(e.target.value))} required className="w-full h-9 px-1 py-1 mt-1 text-center text-gray-700 bg-gray-100 border border-gray-300 rounded-[20px] text-xs">
                             <option value="0">{availablePieces.length > 0 ? t('payform.selectDoc') : t('payform.noDocs')}</option>
                             {availablePieces.map(p => (
-                                <option key={p.ID_PIECE} value={p.ID_PIECE}>{p.PIECE} ({p.NAT_PIECE})</option>
+                                <option key={p.ID_PIECE} value={p.ID_PIECE}>{p.PIECE} ({labelNaturePiece(p.NAT_PIECE, t)})</option>
                             ))}
                         </select>
                     </div>

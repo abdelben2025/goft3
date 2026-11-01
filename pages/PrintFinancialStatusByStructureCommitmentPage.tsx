@@ -3,7 +3,7 @@ import React, { useMemo } from 'react';
 import { Page } from '../types';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
-import { labelCommonFallback } from '../utils/dataLabels';
+import { labelCommonFallback, pickLocalLabel } from '../utils/dataLabels';
 
 interface PrintFinancialStatusByStructureCommitmentPageProps {
     navigate: (page: Page, id?: number, tab?: string) => void;
@@ -21,7 +21,7 @@ const formatCurrency = (amount: number | null | undefined) => {
 
 const PrintFinancialStatusByStructureCommitmentPage: React.FC<PrintFinancialStatusByStructureCommitmentPageProps> = ({ navigate, operationId }) => {
     const { db, loading } = useData();
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
 
     const printData = useMemo(() => {
         if (loading) return { loading: true };
@@ -164,8 +164,8 @@ const PrintFinancialStatusByStructureCommitmentPage: React.FC<PrintFinancialStat
             <div id="print-content" className="print-area bg-white p-6 mx-auto max-w-[210mm] min-h-[297mm] ">
                 <header className="text-right mb-6">
                     <p className="font-bold text-lg text-center">{t('print.header.republic')}</p>
-                    <p>{direction.INT_PORTEFEUILLE}</p>
-                    <p>{direction.DIRECTION}</p>
+                    <p>{pickLocalLabel(direction, 'INT_PORTEFEUILLE', 'INT_PORTEFEUILLE_FR', '', language)}</p>
+                    <p>{pickLocalLabel(direction, 'DIRECTION', 'DIRECTION_FR', '', language)}</p>
                 </header>
                 
                 <div className="text-center font-bold mb-6">

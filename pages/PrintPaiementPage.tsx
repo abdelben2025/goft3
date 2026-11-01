@@ -191,7 +191,7 @@ const PrintPaiementPage: React.FC<PrintPaiementPageProps> = ({ navigate, paiemen
                                 <tbody> 
                                     <tr><td className="border-none text-center font-bold text-lg">{t('print.label.budget_ops')}</td></tr>						 
                                     <tr><td className="border border-black p-1 text-center font-bold text-lg">{t('print.label.manager_id')}</td></tr>
-                                    <tr><td className="border border-black p-1 text-center text-lg">{direction.DIRECTION}</td></tr> 
+                                    <tr><td className="border border-black p-1 text-center text-lg">{pickLocalLabel(direction, 'DIRECTION', 'DIRECTION_FR', '', language)}</td></tr> 
                                 </tbody>
                             </table>
                         </div>

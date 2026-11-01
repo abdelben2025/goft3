@@ -223,8 +223,8 @@ const PrintMandatPage: React.FC<PrintMandatPageProps> = ({ navigate, paiementId 
                         <div className="flex justify-between items-start gap-2">
                             <div className="w-1/2 text-right">
                                 <div className="space-y-1">
-                                    <p>{direction.INT_PORTEFEUILLE}</p>
-                                    <p>{direction.DIRECTION}</p>
+                                    <p>{pickLocalLabel(direction, 'INT_PORTEFEUILLE', 'INT_PORTEFEUILLE_FR', '', language)}</p>
+                                    <p>{pickLocalLabel(direction, 'DIRECTION', 'DIRECTION_FR', '', language)}</p>
                                     <p><span className="font-bold">{t('print.label.ordonnateur_code')}:</span> {direction.ORDONATEUR}</p>
                                     <p><span className="font-bold">{t('print.label.mandate_year')}:</span> {paiement.ANNEE}</p>
                                     <p><span className="font-bold">{t('col.mandat_no')}: </span>{paiement.N_MANDAT}</p>
@@ -260,7 +260,7 @@ const PrintMandatPage: React.FC<PrintMandatPageProps> = ({ navigate, paiementId 
                                 <tr>
                                     <td className="border border-black p-1 font-bold">{t('print.mandat.portfolio_cell')}</td>
                                     <td className="border border-black text-center">{direction.PORTEFEUILLE}</td>
-                                    <td className="border border-black">{direction.INT_PORTEFEUILLE}</td>
+                                    <td className="border border-black">{pickLocalLabel(direction, 'INT_PORTEFEUILLE', 'INT_PORTEFEUILLE_FR', '', language)}</td>
                                 </tr>
                                 <tr>
                                     <td className="border border-black p-1 font-bold">{t('print.label.program')}</td>

@@ -4,6 +4,7 @@ import { Page, LotOperation } from '../types';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
 import { getEffectiveDurationDays, parseDate, normalizeDate } from '../utils/dateUtils';
+import { pickLocalLabel } from '../utils/dataLabels';
 
 const formatCurrency = (amount: number | null | undefined) => {
     if (amount === null || amount === undefined) return '0,00';
@@ -32,7 +33,7 @@ const safeId = (val: any): number => {
 
 const PrintProjectTrackingPage: React.FC<{ navigate: (page: Page) => void, operationId: number }> = ({ navigate, operationId }) => {
     const { db, loading } = useData();
-    const { t, dir } = useLanguage();
+    const { t, dir, language } = useLanguage();
     
     const printData = useMemo(() => {
         if (loading || !operationId) return null;
@@ -193,8 +194,8 @@ const PrintProjectTrackingPage: React.FC<{ navigate: (page: Page) => void, opera
             <div className="print-area bg-white p-6 mx-auto max-w-full shadow-lg border border-gray-300">
                 <header className="text-center mb-4">
                     <p className="font-bold">{t('print.header.republic')}</p>
-                    <p className="font-bold ltr:text-left rtl:text-right">{direction?.INT_PORTEFEUILLE}</p>
-                    <p className="font-bold ltr:text-left rtl:text-right">{direction?.DIRECTION}</p>
+                    <p className="font-bold ltr:text-left rtl:text-right">{pickLocalLabel(direction, 'INT_PORTEFEUILLE', 'INT_PORTEFEUILLE_FR', '', language)}</p>
+                    <p className="font-bold ltr:text-left rtl:text-right">{pickLocalLabel(direction, 'DIRECTION', 'DIRECTION_FR', '', language)}</p>
                     <h1 className="text-lg font-bold underline mt-4">{t('print.title.project_tracking', {operation: operation.INT_OPERATION})}</h1>
                 </header>
                  <table className="w-full border-collapse border border-black text-black text-center text-[10px]">

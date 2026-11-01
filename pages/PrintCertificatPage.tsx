@@ -5,6 +5,7 @@ import { useData } from '../context/DataContext';
 import { normalizeDate } from '../utils/dateUtils';
 import { useLanguage } from '../context/LanguageContext';
 import { formatCurrency, numberToArabicWords } from '../utils/currencyUtils';
+import { pickLocalLabel } from '../utils/dataLabels';
 
 interface PrintCertificatPageProps {
     navigate: (page: Page, id?: number, tab?: string) => void;
@@ -13,7 +14,7 @@ interface PrintCertificatPageProps {
 
 const PrintCertificatPage: React.FC<PrintCertificatPageProps> = ({ navigate, paiementId }) => {
     const { db, loading } = useData();
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
 
     const printData = useMemo(() => {
         if (loading || !paiementId) return null;
@@ -161,8 +162,8 @@ const PrintCertificatPage: React.FC<PrintCertificatPageProps> = ({ navigate, pai
             <div id="print-content" className="print-area bg-white mx-auto max-w-[210mm] text-black" dir="rtl">
                 <header className="flex justify-between items-start mb-4">
                     <div className="ltr:text-left rtl:text-right">
-                        <p className="font-bold">{direction.INT_PORTEFEUILLE}</p>
-                        <p>{direction.DIRECTION}</p>
+                        <p className="font-bold">{pickLocalLabel(direction, 'INT_PORTEFEUILLE', 'INT_PORTEFEUILLE_FR', '', language)}</p>
+                        <p>{pickLocalLabel(direction, 'DIRECTION', 'DIRECTION_FR', '', language)}</p>
                     </div>
                     <div className="text-center">
                         <p className="font-bold text-lg">{t('print.header.republic')}</p>

@@ -201,7 +201,7 @@ const PrintOperationsTablePage: React.FC<PrintOperationsTablePageProps> = ({ nav
                         tableRows.push({ 
                             type: 'sprgSubtotal', 
                             id: `subtotal-sprg-${catCode}-${scatCode}-${prgCode}-${sprgCode}`, 
-                            label: `مجموع البرنامج الفرعي: ${sprgCode}`, 
+                            label: t('op.subtotal_sprogram', { code: sprgCode }), 
                             ...sprgSubtotal 
                         });
                     });
@@ -223,7 +223,7 @@ const PrintOperationsTablePage: React.FC<PrintOperationsTablePageProps> = ({ nav
                 tableRows.push({ 
                     type: 'subtotal', 
                     id: `subtotal-scat-${catCode}-${scatCode}`, 
-                    label: `مجموع ${scatName}`, 
+                    label: t('lbl.subtotal', { name: scatName }), 
                     ...scatSubtotal 
                 });
             });
@@ -304,8 +304,8 @@ const PrintOperationsTablePage: React.FC<PrintOperationsTablePageProps> = ({ nav
                     <p className="font-bold text-sm mb-4">{t('print.header.republic')}</p>
                     <div className="flex justify-between text-xs font-bold mb-4">
                         <div className="text-right">
-                            <p>{direction?.INT_PORTEFEUILLE}</p>
-                            <p>{direction?.DIRECTION}</p>
+                            <p>{pickLocalLabel(direction, 'INT_PORTEFEUILLE', 'INT_PORTEFEUILLE_FR', '', language)}</p>
+                            <p>{pickLocalLabel(direction, 'DIRECTION', 'DIRECTION_FR', '', language)}</p>
                         </div>
                         <div className="text-left text-gray-600">
                             <p>{t('print.fiscal_year', { year: selectedYear })}</p>

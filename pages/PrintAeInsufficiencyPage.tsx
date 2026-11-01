@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Page } from '../types';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
+import { pickLocalLabel } from '../utils/dataLabels';
 
 interface PrintAeInsufficiencyPageProps {
     navigate: (page: Page) => void;
@@ -19,7 +20,7 @@ const formatCurrency = (amount: number | null | undefined) => {
 
 const PrintAeInsufficiencyPage: React.FC<PrintAeInsufficiencyPageProps> = ({ navigate, operationId }) => {
     const { db, loading } = useData();
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
 
     const [firstPageRows, setFirstPageRows] = useState(28);
     const [otherPageRows, setOtherPageRows] = useState(32);
@@ -241,8 +242,8 @@ const PrintAeInsufficiencyPage: React.FC<PrintAeInsufficiencyPageProps> = ({ nav
                                 <p className="font-bold text-lg">{t('print.header.republic')}</p>
                                 <div className="flex justify-between items-end mt-4">
                                     <div className="text-right">
-                                        <p className="font-bold">{direction?.INT_PORTEFEUILLE}</p>
-                                        <p className="font-bold">{direction?.DIRECTION}</p>
+                                        <p className="font-bold">{pickLocalLabel(direction, 'INT_PORTEFEUILLE', 'INT_PORTEFEUILLE_FR', '', language)}</p>
+                                        <p className="font-bold">{pickLocalLabel(direction, 'DIRECTION', 'DIRECTION_FR', '', language)}</p>
                                     </div>
                                     <div className="text-left">
                                         <p>{t('print.label.date')} {currentDate}</p>

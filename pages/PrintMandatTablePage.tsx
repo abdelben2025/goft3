@@ -154,8 +154,8 @@ const PrintMandatTablePage: React.FC<PrintMandatTablePageProps> = ({ navigate, p
                 
                 <div className="flex justify-between text-sm my-4">
                     <div className="w-1/3 space-y-1">
-                        <p>{direction.INT_PORTEFEUILLE}</p>
-                        <p>{direction.DIRECTION}</p>
+                        <p>{pickLocalLabel(direction, 'INT_PORTEFEUILLE', 'INT_PORTEFEUILLE_FR', '', language)}</p>
+                        <p>{pickLocalLabel(direction, 'DIRECTION', 'DIRECTION_FR', '', language)}</p>
                         <p><span className="font-bold">{t('print.label.ordonnateur_code')}:</span> {direction.ORDONATEUR}</p>
                         <p><span className="font-bold">{t('print.label.mandate_year')}:</span> {paiement.ANNEE}</p>
                         <p><span className="font-bold">{t('print.label.mandate_table_num')}:</span></p>
@@ -176,7 +176,7 @@ const PrintMandatTablePage: React.FC<PrintMandatTablePageProps> = ({ navigate, p
                                 <tr>
                                     <td className="border border-black p-1 font-bold">{t('print.label.activity_portfolio')}</td>
                                     <td className="border border-black p-1 text-center">{direction.PORTEFEUILLE}</td>
-                                    <td className="border border-black p-1 text-center">{direction.INT_PORTEFEUILLE}</td>
+                                    <td className="border border-black p-1 text-center">{pickLocalLabel(direction, 'INT_PORTEFEUILLE', 'INT_PORTEFEUILLE_FR', '', language)}</td>
                                 </tr>
                                 <tr>
                                     <td className="border border-black p-1 font-bold">{t('print.label.program')}</td>

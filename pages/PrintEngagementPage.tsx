@@ -226,8 +226,8 @@ const PrintEngagementPage: React.FC<PrintEngagementPageProps> = ({ navigate, eng
                 
                 <div className="flex justify-between items-start mb-1">
                     <div className="w-2/3 space-y-0.5 text-[9pt]">
-                        <p className="font-bold">{direction.INT_PORTEFEUILLE}</p>
-                        <p className="font-bold">{direction.DIRECTION}</p>
+                        <p className="font-bold">{pickLocalLabel(direction, 'INT_PORTEFEUILLE', 'INT_PORTEFEUILLE_FR', '', language)}</p>
+                        <p className="font-bold">{pickLocalLabel(direction, 'DIRECTION', 'DIRECTION_FR', '', language)}</p>
                         <p className="font-bold">{t('print.label.ordonnateur_code')}: {direction.ORDONATEUR}</p>
                         <p className="font-bold">{t('col.eng_no')}: {engagement.N_ENG}/{engagement.ANNEE}</p>
                     </div>

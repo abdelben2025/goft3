@@ -4,6 +4,7 @@ import { Page } from '../types';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
 import { formatCurrency, numberToArabicWords } from '../utils/currencyUtils';
+import { pickLocalLabel } from '../utils/dataLabels';
 
 interface PrintDeclarationPageProps {
     navigate: (page: Page, id?: number, tab?: string) => void;
@@ -12,7 +13,7 @@ interface PrintDeclarationPageProps {
 
 const PrintDeclarationPage: React.FC<PrintDeclarationPageProps> = ({ navigate, paiementId }) => {
     const { db, loading } = useData();
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
 
     const printData = useMemo(() => {
         if (loading || !paiementId) return null;
@@ -156,8 +157,8 @@ const PrintDeclarationPage: React.FC<PrintDeclarationPageProps> = ({ navigate, p
             <div id="print-content" className="print-area bg-white mx-auto max-w-[210mm] text-black" dir="rtl">
                 <header className="text-center font-bold text-lg mb-3">
                     <p>{t('print.header.republic')}</p>
-                    <p className="ltr:text-left rtl:text-right">{direction.INT_PORTEFEUILLE}</p>
-                    <p className="ltr:text-left rtl:text-right">{direction.DIRECTION}</p>
+                    <p className="ltr:text-left rtl:text-right">{pickLocalLabel(direction, 'INT_PORTEFEUILLE', 'INT_PORTEFEUILLE_FR', '', language)}</p>
+                    <p className="ltr:text-left rtl:text-right">{pickLocalLabel(direction, 'DIRECTION', 'DIRECTION_FR', '', language)}</p>
                 </header>
 
                 <h1 className="text-center font-bold text-3xl my-5">{t('print.title.payment_declaration')}</h1>
@@ -179,7 +180,7 @@ const PrintDeclarationPage: React.FC<PrintDeclarationPageProps> = ({ navigate, p
                             <td className="w-2/3 ltr:text-left rtl:text-right font-bold">{t('print.label.surname')} : </td>
                         </tr>
                         <tr>
-                            <td className="w-2/3 ltr:text-left rtl:text-right font-bold"> {t('print.label.social_reason')} :  {direction.DIRECTION}</td>
+                            <td className="w-2/3 ltr:text-left rtl:text-right font-bold"> {t('print.label.social_reason')} :  {pickLocalLabel(direction, 'DIRECTION', 'DIRECTION_FR', '', language)}</td>
                         </tr>
                         <tr>
                             <td className="ltr:text-left rtl:text-right font-bold">  {t('print.declaration.order_address')}</td>

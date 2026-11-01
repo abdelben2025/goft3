@@ -4,6 +4,7 @@ import { Page } from '../types';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
 import { normalizeDate } from '../utils/dateUtils';
+import { pickLocalLabel } from '../utils/dataLabels';
 
 const formatCurrency = (amount: number | null | undefined) => {
     if (amount === null || amount === undefined) return '0,00';
@@ -16,7 +17,7 @@ const formatCurrency = (amount: number | null | undefined) => {
 
 const PrintFinancialStatusPage: React.FC<{ navigate: (page: Page) => void }> = ({ navigate }) => {
     const { db, loading } = useData();
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     
     const filters = useMemo(() => {
         try {
@@ -185,8 +186,8 @@ const PrintFinancialStatusPage: React.FC<{ navigate: (page: Page) => void }> = (
             <div className="print-area bg-white p-6 mx-auto max-w-6xl shadow-lg border border-gray-300">
                 <header className="text-center mb-4">
                     <p className="font-bold">{t('print.header.republic')}</p>
-                    <p className="font-bold text-right">{direction?.INT_PORTEFEUILLE}</p>
-                    <p className="font-bold text-right">{direction?.DIRECTION}</p>
+                    <p className="font-bold text-right">{pickLocalLabel(direction, 'INT_PORTEFEUILLE', 'INT_PORTEFEUILLE_FR', '', language)}</p>
+                    <p className="font-bold text-right">{pickLocalLabel(direction, 'DIRECTION', 'DIRECTION_FR', '', language)}</p>
                     <h1 className="text-lg font-bold underline mt-4">{t('print.title.financial_status', { month: monthName, year })}</h1>
                 </header>
                 {pages.map((page, pageIdx) => (

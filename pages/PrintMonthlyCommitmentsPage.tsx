@@ -4,7 +4,7 @@ import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
 import { formatCurrency } from '../utils/currencyUtils';
 import { normalizeDate } from '../utils/dateUtils';
-import { labelCommonFallback } from '../utils/dataLabels';
+import { labelCommonFallback, pickLocalLabel } from '../utils/dataLabels';
 
 interface PrintMonthlyCommitmentsPageProps {
     navigate: (page: Page) => void;
@@ -12,7 +12,7 @@ interface PrintMonthlyCommitmentsPageProps {
 
 const PrintMonthlyCommitmentsPage: React.FC<PrintMonthlyCommitmentsPageProps> = ({ navigate }) => {
     const { db, loading } = useData();
-    const { t, dir } = useLanguage();
+    const { t, dir, language } = useLanguage();
     
     const selectedYear = sessionStorage.getItem('goft3_monthly_year') || new Date().getFullYear().toString();
     const selectedMonth = sessionStorage.getItem('goft3_monthly_month') || (new Date().getMonth() + 1).toString().padStart(2, '0');
@@ -191,8 +191,8 @@ const PrintMonthlyCommitmentsPage: React.FC<PrintMonthlyCommitmentsPageProps> = 
                                     {pageIndex === 0 && (
                                         <>
                                             <p className="font-bold">{t('print.header.republic')}</p>
-                                            <p className="font-bold text-right">{direction?.INT_PORTEFEUILLE}</p>
-                                            <p className="font-bold text-right">{direction?.DIRECTION}</p>
+                                            <p className="font-bold text-right">{pickLocalLabel(direction, 'INT_PORTEFEUILLE', 'INT_PORTEFEUILLE_FR', '', language)}</p>
+                                            <p className="font-bold text-right">{pickLocalLabel(direction, 'DIRECTION', 'DIRECTION_FR', '', language)}</p>
                                         </>
                                     )}
                                     <div className="flex justify-between items-center border-b border-black pb-2 mt-4">

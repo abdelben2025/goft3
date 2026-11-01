@@ -4,6 +4,7 @@ import { useData } from '../context/DataContext';
 import { formatCurrency, numberToArabicWords } from '../utils/currencyUtils';
 import { normalizeDate } from '../utils/dateUtils';
 import { useLanguage } from '../context/LanguageContext';
+import { pickLocalLabel } from '../utils/dataLabels';
 
 interface PrintRevenueNoticePageProps {
     navigate: (page: Page, id?: number, tab?: string) => void;
@@ -12,7 +13,7 @@ interface PrintRevenueNoticePageProps {
 
 const PrintRevenueNoticePage: React.FC<PrintRevenueNoticePageProps> = ({ navigate, paiementId }) => {
     const { db, loading } = useData();
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
 
     const printData = useMemo(() => {
         if (loading || !paiementId) return null;
@@ -107,7 +108,7 @@ const PrintRevenueNoticePage: React.FC<PrintRevenueNoticePageProps> = ({ navigat
                         <p className="text-sm underline font-bold">REPUBLIQUE ALGERIENNE DEMOCRATIQUE ET POPULAIRE</p>
                     </div>
                     <div className="border border-black p-2 text-center text-xs w-[260px] mt-3">
-                        <p className="font-bold">{direction?.DIRECTION}</p>
+                        <p className="font-bold">{pickLocalLabel(direction, 'DIRECTION', 'DIRECTION_FR', '', language)}</p>
                         <p className="mt-1">{t('print.label.ordonnateur_code')} : {direction?.ORDONATEUR}</p>
                     </div>
                 

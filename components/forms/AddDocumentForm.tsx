@@ -931,17 +931,22 @@ const AddDocumentForm: React.FC<AddDocumentFormProps> = ({ onClose, onSave, oper
 
         if (natPiece !== 'أخرى') {
             const normalizedNumber = extractNormalizedNumber(piece);
+            const isLinkedType = natPiece === 'ملحق' || natPiece === 'وضعية الأشغال';
             // Search across ALL operations (not just the same operation) so that
             // the same source document cannot be added twice under different
             // number formatting ("12 / 2025" vs "12/2025").
-            const duplicate = pieces.find(p =>
-                p.NAT_PIECE === natPiece &&
-                p.ID_PIECE !== initialData?.ID_PIECE &&
-                (
+            // For ملحق / وضعية الأشغال the check is limited to pieces linked to
+            // the SAME parent document, since these types naturally repeat their
+            // number/date across different parent documents.
+            const duplicate = pieces.find(p => {
+                if (p.NAT_PIECE !== natPiece) return false;
+                if (p.ID_PIECE === initialData?.ID_PIECE) return false;
+                if (isLinkedType && p.ID_PIECE_INIT !== idPieceInit) return false;
+                return (
                     (normalizedNumber && extractNormalizedNumber(p.PIECE) === normalizedNumber) ||
                     (!normalizedNumber && p.PIECE.trim().toLowerCase() === piece.trim().toLowerCase())
-                )
-            );
+                );
+            });
 
             if (duplicate) {
                 alert(t('docformalert.duplicate_table', { nature: natPiece, name: normalizedNumber || piece.trim() }));
